@@ -161,6 +161,7 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
     <button data-r="5" aria-pressed="false">5 rondas</button>
     <button data-r="7" aria-pressed="false">7 rondas</button>
   </div>
+  <p class="estado" id="stockFrases" style="margin:-2px 0 14px"></p>
   <button class="btn-grande" id="bCrear">Crear sala y pasar el código</button>
   <button class="btn-grande sec" id="bUnirse">Entrar con un código</button>
   <button class="btn-grande sec" id="bLocal">Jugar los dos en este celular</button>
@@ -288,7 +289,6 @@ const FRASES=[
  {c:"Lugar",t:"PUNTA DEL ESTE EN ENERO"},
  {c:"Lugar",t:"LAS TERMAS DEL DAYMAN"},
  {c:"Lugar",t:"EL CERRO DE MONTEVIDEO"},
- {c:"Lugar",t:"FERIA DE TRISTAN NARVAJA"},
  {c:"Lugar",t:"LA RAMBLA DE MONTEVIDEO"},
  {c:"Lugar",t:"EL ESTADIO CENTENARIO"},
  {c:"Lugar",t:"CABO POLONIO SIN LUZ"},
@@ -517,6 +517,14 @@ $("rondas").addEventListener("click",e=>{const b=e.target.closest("button");if(!
  [...$("rondas").children].forEach(x=>x.setAttribute("aria-pressed",x===b));rondasElegidas=+b.dataset.r;});
 
 let botT=null;
+function verStock(){
+  const q=FRASES.filter(f=>!vistas.has(f.t)).length;
+  $("stockFrases").innerHTML=q+" frases nuevas de "+FRASES.length+
+    ' · <a href="#" id="resetFrases" style="color:var(--agua)">reiniciar</a>';
+  $("resetFrases").onclick=e=>{e.preventDefault();vistas=new Set();guardarVistas();verStock();};
+}
+setTimeout(verStock,0);
+
 $("bBot").onclick=()=>{
   modo="bot";miJug=0;
   $("setup").style.display="none";$("juego").style.display="block";
@@ -566,7 +574,8 @@ function jugarBot(){
     if(c.length){hostResolver(c[Math.floor(Math.random()*c.length)].t);return;}
   }
   const vocLibres=[...VOCALES].filter(x=>!S.usadas.has(x));
-  if(vocLibres.length&&(consRestantes()===0||(plata>=700&&r<.6&&Math.random()<.3))){hostVocal();return;}
+  if(vocLibres.length&&plata>=250&&(consRestantes()===0||(plata>=700&&r<.6&&Math.random()<.3))){hostVocal();return;}
+  if(consRestantes()===0){const c=candidatos();hostResolver(c.length?c[0].t:S.frase);return;}
   hostGirar();
 }
 
@@ -719,7 +728,7 @@ function publicar(txt,fx){
   pintarTodo();
 }
 function hostGirar(){
-  if(S.fase!=="girar"||animando)return;
+  if(S.fase!=="girar"||animando||consRestantes()===0)return;
   pararReloj();
   const destino=giroActual+360*5+Math.random()*360;
   if(modo!=="local"&&modo!=="bot")enviar({tipo:"giro",destino});
@@ -749,20 +758,14 @@ function hostGirar(){
     if(s.t==="X2"){S.doble=true;S.fase="girar";
       publicar("<b>x2</b> — la próxima consonante que aciertes paga doble. Volvé a girar.","x2");return;}
     bip(880,.12,"sine",.06);S.valor=s.v;
-    if(consRestantes()===0){S.fase="vocal";
-      publicar("Salió <b>$"+s.v+"</b>, pero ya no quedan consonantes. "+S.jug[S.turno].n+" elige una vocal gratis.");
-    }else{S.fase="consonante";
-      publicar("Salió <b>$"+s.v+"</b>. "+S.jug[S.turno].n+" elige una consonante (quedan "+consRestantes()+" sin descubrir).");}
+    S.fase="consonante";
+    publicar("Salió <b>$"+s.v+"</b>. "+S.jug[S.turno].n+" elige una consonante (quedan "+consRestantes()+" sin descubrir).");
   });
 }
 function hostVocal(){
-  if(S.fase!=="girar"||animando)return;
-  const c=consRestantes();
-  if(c>0&&S.jug[S.turno].ronda<250)return;
-  if(c>0){S.jug[S.turno].ronda-=250;}
-  S.fase="vocal";
-  publicar(c>0?"Vocal comprada por $250. "+S.jug[S.turno].n+" elige cuál."
-              :"No quedan consonantes: vocal gratis para "+S.jug[S.turno].n+".");
+  if(S.fase!=="girar"||animando||S.jug[S.turno].ronda<250)return;
+  S.jug[S.turno].ronda-=250;S.fase="vocal";
+  publicar("Vocal comprada por $250. "+S.jug[S.turno].n+" elige cuál.");
 }
 function hostLetra(l){
   if(animando||S.usadas.has(l))return;
@@ -782,7 +785,7 @@ function hostLetra(l){
     }
     S.fase="girar";
     publicar("Hay <b>"+veces+"</b> «"+l+"». Sigue "+S.jug[S.turno].n+
-      (consRestantes()===0?": ya no quedan consonantes, la vocal te sale gratis.":": girar, comprar vocal o resolver."));
+      (consRestantes()===0?": no quedan consonantes, comprá una vocal o resolvé.":": girar, comprar vocal o resolver."));
   }else{
     bip(160,.3,"square",.06);
     publicar("No hay «"+l+"». Pasa el turno.","error");
@@ -882,6 +885,7 @@ function pintarTodo(){
     cont.appendChild(w);
   });
   maskPrevia=V.mask;
+  if(V.mask&&V.mask.indexOf("_")<0&&!vistas.has(V.mask)){vistas.add(V.mask);guardarVistas();}
   const paso=nuevas.length>6?110:200;
   nuevas.forEach(([d,ch],k)=>setTimeout(()=>{
     d.textContent=ch;d.classList.add("abierta","destape");tac();
@@ -943,10 +947,8 @@ function pintar(){
     setMonto(e.querySelector(".ronda"),j.ronda,i,0);
     setMonto(e.querySelector(".total"),j.tot,i,1);});
   const mio=esMiTurno()&&!animando&&V.fase!=="fin";
-  $("bGirar").disabled=!mio||V.fase!=="girar";
-  const gratis=V.cons===0;
-  $("bVocal").textContent=gratis?"Vocal gratis":"Comprar vocal $250";
-  $("bVocal").disabled=!mio||V.fase!=="girar"||!V.hayVoc||(!gratis&&V.jug[V.turno].ronda<250);
+  $("bGirar").disabled=!mio||V.fase!=="girar"||V.cons===0;
+  $("bVocal").disabled=!mio||V.fase!=="girar"||!V.hayVoc||V.jug[V.turno].ronda<250;
   $("bResolver").disabled=!mio;
   [...$("teclado").children].forEach(b=>{const l=b.dataset.l,voc=VOCALES.includes(l);
     b.disabled=!mio||V.usadas.includes(l)||(V.fase==="consonante"&&voc)||(V.fase==="vocal"&&!voc)||(V.fase!=="consonante"&&V.fase!=="vocal");});
