@@ -152,11 +152,7 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
   <button class="btn-grande sec" id="bUnirse">Entrar con un código</button>
   <button class="btn-grande sec" id="bLocal">Jugar los dos en este celular</button>
   <button class="btn-grande sec" id="bBot">Jugar solo contra la máquina</button>
-  <div class="rondas" id="nivel" style="margin-top:4px">
-    <button data-n="facil" aria-pressed="false">Máquina fácil</button>
-    <button data-n="normal" aria-pressed="true">Normal</button>
-    <button data-n="dificil" aria-pressed="false">Difícil</button>
-  </div>
+
 </section>
 
 <section id="lobby">
@@ -507,44 +503,60 @@ function conectar(alConectar,alFallar,i){
 $("rondas").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
  [...$("rondas").children].forEach(x=>x.setAttribute("aria-pressed",x===b));rondasElegidas=+b.dataset.r;});
 
-const NIVELES={facil:{umbral:.82,prob:.3,top:6,err:.35},
- normal:{umbral:.62,prob:.5,top:3,err:.15},dificil:{umbral:.45,prob:.75,top:2,err:0}};
-let NIV=NIVELES.normal,botT=null;
-$("nivel").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
- [...$("nivel").children].forEach(x=>x.setAttribute("aria-pressed",x===b));NIV=NIVELES[b.dataset.n];});
-
+let botT=null;
 $("bBot").onclick=()=>{
   modo="bot";miJug=0;
   $("setup").style.display="none";$("juego").style.display="block";
   armarTeclado();iniciarPartida($("miNombre").value.trim()||"Vos","Máquina");
 };
 
+function candidatos(){
+  const mk=mask();
+  return FRASES.filter(f=>{
+    if(f.c!==S.catRaw||f.t.length!==mk.length)return false;
+    for(let i=0;i<mk.length;i++){
+      if(mk[i]===" "){if(f.t[i]!==" ")return false;}
+      else if(mk[i]!=="_"){if(f.t[i]!==mk[i])return false;}
+      else if(S.usadas.has(f.t[i])||f.t[i]===" ")return false;
+    }
+    return true;
+  });
+}
+function mejorLetra(cands,solo){
+  const puntos={};
+  cands.forEach(f=>{
+    [...new Set(f.t.replace(/ /g,""))].forEach(c=>{
+      if(S.usadas.has(c))return;
+      if(solo==="cons"&&VOCALES.includes(c))return;
+      if(solo==="voc"&&!VOCALES.includes(c))return;
+      puntos[c]=(puntos[c]||0)+1+[...f.t].filter(x=>x===c).length*.2;
+    });
+  });
+  let mejor=null,max=-1;
+  for(const c in puntos)if(puntos[c]>max){max=puntos[c];mejor=c;}
+  if(mejor)return mejor;
+  const orden=(solo==="voc"?"EAOIU":"SRNLDCTMPBGVYQHFJZXKWÑ").split("").filter(c=>!S.usadas.has(c));
+  return orden[0]||null;
+}
 function programarBot(){
   clearTimeout(botT);
   if(modo!=="bot"||!S||S.turno!==1||S.fase==="fin"||animando)return;
-  botT=setTimeout(jugarBot,1000+Math.random()*900);
-}
-function consBot(){
-  const orden="SRNLDCTMPBGVYQHFJZXKWÑ".split("").filter(c=>!S.usadas.has(c));
-  if(!orden.length)return null;
-  if(Math.random()<NIV.err){const malas=orden.filter(c=>!S.frase.includes(c));
-    if(malas.length)return malas[Math.floor(Math.random()*malas.length)];}
-  return orden[Math.floor(Math.random()*Math.min(NIV.top,orden.length))];
-}
-function vocalBot(){
-  const v="EAOIU".split("").filter(x=>!S.usadas.has(x));
-  return v[Math.floor(Math.random()*Math.min(2,v.length))]||null;
+  botT=setTimeout(jugarBot,1200+Math.random()*1400);
 }
 function jugarBot(){
   if(modo!=="bot"||S.turno!==1||animando)return;
-  if(S.fase==="consonante"){const c=consBot();if(c)hostLetra(c);else hostGirar();return;}
-  if(S.fase==="vocal"){const v=vocalBot();if(v)hostLetra(v);return;}
+  const cands=candidatos();
+  if(S.fase==="consonante"){const c=mejorLetra(cands,"cons");if(c)hostLetra(c);return;}
+  if(S.fase==="vocal"){const v=mejorLetra(cands,"voc");if(v)hostLetra(v);return;}
   if(S.fase!=="girar")return;
   const letras=[...S.frase].filter(c=>c!==" ");
-  const r=letras.filter(c=>S.abiertas.has(c)).length/letras.length;
-  if(r>=NIV.umbral&&Math.random()<NIV.prob){hostResolver(S.frase);return;}
-  const vocOcultas=[...VOCALES].filter(x=>S.frase.includes(x)&&!S.abiertas.has(x));
-  if(vocOcultas.length&&(consRestantes()===0||(S.jug[1].ronda>=500&&Math.random()<.4))){hostVocal();return;}
+  const visto=letras.filter(c=>S.abiertas.has(c)).length/letras.length;
+  if(cands.length===1&&(S.jug[1].ronda>0||visto>.5)){hostResolver(cands[0].t);return;}
+  if(cands.length===2&&visto>.55&&Math.random()<.45){
+    hostResolver(cands[Math.floor(Math.random()*2)].t);return;}
+  const vocOcultas=[...VOCALES].filter(x=>!S.usadas.has(x));
+  if(vocOcultas.length&&S.jug[1].ronda>=600&&consRestantes()<=2){hostVocal();return;}
+  if(consRestantes()===0&&vocOcultas.length){hostVocal();return;}
   hostGirar();
 }
 
@@ -608,7 +620,7 @@ $("miNombre").addEventListener("change",()=>{try{localStorage.setItem("larueda_n
 const salaEnLink=(new URLSearchParams(location.search).get("sala")||"").toUpperCase();
 if(salaEnLink){
   $("bCrear").style.display="none";$("bLocal").style.display="none";
-  $("bBot").style.display="none";$("nivel").style.display="none";
+  $("bBot").style.display="none";
   document.querySelector("#setup p.sub").textContent="Te invitaron a jugar. Poné tu nombre y entrá.";
   $("bUnirse").className="btn-grande";
   $("bUnirse").textContent="Entrar a la sala "+salaEnLink;
@@ -664,7 +676,7 @@ function nuevaRonda(){
   if(!S.mazo.length)S.mazo=nuevoMazo();
   const f=S.mazo.pop();
   vistas.add(f.t);guardarVistas();
-  S.frase=f.t;S.cat="Ronda "+S.ronda+" de "+S.rondas+" · "+f.c+" · quedan "+S.mazo.length+" frases nuevas";
+  S.frase=f.t;S.catRaw=f.c;S.cat="Ronda "+S.ronda+" de "+S.rondas+" · "+f.c+" · quedan "+S.mazo.length+" frases nuevas";
   S.abiertas=new Set();S.usadas=new Set();S.jug.forEach(j=>j.ronda=0);S.valor=0;S.fase="girar";
   publicar("Le toca a <b>"+S.jug[S.turno].n+"</b>. Girá la rueda para pedir una consonante.");
 }
