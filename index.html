@@ -522,21 +522,14 @@ function candidatos(){
     return true;
   });
 }
-function mejorLetra(cands,solo){
-  const puntos={};
-  cands.forEach(f=>{
-    [...new Set(f.t.replace(/ /g,""))].forEach(c=>{
-      if(S.usadas.has(c))return;
-      if(solo==="cons"&&VOCALES.includes(c))return;
-      if(solo==="voc"&&!VOCALES.includes(c))return;
-      puntos[c]=(puntos[c]||0)+1+[...f.t].filter(x=>x===c).length*.2;
-    });
-  });
-  let mejor=null,max=-1;
-  for(const c in puntos)if(puntos[c]>max){max=puntos[c];mejor=c;}
-  if(mejor)return mejor;
-  const orden=(solo==="voc"?"EAOIU":"SRNLDCTMPBGVYQHFJZXKWÑ").split("").filter(c=>!S.usadas.has(c));
-  return orden[0]||null;
+function letraHumana(solo){
+  const FREQ=solo==="voc"?"EAOIU":"SRNLDCTMPBGVYQHFJZXKWÑ";
+  const libres=FREQ.split("").filter(c=>!S.usadas.has(c));
+  if(!libres.length)return null;
+  if(Math.random()<.14&&libres.length>4)
+    return libres[4+Math.floor(Math.random()*(libres.length-4))];
+  const top=libres.slice(0,solo==="voc"?2:4);
+  return top[Math.floor(Math.random()*top.length)];
 }
 function programarBot(){
   clearTimeout(botT);
@@ -545,18 +538,22 @@ function programarBot(){
 }
 function jugarBot(){
   if(modo!=="bot"||S.turno!==1||animando)return;
-  const cands=candidatos();
-  if(S.fase==="consonante"){const c=mejorLetra(cands,"cons");if(c)hostLetra(c);return;}
-  if(S.fase==="vocal"){const v=mejorLetra(cands,"voc");if(v)hostLetra(v);return;}
+  if(S.fase==="consonante"){const c=letraHumana("cons");if(c)hostLetra(c);return;}
+  if(S.fase==="vocal"){const v=letraHumana("voc");if(v)hostLetra(v);return;}
   if(S.fase!=="girar")return;
+
   const letras=[...S.frase].filter(c=>c!==" ");
-  const visto=letras.filter(c=>S.abiertas.has(c)).length/letras.length;
-  if(cands.length===1&&(S.jug[1].ronda>0||visto>.5)){hostResolver(cands[0].t);return;}
-  if(cands.length===2&&visto>.55&&Math.random()<.45){
-    hostResolver(cands[Math.floor(Math.random()*2)].t);return;}
-  const vocOcultas=[...VOCALES].filter(x=>!S.usadas.has(x));
-  if(vocOcultas.length&&S.jug[1].ronda>=600&&consRestantes()<=2){hostVocal();return;}
-  if(consRestantes()===0&&vocOcultas.length){hostVocal();return;}
+  const r=letras.filter(c=>S.abiertas.has(c)).length/letras.length;
+  const plata=S.jug[1].ronda;
+  let chance=Math.pow(Math.max(0,(r-.5)/.5),1.7)*.8;
+  if(plata>=800)chance*=1.35;
+  if(plata===0)chance*=.45;
+  if(r>.5&&Math.random()<chance){
+    const c=candidatos();
+    if(c.length){hostResolver(c[Math.floor(Math.random()*c.length)].t);return;}
+  }
+  const vocLibres=[...VOCALES].filter(x=>!S.usadas.has(x));
+  if(vocLibres.length&&(consRestantes()===0||(plata>=700&&r<.6&&Math.random()<.3))){hostVocal();return;}
   hostGirar();
 }
 
