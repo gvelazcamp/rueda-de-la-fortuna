@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La Rueda — juego de frases para dos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<style>
+:root{--noche:#160B24;--noche2:#241239;--oro:#F5B301;--magenta:#E5197C;--agua:#37D6C0;--crema:#F6EFE2;--tinta:#1A1024}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Outfit',system-ui,sans-serif;
+ background:radial-gradient(900px 500px at 50% -10%,#3B1B5C 0%,transparent 60%),var(--noche);
+ color:var(--crema);min-height:100vh;padding:18px 14px 40px}
+h1,h2,.disp{font-family:'Archivo Black',sans-serif;letter-spacing:-.01em}
+button{font-family:inherit;cursor:pointer;border:none}
+button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
+
+#setup,#lobby{max-width:520px;margin:5vh auto;text-align:center}
+#lobby{display:none}
+h1.titulo{font-size:clamp(2.6rem,10vw,4.2rem);line-height:.92;color:var(--oro);
+ text-shadow:0 6px 0 #7A2E00,0 0 40px rgba(245,179,1,.35)}
+p.sub{margin:14px 0 24px;color:#C9B8DE}
+.campo{display:flex;align-items:center;gap:10px;background:#00000033;border:1px solid #FFFFFF1F;
+ border-radius:14px;padding:10px 14px;margin-bottom:12px}
+.campo span{font-size:.85rem;color:#B49FCE;min-width:74px;text-align:left}
+.campo input{flex:1;background:transparent;border:none;color:var(--crema);font-size:1.05rem;font-weight:700}
+.campo input:focus{outline:none}
+.rondas{display:flex;gap:8px;justify-content:center;margin:4px 0 22px}
+.rondas button{background:#00000033;border:1px solid #FFFFFF1F;color:#C9B8DE;border-radius:12px;padding:9px 16px;font-weight:700}
+.rondas button[aria-pressed="true"]{background:var(--oro);color:var(--tinta);border-color:var(--oro)}
+.btn-grande{background:var(--magenta);color:#fff;font-weight:700;font-size:1.1rem;padding:15px 28px;
+ border-radius:16px;box-shadow:0 5px 0 #8E0D4B;width:100%;margin-bottom:10px}
+.btn-grande.sec{background:#2A1A3C;box-shadow:0 5px 0 #150C1F;color:var(--crema)}
+.btn-grande:active{transform:translateY(3px);box-shadow:0 2px 0 #8E0D4B}
+.codigo{font-family:'Archivo Black';font-size:clamp(2.4rem,14vw,3.6rem);letter-spacing:.18em;
+ color:var(--agua);background:#00000038;border:1px dashed #37D6C055;border-radius:16px;padding:16px 10px;margin:8px 0 16px}
+.estado{color:#B49FCE;font-size:.92rem;min-height:24px}
+#codigoInput{text-transform:uppercase;letter-spacing:.2em;text-align:center}
+
+#juego{display:none;max-width:1060px;margin:0 auto}
+.marcador{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.jug{background:#00000038;border:2px solid transparent;border-radius:16px;padding:12px 14px}
+.jug.activo{border-color:var(--oro);background:#F5B3011A;box-shadow:0 0 26px #F5B30126}
+.jug.yo .n::after{content:" (vos)";color:var(--agua);font-size:.78rem;font-weight:500}
+.jug .nom{font-weight:700;font-size:1.05rem;display:flex;justify-content:space-between;align-items:center}
+.jug .turno{font-size:.7rem;background:var(--oro);color:var(--tinta);padding:2px 8px;border-radius:99px;font-weight:700}
+.jug .cifras{display:flex;gap:16px;margin-top:6px;font-size:.85rem;color:#B49FCE}
+.jug .cifras b{display:block;font-family:'Archivo Black';font-size:1.35rem;color:var(--crema)}
+.jug.activo .cifras b.ronda{color:var(--oro)}
+
+.tablero{background:#0C0616;border:1px solid #FFFFFF14;border-radius:20px;padding:18px 14px;text-align:center}
+.categoria{font-size:.82rem;color:var(--agua);margin-bottom:14px}
+.frase{display:flex;flex-wrap:wrap;justify-content:center;gap:14px}
+.palabra{display:flex;gap:5px}
+.ficha{width:clamp(24px,6.6vw,42px);height:clamp(34px,8.8vw,56px);border-radius:6px;background:#2A1A3C;
+ border:1px solid #FFFFFF14;display:grid;place-items:center;font-family:'Archivo Black';
+ font-size:clamp(.95rem,3.8vw,1.5rem);color:transparent;transition:transform .35s,background .25s,color .25s}
+.ficha.abierta{background:var(--crema);color:var(--tinta);transform:rotateX(360deg)}
+
+.zona{display:grid;grid-template-columns:minmax(0,300px) 1fr;gap:20px;margin-top:18px;align-items:start}
+@media(max-width:760px){.zona{grid-template-columns:1fr}}
+.ruedabox{position:relative;display:grid;place-items:center}
+.aguja{position:absolute;top:-6px;left:50%;transform:translateX(-50%);z-index:3;width:0;height:0;
+ border-left:13px solid transparent;border-right:13px solid transparent;border-top:26px solid var(--oro);
+ filter:drop-shadow(0 2px 3px #000)}
+#rueda{width:100%;max-width:300px;height:auto;border-radius:50%;
+ box-shadow:0 0 0 8px #2A1A3C,0 0 0 11px var(--oro),0 18px 40px #00000080}
+.centro{position:absolute;width:16%;aspect-ratio:1;border-radius:50%;background:var(--oro);border:4px solid #2A1A3C;z-index:2}
+
+.panel{display:flex;flex-direction:column;gap:12px}
+.aviso{background:#00000038;border-left:3px solid var(--agua);border-radius:10px;padding:11px 14px;
+ min-height:62px;display:flex;align-items:center;font-size:.98rem;line-height:1.35}
+.aviso b{color:var(--oro)}
+.acciones{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.acciones button{background:#2A1A3C;color:var(--crema);border-radius:12px;padding:12px 6px;font-weight:700;
+ font-size:.88rem;border:1px solid #FFFFFF1A}
+.acciones button:disabled{opacity:.3;cursor:not-allowed}
+.acciones button.girar{background:var(--magenta);border-color:var(--magenta)}
+.acciones button.resolver{background:var(--agua);color:var(--tinta);border-color:var(--agua)}
+.teclado{display:grid;grid-template-columns:repeat(9,1fr);gap:5px}
+@media(max-width:420px){.teclado{grid-template-columns:repeat(7,1fr)}}
+.teclado button{aspect-ratio:1;border-radius:9px;background:#2A1A3C;color:var(--crema);font-weight:700;
+ font-size:1rem;border:1px solid #FFFFFF14}
+.teclado button.vocal{background:#3A2450;color:var(--agua)}
+.teclado button:disabled{opacity:.22;cursor:not-allowed}
+.teclado button:not(:disabled):hover{background:var(--oro);color:var(--tinta)}
+
+.capa{position:fixed;inset:0;background:#0A0412E6;display:none;place-items:center;padding:20px;z-index:9}
+.capa.ver{display:grid}
+.caja{background:var(--noche2);border:1px solid #FFFFFF1F;border-radius:20px;padding:26px 22px;max-width:440px;width:100%;text-align:center}
+.caja h2{font-size:1.7rem;color:var(--oro);margin-bottom:10px}
+.caja p{color:#C9B8DE;margin-bottom:18px;line-height:1.4}
+.caja input{width:100%;background:#00000044;border:1px solid #FFFFFF26;border-radius:12px;padding:13px;
+ color:var(--crema);font-size:1.1rem;font-weight:700;text-align:center;text-transform:uppercase;margin-bottom:14px}
+.caja .fila{display:flex;gap:10px}
+.caja .fila button{flex:1;border-radius:12px;padding:13px;font-weight:700}
+.ok{background:var(--oro);color:var(--tinta)}
+.no{background:#00000044;color:#C9B8DE;border:1px solid #FFFFFF26}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<section id="setup">
+  <h1 class="titulo">LA RUEDA</h1>
+  <p class="sub">Girá, pedí una consonante y adiviná la frase antes que el otro.</p>
+  <div class="campo"><span>Tu nombre</span><input id="miNombre" value="Gonzalo" maxlength="12"></div>
+  <div class="rondas" id="rondas">
+    <button data-r="3" aria-pressed="true">3 rondas</button>
+    <button data-r="5" aria-pressed="false">5 rondas</button>
+    <button data-r="7" aria-pressed="false">7 rondas</button>
+  </div>
+  <button class="btn-grande" id="bCrear">Crear sala y pasar el código</button>
+  <button class="btn-grande sec" id="bUnirse">Entrar con un código</button>
+  <button class="btn-grande sec" id="bLocal">Jugar los dos en este celular</button>
+</section>
+
+<section id="lobby">
+  <h1 class="titulo" style="font-size:2.2rem">SALA</h1>
+  <div id="zonaCodigo">
+    <p class="sub" style="margin-bottom:6px">Pasale este código a la otra persona</p>
+    <div class="codigo" id="miCodigo">····</div>
+  </div>
+  <div id="zonaEntrar" style="display:none">
+    <div class="campo"><span>Código</span><input id="codigoInput" maxlength="4" placeholder="ABCD" autocomplete="off"></div>
+    <button class="btn-grande" id="bConectar">Entrar a la sala</button>
+  </div>
+  <p class="estado" id="estado">Conectando…</p>
+</section>
+
+<section id="juego">
+  <div class="marcador">
+    <div class="jug" id="j0"><div class="nom"><span class="n"></span><span class="turno">turno</span></div>
+      <div class="cifras"><div>ronda<b class="ronda">$0</b></div><div>total<b class="total">$0</b></div></div></div>
+    <div class="jug" id="j1"><div class="nom"><span class="n"></span><span class="turno">turno</span></div>
+      <div class="cifras"><div>ronda<b class="ronda">$0</b></div><div>total<b class="total">$0</b></div></div></div>
+  </div>
+  <div class="tablero"><div class="categoria" id="cat"></div><div class="frase" id="frase"></div></div>
+  <div class="zona">
+    <div class="ruedabox"><div class="aguja"></div><canvas id="rueda" width="600" height="600"></canvas><div class="centro"></div></div>
+    <div class="panel">
+      <div class="aviso" id="aviso"></div>
+      <div class="acciones">
+        <button class="girar" id="bGirar">Girar la rueda</button>
+        <button id="bVocal">Comprar vocal $250</button>
+        <button class="resolver" id="bResolver">Resolver</button>
+      </div>
+      <div class="teclado" id="teclado"></div>
+    </div>
+  </div>
+</section>
+
+<div class="capa" id="modalResolver"><div class="caja">
+  <h2>Decí la frase</h2>
+  <p>Si acertás te llevás la plata de la ronda. Si errás, pasa el turno.</p>
+  <input id="respuesta" placeholder="escribí la frase completa" autocomplete="off">
+  <div class="fila"><button class="no" id="cancelar">Volver</button><button class="ok" id="confirmar">Responder</button></div>
+</div></div>
+
+<div class="capa" id="modalFin"><div class="caja">
+  <h2 id="fTitulo">Se terminó</h2><p id="fTexto"></p>
+  <div class="fila"><button class="ok" id="fBoton">Jugar de nuevo</button></div>
+</div></div>
+
+<script>
+const FRASES=[
+ {c:"Dicho popular",t:"ESTAR EN EL HORNO CON PAPAS"},{c:"Dicho popular",t:"BUSCARLE LA QUINTA PATA AL GATO"},
+ {c:"Dicho popular",t:"TIRAR LA CASA POR LA VENTANA"},{c:"Dicho popular",t:"AGARRAR PARA EL LADO DE LOS TOMATES"},
+ {c:"Dicho popular",t:"NO DAR PIE CON BOLA"},{c:"Dicho popular",t:"PONERSE LAS PILAS"},
+ {c:"Dicho popular",t:"TIRAR MANTECA AL TECHO"},{c:"Dicho popular",t:"HACERSE EL DISTRAIDO"},
+ {c:"Dicho popular",t:"METER LA PATA HASTA EL FONDO"},{c:"Dicho popular",t:"IRSE AL MAZO"},
+ {c:"Dicho popular",t:"SE ME PIANTA UN LAGRIMON"},{c:"Dicho popular",t:"TENER LA CAMISETA PUESTA"},
+ {c:"Comida",t:"CHIVITO CANADIENSE CON PAPAS"},{c:"Comida",t:"MATE Y BIZCOCHOS"},
+ {c:"Comida",t:"ASADO CON ENSALADA RUSA"},{c:"Comida",t:"DULCE DE LECHE CASERO"},
+ {c:"Comida",t:"MEDIA LUNA DE MANTECA"},{c:"Comida",t:"MILANESA AL PAN CON QUESO"},
+ {c:"Comida",t:"TORTA FRITA EN DIA DE LLUVIA"},{c:"Comida",t:"PIZZA A LA PARRILLA"},
+ {c:"Lugar",t:"LA CIUDAD VIEJA DE MONTEVIDEO"},{c:"Lugar",t:"PLAYA POCITOS AL ATARDECER"},
+ {c:"Lugar",t:"PUNTA DEL ESTE EN ENERO"},{c:"Lugar",t:"LAS TERMAS DEL DAYMAN"},
+ {c:"Lugar",t:"EL CERRO DE MONTEVIDEO"},{c:"Lugar",t:"FERIA DE TRISTAN NARVAJA"},
+ {c:"Cosa",t:"TERMO Y MATE BAJO EL BRAZO"},{c:"Cosa",t:"UN COLECTIVO REPLETO"},
+ {c:"Cosa",t:"LA GARRAFA DE TRECE KILOS"},{c:"Cosa",t:"PARRILLA PRENDIDA UN DOMINGO"},
+ {c:"Cosa",t:"VENTILADOR DE TECHO ROTO"},{c:"Accion",t:"SALIR A CAMINAR POR LA RAMBLA"},
+ {c:"Accion",t:"LLEGAR TARDE COMO SIEMPRE"},{c:"Accion",t:"JUNTARSE A VER LA FINAL"},
+ {c:"Persona",t:"EL VECINO QUE CORTA EL PASTO"},{c:"Persona",t:"LA TIA QUE SABE TODO"},
+ {c:"Persona",t:"EL AMIGO QUE NUNCA TRAE HIELO"}
+];
+const SEG=[{v:500},{v:150},{v:900},{v:250},{v:400},{t:"PIERDE"},{v:600},{v:200},{v:750},{v:300},{t:"QUIEBRA"},{v:350},
+ {v:1000},{v:250},{v:450},{v:100},{t:"PIERDE"},{v:550},{v:300},{v:800},{v:200},{t:"QUIEBRA"},{v:650},{v:400}];
+const VOCALES="AEIOU", LETRAS="ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split("");
+const $=id=>document.getElementById(id);
+const norm=s=>s.toUpperCase().normalize("NFD").replace(/[\u0300-\u0304\u0306-\u036f]/g,"").replace(/\s+/g," ").trim();
+
+let modo="local", miJug=0, peer=null, conn=null, rondasElegidas=3;
+let S=null, V={mask:"",cat:"",usadas:[],jug:[{n:"",tot:0,ronda:0},{n:"",tot:0,ronda:0}],turno:0,fase:"girar",hayVoc:true,cons:1,aviso:""};
+let giroActual=0, animando=false;
+
+let ac=null;
+function bip(f,d,tipo="sine",g=.06){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+ const o=ac.createOscillator(),v=ac.createGain();o.type=tipo;o.frequency.value=f;
+ v.gain.setValueAtTime(g,ac.currentTime);v.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);
+ o.connect(v);v.connect(ac.destination);o.start();o.stop(ac.currentTime+d);}catch(e){}}
+
+const cv=$("rueda"),cx=cv.getContext("2d");
+(function dibujar(){const R=300,paso=Math.PI*2/SEG.length;
+ SEG.forEach((s,i)=>{const a0=i*paso;
+  cx.beginPath();cx.moveTo(R,R);cx.arc(R,R,R,a0,a0+paso);cx.closePath();
+  cx.fillStyle=s.t==="QUIEBRA"?"#12060F":s.t==="PIERDE"?"#5A2E86":["#F5B301","#E5197C","#37D6C0","#7B3FE4","#F97316","#2DA8FF"][i%6];
+  cx.fill();cx.strokeStyle="#160B24";cx.lineWidth=3;cx.stroke();
+  const mid=a0+paso/2;
+  cx.save();cx.translate(R,R);cx.rotate(mid);
+  cx.fillStyle=s.t==="QUIEBRA"?"#F5B301":"#160B24";
+  cx.font=s.t?"700 26px Outfit, sans-serif":"900 34px 'Archivo Black', sans-serif";
+  const et=s.t?(s.t==="PIERDE"?"PIERDE TURNO":"QUIEBRA"):"$"+s.v;
+  if(mid>Math.PI/2&&mid<Math.PI*1.5){cx.rotate(Math.PI);cx.textAlign="left";cx.fillText(et,-(R-24),10);}
+  else{cx.textAlign="right";cx.fillText(et,R-24,10);}
+  cx.restore();});})();
+
+function animarRueda(destino,alFinal){
+  animando=true;pintar();
+  const paso=360/SEG.length,ini=giroActual,dur=4200,t0=performance.now();let ult=-1;
+  requestAnimationFrame(function frame(t){
+    const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3.2);
+    giroActual=ini+(destino-ini)*e;
+    cv.style.transform="rotate("+giroActual+"deg)";
+    const k=Math.floor(giroActual/paso);if(k!==ult){ult=k;bip(760,.03,"square",.035);}
+    if(p<1)requestAnimationFrame(frame);else{animando=false;pintar();if(alFinal)alFinal();}
+  });
+}
+
+const enviar=o=>{if(conn&&conn.open)conn.send(o);};
+const idSala=c=>"larueda-2p-"+c;
+
+$("rondas").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+ [...$("rondas").children].forEach(x=>x.setAttribute("aria-pressed",x===b));rondasElegidas=+b.dataset.r;});
+
+$("bLocal").onclick=()=>{
+  modo="local";const n=$("miNombre").value.trim()||"Jugador 1";
+  const otro=(prompt("Nombre del segundo jugador","Rival")||"Jugador 2").slice(0,12);
+  $("setup").style.display="none";$("juego").style.display="block";
+  armarTeclado();iniciarPartida(n,otro);
+};
+
+$("bCrear").onclick=()=>{
+  modo="host";miJug=0;
+  $("setup").style.display="none";$("lobby").style.display="block";
+  const cod=Array.from({length:4},()=>"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random()*32)]).join("");
+  $("miCodigo").textContent=cod;
+  $("estado").textContent="Esperando que entre el otro jugador…";
+  peer=new Peer(idSala(cod),{debug:0});
+  peer.on("error",err=>{$("estado").textContent="Error de conexión ("+err.type+"). Recargá y creá otra sala.";});
+  peer.on("connection",c=>{
+    conn=c;
+    c.on("data",d=>recibirHost(d));
+    c.on("close",()=>{$("aviso").innerHTML="<span>Se cortó la conexión con el otro jugador.</span>";});
+  });
+};
+
+$("bUnirse").onclick=()=>{
+  modo="guest";miJug=1;
+  $("setup").style.display="none";$("lobby").style.display="block";
+  $("zonaCodigo").style.display="none";$("zonaEntrar").style.display="block";
+  $("estado").textContent="Pedile el código a quien creó la sala.";
+};
+
+$("bConectar").onclick=()=>{
+  const cod=$("codigoInput").value.trim().toUpperCase();
+  if(cod.length<4){$("estado").textContent="El código tiene 4 caracteres.";return;}
+  $("estado").textContent="Conectando…";
+  peer=new Peer({debug:0});
+  peer.on("open",()=>{
+    conn=peer.connect(idSala(cod),{reliable:true});
+    conn.on("open",()=>{
+      enviar({a:"hola",n:($("miNombre").value.trim()||"Jugador 2").slice(0,12)});
+      $("lobby").style.display="none";$("juego").style.display="block";armarTeclado();
+    });
+    conn.on("data",d=>recibirGuest(d));
+    conn.on("close",()=>{$("aviso").innerHTML="<span>Se cortó la conexión con el otro jugador.</span>";});
+  });
+  peer.on("error",()=>{$("estado").textContent="No se encontró esa sala. Revisá el código.";});
+};
+
+function recibirHost(d){
+  if(d.a==="hola"){
+    $("lobby").style.display="none";$("juego").style.display="block";armarTeclado();
+    iniciarPartida(($("miNombre").value.trim()||"Jugador 1").slice(0,12),d.n);return;}
+  if(!S||S.turno!==1||animando)return;
+  if(d.a==="girar")hostGirar();
+  else if(d.a==="vocal")hostVocal();
+  else if(d.a==="letra")hostLetra(d.l);
+  else if(d.a==="resolver")hostResolver(d.txt);
+}
+function recibirGuest(d){
+  if(d.tipo==="estado"){V=d.v;pintarTodo();}
+  else if(d.tipo==="giro")animarRueda(d.destino,null);
+  else if(d.tipo==="fin"){$("fTexto").textContent=d.txt;$("modalFin").classList.add("ver");}
+}
+
+function iniciarPartida(n1,n2){
+  S={jug:[{n:n1,tot:0,ronda:0},{n:n2,tot:0,ronda:0}],turno:0,rondas:rondasElegidas,ronda:0,
+     mazo:[...FRASES].sort(()=>Math.random()-.5),valor:0,fase:"girar",abiertas:new Set(),usadas:new Set(),frase:"",cat:""};
+  nuevaRonda();
+}
+function nuevaRonda(){
+  S.ronda++;
+  if(S.ronda>S.rondas)return finDelJuego();
+  const f=S.mazo.pop()||FRASES[Math.floor(Math.random()*FRASES.length)];
+  S.frase=f.t;S.cat="Ronda "+S.ronda+" de "+S.rondas+" · "+f.c;
+  S.abiertas=new Set();S.usadas=new Set();S.jug.forEach(j=>j.ronda=0);S.valor=0;S.fase="girar";
+  publicar("Le toca a <b>"+S.jug[S.turno].n+"</b>. Girá la rueda para pedir una consonante.");
+}
+const mask=()=>[...S.frase].map(c=>c===" "?" ":(S.abiertas.has(c)?c:"_")).join("");
+const consRestantes=()=>[...new Set(S.frase.replace(/ /g,""))].filter(c=>!VOCALES.includes(c)&&!S.abiertas.has(c)).length;
+function publicar(txt){
+  V={mask:mask(),cat:S.cat,usadas:[...S.usadas],
+     jug:S.jug.map(j=>({n:j.n,tot:j.tot,ronda:j.ronda})),turno:S.turno,fase:S.fase,
+     hayVoc:[...VOCALES].some(v=>!S.usadas.has(v)&&S.frase.includes(v)),
+     cons:consRestantes(),aviso:txt};
+  if(modo!=="local")enviar({tipo:"estado",v:V});
+  pintarTodo();
+}
+function hostGirar(){
+  if(S.fase!=="girar"||animando)return;
+  const destino=giroActual+360*5+Math.random()*360;
+  if(modo!=="local")enviar({tipo:"giro",destino});
+  animarRueda(destino,()=>{
+    const paso=360/SEG.length,local=((270-(destino%360))%360+360)%360;
+    const s=SEG[Math.floor(local/paso)%SEG.length];
+    if(s.t==="QUIEBRA"){bip(120,.5,"sawtooth",.09);S.jug[S.turno].ronda=0;
+      publicar("<b>QUIEBRA</b> — "+S.jug[S.turno].n+" pierde la plata de la ronda.");
+      setTimeout(cambiarTurno,1800);return;}
+    if(s.t==="PIERDE"){bip(200,.35,"triangle",.07);
+      publicar("<b>Pierde turno</b> — no pasa nada, le toca al otro.");
+      setTimeout(cambiarTurno,1600);return;}
+    bip(880,.12,"sine",.06);S.valor=s.v;
+    if(consRestantes()===0){S.fase="vocal";
+      publicar("Salió <b>$"+s.v+"</b>, pero ya no quedan consonantes. "+S.jug[S.turno].n+" elige una vocal gratis.");
+    }else{S.fase="consonante";
+      publicar("Salió <b>$"+s.v+"</b>. "+S.jug[S.turno].n+" elige una consonante (quedan "+consRestantes()+" sin descubrir).");}
+  });
+}
+function hostVocal(){
+  if(S.fase!=="girar"||animando)return;
+  const c=consRestantes();
+  if(c>0&&S.jug[S.turno].ronda<250)return;
+  if(c>0){S.jug[S.turno].ronda-=250;}
+  S.fase="vocal";
+  publicar(c>0?"Vocal comprada por $250. "+S.jug[S.turno].n+" elige cuál."
+              :"No quedan consonantes: vocal gratis para "+S.jug[S.turno].n+".");
+}
+function hostLetra(l){
+  if(animando||S.usadas.has(l))return;
+  const voc=VOCALES.includes(l);
+  if(S.fase==="consonante"&&voc)return;
+  if(S.fase==="vocal"&&!voc)return;
+  if(S.fase!=="consonante"&&S.fase!=="vocal")return;
+  S.usadas.add(l);
+  const veces=[...S.frase].filter(c=>c===l).length;
+  if(veces>0){
+    bip(1046,.16,"sine",.07);S.abiertas.add(l);
+    if(!voc)S.jug[S.turno].ronda+=S.valor*veces;
+    if([...S.frase].filter(c=>c!==" ").every(c=>S.abiertas.has(c))){
+      const j=S.jug[S.turno];j.tot+=j.ronda;
+      publicar("¡Frase completa! <b>"+j.n+"</b> se lleva $"+j.ronda+".");
+      setTimeout(nuevaRonda,2400);return;
+    }
+    S.fase="girar";
+    publicar("Hay <b>"+veces+"</b> «"+l+"». Sigue "+S.jug[S.turno].n+
+      (consRestantes()===0?": ya no quedan consonantes, la vocal te sale gratis.":": girar, comprar vocal o resolver."));
+  }else{
+    bip(160,.3,"square",.06);
+    publicar("No hay «"+l+"». Pasa el turno.");
+    setTimeout(cambiarTurno,1500);
+  }
+}
+function hostResolver(txt){
+  if(animando)return;
+  if(norm(txt)===norm(S.frase)){
+    bip(1318,.25,"sine",.08);[...S.frase].forEach(c=>S.abiertas.add(c));
+    const j=S.jug[S.turno];j.tot+=j.ronda;
+    publicar("¡Correcto! <b>"+j.n+"</b> resolvió y suma $"+j.ronda+".");
+    setTimeout(nuevaRonda,2600);
+  }else{
+    bip(140,.35,"square",.07);
+    publicar("«"+txt.toUpperCase()+"» no era. Pasa el turno.");
+    setTimeout(cambiarTurno,1700);
+  }
+}
+function cambiarTurno(){S.turno=1-S.turno;S.fase="girar";S.valor=0;
+  publicar("Le toca a <b>"+S.jug[S.turno].n+"</b>.");}
+function finDelJuego(){
+  const [a,b]=S.jug;
+  const txt=a.tot===b.tot?"Empate en $"+a.tot+". Va la revancha."
+    :(a.tot>b.tot?a.n:b.n)+" gana con $"+Math.max(a.tot,b.tot)+" contra $"+Math.min(a.tot,b.tot)+".";
+  bip(880,.5,"sine",.08);
+  if(modo!=="local")enviar({tipo:"fin",txt});
+  $("fTexto").textContent=txt;$("modalFin").classList.add("ver");
+}
+
+function armarTeclado(){
+  $("teclado").innerHTML="";
+  LETRAS.forEach(l=>{const b=document.createElement("button");b.textContent=l;b.dataset.l=l;
+    if(VOCALES.includes(l))b.classList.add("vocal");
+    b.onclick=()=>accionLetra(l);$("teclado").appendChild(b);});
+}
+function pintarTodo(){
+  $("cat").textContent=V.cat;
+  const cont=$("frase");cont.innerHTML="";
+  V.mask.split(" ").forEach(p=>{
+    const w=document.createElement("div");w.className="palabra";
+    [...p].forEach(ch=>{const d=document.createElement("div");d.className="ficha";
+      if(ch!=="_"){d.textContent=ch;d.classList.add("abierta");}w.appendChild(d);});
+    cont.appendChild(w);});
+  $("aviso").innerHTML="<span>"+(V.aviso||"")+"</span>";
+  pintar();
+}
+const esMiTurno=()=>modo==="local"||V.turno===miJug;
+function pintar(){
+  V.jug.forEach((j,i)=>{const e=$("j"+i);
+    e.classList.toggle("activo",i===V.turno);
+    e.classList.toggle("yo",modo!=="local"&&i===miJug);
+    e.querySelector(".n").textContent=j.n;
+    e.querySelector(".turno").style.visibility=i===V.turno?"visible":"hidden";
+    e.querySelector(".ronda").textContent="$"+j.ronda;
+    e.querySelector(".total").textContent="$"+j.tot;});
+  const mio=esMiTurno()&&!animando;
+  $("bGirar").disabled=!mio||V.fase!=="girar";
+  const gratis=V.cons===0;
+  $("bVocal").textContent=gratis?"Vocal gratis":"Comprar vocal $250";
+  $("bVocal").disabled=!mio||V.fase!=="girar"||!V.hayVoc||(!gratis&&V.jug[V.turno].ronda<250);
+  $("bResolver").disabled=!mio;
+  [...$("teclado").children].forEach(b=>{const l=b.dataset.l,voc=VOCALES.includes(l);
+    b.disabled=!mio||V.usadas.includes(l)||(V.fase==="consonante"&&voc)||(V.fase==="vocal"&&!voc)||(V.fase!=="consonante"&&V.fase!=="vocal");});
+}
+
+$("bGirar").onclick=()=>{if(modo==="guest")enviar({a:"girar"});else hostGirar();};
+$("bVocal").onclick=()=>{if(modo==="guest")enviar({a:"vocal"});else hostVocal();};
+function accionLetra(l){if(modo==="guest")enviar({a:"letra",l});else hostLetra(l);}
+$("bResolver").onclick=()=>{$("modalResolver").classList.add("ver");$("respuesta").value="";$("respuesta").focus();};
+$("cancelar").onclick=()=>$("modalResolver").classList.remove("ver");
+$("respuesta").addEventListener("keydown",e=>{if(e.key==="Enter")$("confirmar").click();});
+$("confirmar").onclick=()=>{
+  const t=$("respuesta").value;$("modalResolver").classList.remove("ver");
+  if(!t.trim())return;
+  if(modo==="guest")enviar({a:"resolver",txt:t});else hostResolver(t);
+};
+$("fBoton").onclick=()=>location.reload();
+document.addEventListener("keydown",e=>{
+  if($("modalResolver").classList.contains("ver"))return;
+  const k=e.key.toUpperCase();
+  if(LETRAS.includes(k)){const b=[...$("teclado").children].find(x=>x.dataset.l===k);if(b&&!b.disabled)b.click();}
+  if(e.code==="Space"&&!$("bGirar").disabled){e.preventDefault();$("bGirar").click();}
+});
+</script>
+</body>
+</html>
