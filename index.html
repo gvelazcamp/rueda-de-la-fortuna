@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <style>
 :root{--noche:#160B24;--noche2:#241239;--oro:#F5B301;--magenta:#E5197C;--agua:#37D6C0;--crema:#F6EFE2;--tinta:#1A1024}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -193,7 +193,7 @@ const VOCALES="AEIOU", LETRAS="ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split("");
 const $=id=>document.getElementById(id);
 const norm=s=>s.toUpperCase().normalize("NFD").replace(/[\u0300-\u0304\u0306-\u036f]/g,"").replace(/\s+/g," ").trim();
 
-let modo="local", miJug=0, peer=null, conn=null, rondasElegidas=3;
+let modo="local", miJug=0, mq=null, sala="", rondasElegidas=3, holaTimer=null;
 let S=null, V={mask:"",cat:"",usadas:[],jug:[{n:"",tot:0,ronda:0},{n:"",tot:0,ronda:0}],turno:0,fase:"girar",hayVoc:true,cons:1,aviso:""};
 let giroActual=0, animando=false;
 
@@ -230,8 +230,21 @@ function animarRueda(destino,alFinal){
   });
 }
 
-const enviar=o=>{if(conn&&conn.open)conn.send(o);};
-const idSala=c=>"larueda-2p-"+c;
+const tema=t=>"larueda2p/"+sala+"/"+t;
+const enviar=o=>{try{if(mq&&mq.connected)mq.publish(tema(modo==="guest"?"accion":"estado"),JSON.stringify(o));}catch(e){}};
+
+const BROKERS=["wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt","wss://test.mosquitto.org:8081/mqtt"];
+function conectar(alConectar,alFallar,i){
+  i=i||0;
+  if(i>=BROKERS.length)return alFallar();
+  let listo=false,muerto=false;
+  const c=mqtt.connect(BROKERS[i],{clientId:"lr"+Math.random().toString(16).slice(2),
+    connectTimeout:7000,reconnectPeriod:0,clean:true});
+  const siguiente=()=>{if(listo||muerto)return;muerto=true;try{c.end(true);}catch(e){}conectar(alConectar,alFallar,i+1);};
+  c.on("connect",()=>{if(muerto)return;listo=true;mq=c;c.options.reconnectPeriod=2500;alConectar();});
+  c.on("error",siguiente);
+  c.on("close",()=>{if(!listo)siguiente();});
+}
 
 $("rondas").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
  [...$("rondas").children].forEach(x=>x.setAttribute("aria-pressed",x===b));rondasElegidas=+b.dataset.r;});
@@ -246,16 +259,14 @@ $("bLocal").onclick=()=>{
 $("bCrear").onclick=()=>{
   modo="host";miJug=0;
   $("setup").style.display="none";$("lobby").style.display="block";
-  const cod=Array.from({length:4},()=>"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random()*32)]).join("");
-  $("miCodigo").textContent=cod;
-  $("estado").textContent="Esperando que entre el otro jugador…";
-  peer=new Peer(idSala(cod),{debug:0});
-  peer.on("error",err=>{$("estado").textContent="Error de conexión ("+err.type+"). Recargá y creá otra sala.";});
-  peer.on("connection",c=>{
-    conn=c;
-    c.on("data",d=>recibirHost(d));
-    c.on("close",()=>{$("aviso").innerHTML="<span>Se cortó la conexión con el otro jugador.</span>";});
-  });
+  sala=Array.from({length:4},()=>"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random()*32)]).join("");
+  $("miCodigo").textContent=sala;
+  $("estado").textContent="Conectando…";
+  conectar(()=>{
+    mq.subscribe(tema("accion"));
+    mq.on("message",(t,pl)=>{if(t===tema("accion")){try{recibirHost(JSON.parse(pl.toString()));}catch(e){}}});
+    $("estado").textContent="Sala lista. Esperando al otro jugador…";
+  },()=>{$("estado").textContent="No se pudo conectar a internet para la sala. Probá con otra red (datos del celular) o usá «Jugar los dos en este celular».";});
 };
 
 $("bUnirse").onclick=()=>{
@@ -268,22 +279,19 @@ $("bUnirse").onclick=()=>{
 $("bConectar").onclick=()=>{
   const cod=$("codigoInput").value.trim().toUpperCase();
   if(cod.length<4){$("estado").textContent="El código tiene 4 caracteres.";return;}
-  $("estado").textContent="Conectando…";
-  peer=new Peer({debug:0});
-  peer.on("open",()=>{
-    conn=peer.connect(idSala(cod),{reliable:true});
-    conn.on("open",()=>{
-      enviar({a:"hola",n:($("miNombre").value.trim()||"Jugador 2").slice(0,12)});
-      $("lobby").style.display="none";$("juego").style.display="block";armarTeclado();
-    });
-    conn.on("data",d=>recibirGuest(d));
-    conn.on("close",()=>{$("aviso").innerHTML="<span>Se cortó la conexión con el otro jugador.</span>";});
-  });
-  peer.on("error",()=>{$("estado").textContent="No se encontró esa sala. Revisá el código.";});
+  sala=cod;$("estado").textContent="Conectando…";
+  conectar(()=>{
+    mq.subscribe(tema("estado"));
+    mq.on("message",(t,pl)=>{if(t===tema("estado")){try{recibirGuest(JSON.parse(pl.toString()));}catch(e){}}});
+    const hola=()=>enviar({a:"hola",n:($("miNombre").value.trim()||"Jugador 2").slice(0,12)});
+    hola();holaTimer=setInterval(hola,2000);
+    $("estado").textContent="Buscando la sala "+sala+"…";
+  },()=>{$("estado").textContent="No se pudo conectar. Probá con otra red (datos del celular).";});
 };
 
 function recibirHost(d){
   if(d.a==="hola"){
+    if(S){publicar(V.aviso);return;}
     $("lobby").style.display="none";$("juego").style.display="block";armarTeclado();
     iniciarPartida(($("miNombre").value.trim()||"Jugador 1").slice(0,12),d.n);return;}
   if(!S||S.turno!==1||animando)return;
@@ -293,7 +301,10 @@ function recibirHost(d){
   else if(d.a==="resolver")hostResolver(d.txt);
 }
 function recibirGuest(d){
-  if(d.tipo==="estado"){V=d.v;pintarTodo();}
+  if(d.tipo==="estado"){
+    if(holaTimer){clearInterval(holaTimer);holaTimer=null;
+      $("lobby").style.display="none";$("juego").style.display="block";armarTeclado();}
+    V=d.v;pintarTodo();}
   else if(d.tipo==="giro")animarRueda(d.destino,null);
   else if(d.tipo==="fin"){$("fTexto").textContent=d.txt;$("modalFin").classList.add("ver");}
 }
