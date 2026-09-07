@@ -142,7 +142,7 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 <section id="setup">
   <h1 class="titulo">LA RUEDA</h1>
   <p class="sub">Girá, pedí una consonante y adiviná la frase antes que el otro.</p>
-  <div class="campo"><span>Tu nombre</span><input id="miNombre" value="Gonzalo" maxlength="12"></div>
+  <div class="campo"><span>Tu nombre</span><input id="miNombre" placeholder="escribí tu nombre" maxlength="12" autocomplete="off"></div>
   <div class="rondas" id="rondas">
     <button data-r="3" aria-pressed="true">3 rondas</button>
     <button data-r="5" aria-pressed="false">5 rondas</button>
@@ -158,6 +158,8 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
   <div id="zonaCodigo">
     <p class="sub" style="margin-bottom:6px">Pasale este código a la otra persona</p>
     <div class="codigo" id="miCodigo">····</div>
+    <button class="btn-grande" id="bWpp">Enviar invitación por WhatsApp</button>
+    <button class="btn-grande sec" id="bCopiar">Copiar invitación</button>
   </div>
   <div id="zonaEntrar" style="display:none">
     <div class="campo"><span>Código</span><input id="codigoInput" maxlength="4" placeholder="ABCD" autocomplete="off"></div>
@@ -519,6 +521,17 @@ $("bCrear").onclick=()=>{
   },()=>{$("estado").textContent="No se pudo conectar a internet para la sala. Probá con otra red (datos del celular) o usá «Jugar los dos en este celular».";});
 };
 
+const invitacion=()=>"Jugamos a La Rueda\n"+location.origin+location.pathname+"?sala="+sala+"\nCódigo: "+sala;
+$("bWpp").onclick=()=>window.open("https://wa.me/?text="+encodeURIComponent(invitacion()),"_blank");
+$("bCopiar").onclick=async()=>{
+  const t=invitacion();
+  try{await navigator.clipboard.writeText(t);}
+  catch(e){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);
+    a.select();document.execCommand("copy");a.remove();}
+  $("bCopiar").textContent="Invitación copiada";
+  setTimeout(()=>$("bCopiar").textContent="Copiar invitación",1800);
+};
+
 $("bUnirse").onclick=()=>{
   modo="guest";miJug=1;
   $("setup").style.display="none";$("lobby").style.display="block";
@@ -526,10 +539,12 @@ $("bUnirse").onclick=()=>{
   $("estado").textContent="Pedile el código a quien creó la sala.";
 };
 
-$("bConectar").onclick=()=>{
-  const cod=$("codigoInput").value.trim().toUpperCase();
-  if(cod.length<4){$("estado").textContent="El código tiene 4 caracteres.";return;}
-  sala=cod;$("estado").textContent="Conectando…";
+function unirse(cod){
+  if(!cod||cod.length<4){$("estado").textContent="El código tiene 4 caracteres.";return;}
+  modo="guest";miJug=1;sala=cod;
+  $("setup").style.display="none";$("lobby").style.display="block";
+  $("zonaCodigo").style.display="none";$("zonaEntrar").style.display="block";
+  $("codigoInput").value=cod;$("estado").textContent="Conectando…";
   conectar(()=>{
     mq.subscribe(tema("estado"));
     mq.on("message",(t,pl)=>{if(t===tema("estado")){try{recibirGuest(JSON.parse(pl.toString()));}catch(e){}}});
@@ -537,7 +552,27 @@ $("bConectar").onclick=()=>{
     hola();holaTimer=setInterval(hola,2000);
     $("estado").textContent="Buscando la sala "+sala+"…";
   },()=>{$("estado").textContent="No se pudo conectar. Probá con otra red (datos del celular).";});
-};
+}
+$("bConectar").onclick=()=>unirse($("codigoInput").value.trim().toUpperCase());
+
+try{$("miNombre").value=localStorage.getItem("larueda_nombre")||"";}catch(e){}
+$("miNombre").addEventListener("change",()=>{try{localStorage.setItem("larueda_nombre",$("miNombre").value.trim());}catch(e){}});
+
+const salaEnLink=(new URLSearchParams(location.search).get("sala")||"").toUpperCase();
+if(salaEnLink){
+  $("bCrear").style.display="none";$("bLocal").style.display="none";
+  document.querySelector("#setup p.sub").textContent="Te invitaron a jugar. Poné tu nombre y entrá.";
+  $("bUnirse").className="btn-grande";
+  $("bUnirse").textContent="Entrar a la sala "+salaEnLink;
+  $("bUnirse").onclick=()=>{
+    const n=$("miNombre").value.trim();
+    if(!n){$("miNombre").focus();
+      document.querySelector("#setup p.sub").textContent="Escribí tu nombre para entrar.";return;}
+    try{localStorage.setItem("larueda_nombre",n);}catch(e){}
+    unirse(salaEnLink);
+  };
+  $("miNombre").addEventListener("keydown",e=>{if(e.key==="Enter")$("bUnirse").click();});
+}
 
 function recibirHost(d){
   if(d.a==="hola"){
