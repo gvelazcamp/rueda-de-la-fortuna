@@ -151,6 +151,12 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
   <button class="btn-grande" id="bCrear">Crear sala y pasar el código</button>
   <button class="btn-grande sec" id="bUnirse">Entrar con un código</button>
   <button class="btn-grande sec" id="bLocal">Jugar los dos en este celular</button>
+  <button class="btn-grande sec" id="bBot">Jugar solo contra la máquina</button>
+  <div class="rondas" id="nivel" style="margin-top:4px">
+    <button data-n="facil" aria-pressed="false">Máquina fácil</button>
+    <button data-n="normal" aria-pressed="true">Normal</button>
+    <button data-n="dificil" aria-pressed="false">Difícil</button>
+  </div>
 </section>
 
 <section id="lobby">
@@ -501,6 +507,47 @@ function conectar(alConectar,alFallar,i){
 $("rondas").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
  [...$("rondas").children].forEach(x=>x.setAttribute("aria-pressed",x===b));rondasElegidas=+b.dataset.r;});
 
+const NIVELES={facil:{umbral:.82,prob:.3,top:6,err:.35},
+ normal:{umbral:.62,prob:.5,top:3,err:.15},dificil:{umbral:.45,prob:.75,top:2,err:0}};
+let NIV=NIVELES.normal,botT=null;
+$("nivel").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+ [...$("nivel").children].forEach(x=>x.setAttribute("aria-pressed",x===b));NIV=NIVELES[b.dataset.n];});
+
+$("bBot").onclick=()=>{
+  modo="bot";miJug=0;
+  $("setup").style.display="none";$("juego").style.display="block";
+  armarTeclado();iniciarPartida($("miNombre").value.trim()||"Vos","Máquina");
+};
+
+function programarBot(){
+  clearTimeout(botT);
+  if(modo!=="bot"||!S||S.turno!==1||S.fase==="fin"||animando)return;
+  botT=setTimeout(jugarBot,1000+Math.random()*900);
+}
+function consBot(){
+  const orden="SRNLDCTMPBGVYQHFJZXKWÑ".split("").filter(c=>!S.usadas.has(c));
+  if(!orden.length)return null;
+  if(Math.random()<NIV.err){const malas=orden.filter(c=>!S.frase.includes(c));
+    if(malas.length)return malas[Math.floor(Math.random()*malas.length)];}
+  return orden[Math.floor(Math.random()*Math.min(NIV.top,orden.length))];
+}
+function vocalBot(){
+  const v="EAOIU".split("").filter(x=>!S.usadas.has(x));
+  return v[Math.floor(Math.random()*Math.min(2,v.length))]||null;
+}
+function jugarBot(){
+  if(modo!=="bot"||S.turno!==1||animando)return;
+  if(S.fase==="consonante"){const c=consBot();if(c)hostLetra(c);else hostGirar();return;}
+  if(S.fase==="vocal"){const v=vocalBot();if(v)hostLetra(v);return;}
+  if(S.fase!=="girar")return;
+  const letras=[...S.frase].filter(c=>c!==" ");
+  const r=letras.filter(c=>S.abiertas.has(c)).length/letras.length;
+  if(r>=NIV.umbral&&Math.random()<NIV.prob){hostResolver(S.frase);return;}
+  const vocOcultas=[...VOCALES].filter(x=>S.frase.includes(x)&&!S.abiertas.has(x));
+  if(vocOcultas.length&&(consRestantes()===0||(S.jug[1].ronda>=500&&Math.random()<.4))){hostVocal();return;}
+  hostGirar();
+}
+
 $("bLocal").onclick=()=>{
   modo="local";const n=$("miNombre").value.trim()||"Jugador 1";
   const otro=(prompt("Nombre del segundo jugador","Rival")||"Jugador 2").slice(0,12);
@@ -561,6 +608,7 @@ $("miNombre").addEventListener("change",()=>{try{localStorage.setItem("larueda_n
 const salaEnLink=(new URLSearchParams(location.search).get("sala")||"").toUpperCase();
 if(salaEnLink){
   $("bCrear").style.display="none";$("bLocal").style.display="none";
+  $("bBot").style.display="none";$("nivel").style.display="none";
   document.querySelector("#setup p.sub").textContent="Te invitaron a jugar. Poné tu nombre y entrá.";
   $("bUnirse").className="btn-grande";
   $("bUnirse").textContent="Entrar a la sala "+salaEnLink;
@@ -643,14 +691,15 @@ function publicar(txt,fx){
   const vivo=(S.fase==="girar"||S.fase==="consonante"||S.fase==="vocal")&&!animando;
   if(vivo)arrancarReloj();else pararReloj();
   V.seg=vivo?Math.max(1,Math.round((S.tFin-Date.now())/1000)):0;
-  if(modo!=="local")enviar({tipo:"estado",v:V});
+  if(modo==="bot")setTimeout(programarBot,0);
+  if(modo!=="local"&&modo!=="bot")enviar({tipo:"estado",v:V});
   pintarTodo();
 }
 function hostGirar(){
   if(S.fase!=="girar"||animando)return;
   pararReloj();
   const destino=giroActual+360*5+Math.random()*360;
-  if(modo!=="local")enviar({tipo:"giro",destino});
+  if(modo!=="local"&&modo!=="bot")enviar({tipo:"giro",destino});
   animarRueda(destino,()=>{
     const paso=360/SEG.length,local=((270-(destino%360))%360+360)%360;
     const s=SEG[Math.floor(local/paso)%SEG.length];
@@ -744,7 +793,7 @@ function finDelJuego(){
   bip(880,.5,"sine",.08);
   S.fase="fin";pararReloj();
   publicar("Partida terminada.");
-  if(modo!=="local")enviar({tipo:"fin",txt,tit});
+  if(modo!=="local"&&modo!=="bot")enviar({tipo:"fin",txt,tit});
   mostrarFin(tit,txt);
 }
 function mostrarFin(tit,txt){
@@ -844,6 +893,7 @@ function pintar(){
   V.jug.forEach((j,i)=>{const e=$("j"+i);
     e.classList.toggle("activo",i===V.turno);
     e.classList.toggle("yo",modo!=="local"&&i===miJug);
+    e.classList.toggle("maquina",modo==="bot"&&i===1);
     e.querySelector(".n").textContent=j.n;
     e.querySelector(".turno").style.visibility=i===V.turno?"visible":"hidden";
     e.querySelector(".turno").textContent=(i===V.turno&&V.doble)?"turno · x2":"turno";
