@@ -102,6 +102,12 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 .caja .fila{display:flex;gap:10px}
 .caja .fila button{flex:1;border-radius:12px;padding:13px;font-weight:700}
 .ok{background:var(--oro);color:var(--tinta)}
+#modalFin .caja{border-color:var(--oro);box-shadow:0 0 60px #F5B30140}
+#fTitulo{font-size:clamp(1.9rem,8vw,2.8rem);line-height:1.05;color:var(--oro);
+ text-shadow:0 4px 0 #7A2E00;animation:entra .5s cubic-bezier(.2,1.4,.4,1)}
+#fCopa{font-size:2.6rem;line-height:1;margin-bottom:6px;animation:late 1.4s ease-in-out infinite}
+@keyframes entra{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes late{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
 .no{background:#00000044;color:#C9B8DE;border:1px solid #FFFFFF26}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -166,7 +172,7 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 </div></div>
 
 <div class="capa" id="modalFin"><div class="caja">
-  <h2 id="fTitulo">Se terminó</h2><p id="fTexto"></p>
+  <div id="fCopa">🏆</div><h2 id="fTitulo">Se terminó</h2><p id="fTexto"></p>
   <div class="fila"><button class="ok" id="fBoton">Revancha</button></div>
 </div></div>
 
@@ -313,7 +319,7 @@ function recibirGuest(d){
       $("lobby").style.display="none";$("juego").style.display="block";armarTeclado();}
     V=d.v;if(V.fase!=="fin")$("modalFin").classList.remove("ver");pintarTodo();}
   else if(d.tipo==="giro")animarRueda(d.destino,null);
-  else if(d.tipo==="fin"){$("fTexto").textContent=d.txt;$("modalFin").classList.add("ver");}
+  else if(d.tipo==="fin")mostrarFin(d.tit||"Se terminó",d.txt);
 }
 
 function iniciarPartida(n1,n2){
@@ -411,14 +417,21 @@ function cambiarTurno(){S.turno=1-S.turno;S.fase="girar";S.valor=0;
 function finDelJuego(){
   const [a,b]=S.jug;
   if(a.tot!==b.tot)serie[a.tot>b.tot?0:1]++;
+  const tit=a.tot===b.tot?"¡Empate!":"¡Victoria, "+(a.tot>b.tot?a.n:b.n)+"!";
   const txt=(a.tot===b.tot?"Empate en $"+a.tot+"."
     :(a.tot>b.tot?a.n:b.n)+" gana con $"+Math.max(a.tot,b.tot)+" contra $"+Math.min(a.tot,b.tot)+".")
     +" Partidas del día: "+a.n+" "+serie[0]+" — "+serie[1]+" "+b.n+".";
   bip(880,.5,"sine",.08);
   S.fase="fin";
   publicar("Partida terminada.");
-  if(modo!=="local")enviar({tipo:"fin",txt});
-  $("fTexto").textContent=txt;$("modalFin").classList.add("ver");
+  if(modo!=="local")enviar({tipo:"fin",txt,tit});
+  mostrarFin(tit,txt);
+}
+function mostrarFin(tit,txt){
+  $("fCopa").textContent=tit.startsWith("¡Empate")?"🤝":"🏆";
+  $("fTitulo").textContent=tit;$("fTexto").textContent=txt;
+  $("modalFin").classList.add("ver");
+  [0,180,360,620].forEach((ms,i)=>setTimeout(()=>bip([784,988,1175,1568][i],.28,"sine",.07),ms));
 }
 function revancha(){
   arranca=1-arranca;
