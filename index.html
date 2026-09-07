@@ -85,15 +85,20 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
  45%{transform:rotateY(88deg) scale(1.22);box-shadow:0 0 22px #F5B30188}
  100%{transform:rotateY(0) scale(1)}}
 
-.zona{display:grid;grid-template-columns:minmax(0,300px) 1fr;gap:20px;margin-top:18px;align-items:start}
-@media(max-width:760px){.zona{grid-template-columns:1fr}}
+.zona{margin-top:14px}
+#capaRueda{position:fixed;inset:0;background:#160B24F5;display:none;z-index:15;
+ place-items:center;align-content:center;gap:22px;padding:20px}
+#capaRueda.ver{display:grid}
+.ruedabox{width:min(84vw,420px);justify-self:center}
+#salioGiro{font-family:'Archivo Black',sans-serif;font-size:clamp(1.6rem,8vw,2.6rem);
+ color:var(--oro);text-align:center;text-shadow:0 4px 0 #7A2E00;min-height:1.2em}
 .ruedabox{position:relative;display:grid;place-items:center}
 .aguja{position:absolute;top:-6px;left:50%;transform:translateX(-50%);z-index:3;width:0;height:0;
  border-left:13px solid transparent;border-right:13px solid transparent;border-top:26px solid var(--oro);
  filter:drop-shadow(0 2px 3px #000)}
-.aro{width:100%;max-width:300px;line-height:0;border-radius:50%;
+.aro{width:100%;line-height:0;border-radius:50%;
  box-shadow:0 0 0 8px #2A1A3C,0 0 0 11px var(--oro),0 18px 40px #00000080}
-#rueda{width:100%;height:auto;border-radius:50%;will-change:transform;
+#rueda{width:100%;max-width:none;height:auto;border-radius:50%;will-change:transform;
  backface-visibility:hidden;transform:translateZ(0)}
 .centro{position:absolute;width:16%;aspect-ratio:1;border-radius:50%;background:var(--oro);border:4px solid #2A1A3C;z-index:2}
 
@@ -194,7 +199,6 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
   </div>
   <div class="tablero"><div class="categoria" id="cat"></div><div class="frase" id="frase"></div></div>
   <div class="zona">
-    <div class="ruedabox"><div class="aguja"></div><div class="aro"><canvas id="rueda" width="600" height="600"></canvas></div><div class="centro"></div></div>
     <div class="panel">
       <div class="aviso" id="aviso"></div>
       <div class="reloj" id="reloj"><i id="relojBarra"></i><span id="relojNum">25</span></div>
@@ -209,6 +213,10 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
         <button data-e="🤣">🤣</button><button data-e="🔥">🔥</button>
       </div>
     </div>
+  </div>
+  <div id="capaRueda">
+    <div class="ruedabox"><div class="aguja"></div><div class="aro"><canvas id="rueda" width="600" height="600"></canvas></div><div class="centro"></div></div>
+    <div id="salioGiro">Girando…</div>
   </div>
 </section>
 
@@ -1031,6 +1039,163 @@ const FRASES=[
  {c:"Dicho popular",t:"QUEDARSE EN EL INTENTO"},
  {c:"Dicho popular",t:"LLEVAR EL AGUA A SU CANCHA"},
  {c:"Dicho popular",t:"TENER CUERDA PARA RATO"}
+,
+ {c:"Pelicula",t:"LA GUERRA DE LAS GALAXIAS"},
+ {c:"Pelicula",t:"EL SEÑOR DE LOS ANILLOS"},
+ {c:"Pelicula",t:"VOLVER AL FUTURO"},
+ {c:"Pelicula",t:"EL REY LEON"},
+ {c:"Pelicula",t:"LOS CAZAFANTASMAS"},
+ {c:"Pelicula",t:"EL DIA DE LA MARMOTA"},
+ {c:"Pelicula",t:"MI POBRE ANGELITO"},
+ {c:"Pelicula",t:"LA VIDA ES BELLA"},
+ {c:"Pelicula",t:"EL SILENCIO DE LOS INOCENTES"},
+ {c:"Pelicula",t:"EL PADRINO SEGUNDA PARTE"},
+ {c:"Pelicula",t:"LO QUE EL VIENTO SE LLEVO"},
+ {c:"Pelicula",t:"CANTANDO BAJO LA LLUVIA"},
+ {c:"Pelicula",t:"DESAYUNO CON DIAMANTES"},
+ {c:"Pelicula",t:"DOCE HOMBRES EN PUGNA"},
+ {c:"Pelicula",t:"EL BUENO EL MALO Y EL FEO"},
+ {c:"Pelicula",t:"LA NARANJA MECANICA"},
+ {c:"Pelicula",t:"EL PLANETA DE LOS SIMIOS"},
+ {c:"Pelicula",t:"CADENA PERPETUA"},
+ {c:"Pelicula",t:"EL SEXTO SENTIDO"},
+ {c:"Pelicula",t:"MISION IMPOSIBLE"},
+ {c:"Pelicula",t:"RAPIDOS Y FURIOSOS"},
+ {c:"Pelicula",t:"LOS JUEGOS DEL HAMBRE"},
+ {c:"Pelicula",t:"EL CODIGO DA VINCI"},
+ {c:"Pelicula",t:"PIRATAS DEL CARIBE"},
+ {c:"Pelicula",t:"EL CLUB DE LA PELEA"},
+ {c:"Pelicula",t:"BUSCANDO A NEMO"},
+ {c:"Pelicula",t:"LOS INCREIBLES"},
+ {c:"Pelicula",t:"TOY STORY"},
+ {c:"Pelicula",t:"EL LIBRO DE LA SELVA"},
+ {c:"Pelicula",t:"LA BELLA Y LA BESTIA"},
+ {c:"Pelicula",t:"LA DAMA Y EL VAGABUNDO"},
+ {c:"Pelicula",t:"EL SECRETO DE SUS OJOS"},
+ {c:"Pelicula",t:"RELATOS SALVAJES"},
+ {c:"Pelicula",t:"NUEVE REINAS"},
+ {c:"Pelicula",t:"EL HIJO DE LA NOVIA"},
+ {c:"Pelicula",t:"ESPERANDO LA CARROZA"},
+ {c:"Pelicula",t:"UN CUENTO CHINO"},
+ {c:"Pelicula",t:"LA HISTORIA OFICIAL"},
+ {c:"Pelicula",t:"EL BAÑO DEL PAPA"},
+ {c:"Pelicula",t:"UNA NOCHE EN LA OPERA"},
+ {c:"Pelicula",t:"EL CIUDADANO KANE"},
+ {c:"Pelicula",t:"VIAJE A LAS ESTRELLAS"},
+ {c:"Pelicula",t:"EL EXORCISTA"},
+ {c:"Pelicula",t:"TIEMPOS MODERNOS"},
+ {c:"Pelicula",t:"EL GRAN DICTADOR"},
+ {c:"Pelicula",t:"LOS PUENTES DE MADISON"},
+ {c:"Pelicula",t:"PERFUME DE MUJER"},
+ {c:"Pelicula",t:"EL DIARIO DE NOA"},
+ {c:"Pelicula",t:"MAS ALLA DE LOS SUEÑOS"},
+ {c:"Pelicula",t:"EL PIANISTA"},
+ {c:"Programa de TV",t:"CASADOS CON HIJOS"},
+ {c:"Programa de TV",t:"LOS SIMPSON"},
+ {c:"Programa de TV",t:"EL CHAVO DEL OCHO"},
+ {c:"Programa de TV",t:"EL CHAPULIN COLORADO"},
+ {c:"Programa de TV",t:"LOS TRES CHIFLADOS"},
+ {c:"Programa de TV",t:"MARIA LA DEL BARRIO"},
+ {c:"Programa de TV",t:"LA NIÑERA"},
+ {c:"Programa de TV",t:"EL PRINCIPE DEL RAP"},
+ {c:"Programa de TV",t:"LOS LOCOS ADDAMS"},
+ {c:"Programa de TV",t:"LA FAMILIA INGALLS"},
+ {c:"Programa de TV",t:"PADRE DE FAMILIA"},
+ {c:"Programa de TV",t:"DOS HOMBRES Y MEDIO"},
+ {c:"Programa de TV",t:"LA RUEDA DE LA FORTUNA"},
+ {c:"Programa de TV",t:"GRAN HERMANO"},
+ {c:"Programa de TV",t:"POLEMICA EN EL BAR"},
+ {c:"Programa de TV",t:"LA LEY Y EL ORDEN"},
+ {c:"Programa de TV",t:"JUEGO DE TRONOS"},
+ {c:"Programa de TV",t:"LA CASA DE PAPEL"},
+ {c:"Programa de TV",t:"EL JUEGO DEL CALAMAR"},
+ {c:"Programa de TV",t:"EL AUTO FANTASTICO"},
+ {c:"Programa de TV",t:"LOS MAGNIFICOS"},
+ {c:"Programa de TV",t:"SALVADOS POR LA CAMPANA"},
+ {c:"Programa de TV",t:"LOS AÑOS MARAVILLOSOS"},
+ {c:"Programa de TV",t:"GUARDIANES DE LA BAHIA"},
+ {c:"Programa de TV",t:"EL AGENTE ESPECIAL"},
+ {c:"Programa de TV",t:"VIAJE AL FONDO DEL MAR"},
+ {c:"Programa de TV",t:"LA ISLA DE LA FANTASIA"},
+ {c:"Programa de TV",t:"LOS PICAPIEDRAS"},
+ {c:"Programa de TV",t:"LOS SUPERSONICOS"},
+ {c:"Programa de TV",t:"EL SUPER AGENTE OCHENTA Y SEIS"},
+ {c:"Programa de TV",t:"MI BELLA GENIO"},
+ {c:"Programa de TV",t:"HECHIZADA"},
+ {c:"Programa de TV",t:"EL SHOW DE BENNY HILL"},
+ {c:"Programa de TV",t:"LA PANTERA ROSA"},
+ {c:"Programa de TV",t:"BUENOS DIAS URUGUAY"},
+ {c:"Programa de TV",t:"EL PRECIO JUSTO"},
+ {c:"Cosas de la casa",t:"LA MESITA DE LUZ CON DESPERTADOR"},
+ {c:"Cosas de la casa",t:"EL SILLON DEL LIVING"},
+ {c:"Cosas de la casa",t:"LA CORTINA DEL BAÑO"},
+ {c:"Cosas de la casa",t:"EL ESPEJO DEL PASILLO"},
+ {c:"Cosas de la casa",t:"LA ALFOMBRA DE LA ENTRADA"},
+ {c:"Cosas de la casa",t:"EL PERCHERO DETRAS DE LA PUERTA"},
+ {c:"Cosas de la casa",t:"EL VELADOR DE LA MESITA"},
+ {c:"Cosas de la casa",t:"LA COLCHA DE LA CAMA"},
+ {c:"Cosas de la casa",t:"EL ACOLCHADO DE INVIERNO"},
+ {c:"Cosas de la casa",t:"LAS TOALLAS COLGADAS"},
+ {c:"Cosas de la casa",t:"EL SECADOR DE PELO"},
+ {c:"Cosas de la casa",t:"EL CEPILLO DE DIENTES"},
+ {c:"Cosas de la casa",t:"EL JABON EN LA JABONERA"},
+ {c:"Cosas de la casa",t:"EL PAPEL HIGIENICO QUE SE ACABA"},
+ {c:"Cosas de la casa",t:"LA CANASTA DE LA ROPA SUCIA"},
+ {c:"Cosas de la casa",t:"EL CANASTO DE MIMBRE"},
+ {c:"Cosas de la casa",t:"LA ESPONJA DE LAVAR PLATOS"},
+ {c:"Cosas de la casa",t:"EL DETERGENTE Y LA REJILLA"},
+ {c:"Cosas de la casa",t:"LA TABLA DE PICAR"},
+ {c:"Cosas de la casa",t:"EL CUCHILLO SIN FILO"},
+ {c:"Cosas de la casa",t:"LA SARTEN ANTIADHERENTE"},
+ {c:"Cosas de la casa",t:"LA OLLA A PRESION"},
+ {c:"Cosas de la casa",t:"EL COLADOR DE FIDEOS"},
+ {c:"Cosas de la casa",t:"LA JARRA DE AGUA FRIA"},
+ {c:"Cosas de la casa",t:"EL AZUCARERO DE LA MESA"},
+ {c:"Cosas de la casa",t:"EL SALERO Y EL PIMENTERO"},
+ {c:"Cosas de la casa",t:"EL JUEGO DE PLATOS"},
+ {c:"Cosas de la casa",t:"LOS CUBIERTOS EN EL CAJON"},
+ {c:"Cosas de la casa",t:"EL REPASADOR MOJADO"},
+ {c:"Cosas de la casa",t:"EL TACHO DE BASURA DE LA COCINA"},
+ {c:"Cosas de la casa",t:"EL ESTANTE DE LOS CONDIMENTOS"},
+ {c:"Cosas de la casa",t:"LA ALACENA DE LA COCINA"},
+ {c:"Cosas de la casa",t:"LA LLAVE DE LUZ DEL PASILLO"},
+ {c:"Cosas de la casa",t:"EL ENCHUFE FLOJO"},
+ {c:"Cosas de la casa",t:"LA REGLETA DE ENCHUFES"},
+ {c:"Cosas de la casa",t:"EL VENTANAL DEL COMEDOR"},
+ {c:"Cosas de la casa",t:"LA PERSIANA TRABADA"},
+ {c:"Cosas de la casa",t:"EL PICAPORTE DE LA PUERTA"},
+ {c:"Cosas de la casa",t:"LA LAMPARA QUEMADA DEL BAÑO"},
+ {c:"Cosas de la casa",t:"EL PORTARRETRATO DE LA REPISA"},
+ {c:"Personajes",t:"EL RATON MICKEY"},
+ {c:"Personajes",t:"EL PATO DONALD"},
+ {c:"Personajes",t:"EL HOMBRE ARAÑA"},
+ {c:"Personajes",t:"LA MUJER MARAVILLA"},
+ {c:"Personajes",t:"EL LLANERO SOLITARIO"},
+ {c:"Personajes",t:"DON QUIJOTE DE LA MANCHA"},
+ {c:"Personajes",t:"EL GATO CON BOTAS"},
+ {c:"Personajes",t:"CAPERUCITA ROJA"},
+ {c:"Personajes",t:"BLANCANIEVES Y LOS SIETE ENANITOS"},
+ {c:"Personajes",t:"LA BELLA DURMIENTE"},
+ {c:"Personajes",t:"EL PATITO FEO"},
+ {c:"Personajes",t:"LOS TRES CHANCHITOS"},
+ {c:"Personajes",t:"EL SOLDADITO DE PLOMO"},
+ {c:"Personajes",t:"EL FLAUTISTA DE HAMELIN"},
+ {c:"Personajes",t:"LA CENICIENTA"},
+ {c:"Personajes",t:"EL PRINCIPITO"},
+ {c:"Personajes",t:"EL LOBO FEROZ"},
+ {c:"Personajes",t:"EL HOMBRE DE HOJALATA"},
+ {c:"Personajes",t:"EL CONEJO DE LA SUERTE"},
+ {c:"Personajes",t:"EL CORRECAMINOS Y EL COYOTE"},
+ {c:"Personajes",t:"EL OSO YOGUI"},
+ {c:"Personajes",t:"LA HORMIGA ATOMICA"},
+ {c:"Personajes",t:"EL INSPECTOR CLUSO"},
+ {c:"Personajes",t:"EL CAPITAN GARFIO"},
+ {c:"Personajes",t:"LA SIRENITA DEL MAR"},
+ {c:"Personajes",t:"EL GIGANTE BONACHON"},
+ {c:"Personajes",t:"EL FANTASMA DE LA OPERA"},
+ {c:"Personajes",t:"EL JOROBADO DE NOTRE DAME"},
+ {c:"Personajes",t:"ROBIN HOOD Y SUS HOMBRES"},
+ {c:"Personajes",t:"EL MAGO DE OZ"}
 ];
 const SEG=[{v:500},{v:150},{v:900},{t:"COMODIN"},{v:400},{t:"PIERDE"},{v:600},{v:200},{v:750},{v:300},{t:"QUIEBRA"},{v:350},
  {v:1000},{v:250},{v:450},{t:"X2"},{t:"PIERDE"},{v:550},{v:300},{v:800},{v:200},{t:"QUIEBRA"},{v:650},{v:400}];
@@ -1067,8 +1232,14 @@ const cv=$("rueda"),cx=cv.getContext("2d");
   else{cx.textAlign="right";cx.fillText(et,R-24,10);}
   cx.restore();});})();
 
+function segmentoDe(g){
+  const paso=360/SEG.length,local=((270-(g%360))%360+360)%360;
+  return SEG[Math.floor(local/paso)%SEG.length];
+}
 function animarRueda(destino,alFinal){
   animando=true;pintar();
+  $("salioGiro").textContent="Girando…";
+  $("capaRueda").classList.add("ver");
   const paso=360/SEG.length,ini=giroActual,dur=4200,t0=performance.now();
   const ag=document.querySelector(".aguja");
   let ult=-1,tAnt=t0,gAnt=ini;
@@ -1089,7 +1260,10 @@ function animarRueda(destino,alFinal){
     }
     if(p<1)requestAnimationFrame(frame);
     else{ag.style.transform="translateX(-50%)";bip(190,.16,"triangle",.07);
-      animando=false;pintar();if(alFinal)alFinal();}
+      const sg=segmentoDe(destino);
+      $("salioGiro").textContent=sg.t?ETI[sg.t]:"$"+sg.v;
+      setTimeout(()=>{$("capaRueda").classList.remove("ver");
+        animando=false;pintar();if(alFinal)alFinal();},1100);}
   });
 }
 
