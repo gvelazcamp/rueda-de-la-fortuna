@@ -50,6 +50,19 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 .jug .nom{font-weight:700;font-size:1.05rem;display:flex;justify-content:space-between;align-items:center}
 .jug .turno{font-size:.7rem;background:var(--oro);color:var(--tinta);padding:2px 8px;border-radius:99px;font-weight:700}
 .jug .cifras{display:flex;gap:16px;margin-top:6px;font-size:.85rem;color:#B49FCE}
+.jug .cifras b svg{width:20px;height:13px;margin-right:6px;vertical-align:1px;opacity:.85;
+ transform-origin:50% 80%}
+.jug .cifras b.sube{color:var(--oro)!important;text-shadow:0 0 18px #F5B30188}
+.jug .cifras b.sube svg{animation:salta .55s cubic-bezier(.3,1.5,.5,1) 2}
+@keyframes salta{0%{transform:translateY(0) rotate(0) scale(1)}
+ 35%{transform:translateY(-9px) rotate(-9deg) scale(1.3)}
+ 70%{transform:translateY(0) rotate(5deg) scale(1)}
+ 100%{transform:translateY(0) rotate(0) scale(1)}}
+.jug .cifras b.baja{color:#F09595!important}
+.jug .cifras b.baja svg{animation:cae .5s ease-in}
+@keyframes cae{0%{transform:translateY(0) scale(1);opacity:.85}
+ 60%{transform:translateY(9px) scale(.8) rotate(12deg);opacity:.25}
+ 100%{transform:translateY(0) scale(1);opacity:.85}}
 .jug .cifras b{display:block;font-family:'Archivo Black';font-size:1.35rem;color:var(--crema)}
 .jug.activo .cifras b.ronda{color:var(--oro)}
 
@@ -679,6 +692,7 @@ function nuevaRonda(){
 }
 const mask=()=>[...S.frase].map(c=>c===" "?" ":(S.abiertas.has(c)?c:"_")).join("");
 const consRestantes=()=>[...new Set(S.frase.replace(/ /g,""))].filter(c=>!VOCALES.includes(c)&&!S.abiertas.has(c)).length;
+const BILLETE='<svg viewBox="0 0 28 18" aria-hidden="true"><rect x="1" y="1" width="26" height="16" rx="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="14" cy="9" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.6 5.4h1.5M21.9 12.6h1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 let fxN=0;
 function pararReloj(){if(relojID){clearInterval(relojID);relojID=null;}if(S)S.tFin=0;}
 function arrancarReloj(){
@@ -882,6 +896,26 @@ function pintarTodo(){
   verReloj();
   pintar();
 }
+const montos=[[null,null],[null,null]];
+function setMonto(el,val,i,k){
+  if(montos[i][k]===val){if(!el.dataset.anim)el.innerHTML=BILLETE+"$"+val;return;}
+  const desde=montos[i][k]===null?val:montos[i][k];
+  montos[i][k]=val;
+  if(desde===val){el.innerHTML=BILLETE+"$"+val;return;}
+  const sube=val>desde;
+  el.classList.remove("sube","baja");void el.offsetWidth;
+  el.classList.add(sube?"sube":"baja");
+  setTimeout(()=>el.classList.remove("sube","baja"),1150);
+  if(sube)[0,150,300,450].forEach((m,q)=>setTimeout(()=>bip(660+q*120,.05,"square",.04),m));
+  const t0=performance.now(),dur=sube?700:450;
+  el.dataset.anim="1";
+  requestAnimationFrame(function f(t){
+    const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);
+    el.innerHTML=BILLETE+"$"+Math.round(desde+(val-desde)*e);
+    if(p<1)requestAnimationFrame(f);
+    else{el.innerHTML=BILLETE+"$"+val;delete el.dataset.anim;}
+  });
+}
 let relojBase=0,relojT0=0,relojInt=null,ultSeg=-1;
 function verReloj(){
   const el=$("reloj");
@@ -906,8 +940,8 @@ function pintar(){
     e.querySelector(".n").textContent=j.n;
     e.querySelector(".turno").style.visibility=i===V.turno?"visible":"hidden";
     e.querySelector(".turno").textContent=(i===V.turno&&V.doble)?"turno · x2":"turno";
-    e.querySelector(".ronda").textContent="$"+j.ronda;
-    e.querySelector(".total").textContent="$"+j.tot;});
+    setMonto(e.querySelector(".ronda"),j.ronda,i,0);
+    setMonto(e.querySelector(".total"),j.tot,i,1);});
   const mio=esMiTurno()&&!animando&&V.fase!=="fin";
   $("bGirar").disabled=!mio||V.fase!=="girar";
   const gratis=V.cons===0;
