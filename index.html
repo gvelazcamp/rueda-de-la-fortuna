@@ -41,6 +41,8 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 #codigoInput{text-transform:uppercase;letter-spacing:.2em;text-align:center}
 
 #juego{display:none;max-width:1060px;margin:0 auto}
+.serie{text-align:center;color:#B49FCE;font-size:.9rem;margin-bottom:10px;min-height:20px}
+.serie b{color:var(--oro);font-family:'Archivo Black'}
 .marcador{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
 .jug{background:#00000038;border:2px solid transparent;border-radius:16px;padding:12px 14px}
 .jug.activo{border-color:var(--oro);background:#F5B3011A;box-shadow:0 0 26px #F5B30126}
@@ -66,8 +68,10 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 .aguja{position:absolute;top:-6px;left:50%;transform:translateX(-50%);z-index:3;width:0;height:0;
  border-left:13px solid transparent;border-right:13px solid transparent;border-top:26px solid var(--oro);
  filter:drop-shadow(0 2px 3px #000)}
-#rueda{width:100%;max-width:300px;height:auto;border-radius:50%;
+.aro{width:100%;max-width:300px;line-height:0;border-radius:50%;
  box-shadow:0 0 0 8px #2A1A3C,0 0 0 11px var(--oro),0 18px 40px #00000080}
+#rueda{width:100%;height:auto;border-radius:50%;will-change:transform;
+ backface-visibility:hidden;transform:translateZ(0)}
 .centro{position:absolute;width:16%;aspect-ratio:1;border-radius:50%;background:var(--oro);border:4px solid #2A1A3C;z-index:2}
 
 .panel{display:flex;flex-direction:column;gap:12px}
@@ -132,6 +136,7 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 </section>
 
 <section id="juego">
+  <div class="serie" id="serie"></div>
   <div class="marcador">
     <div class="jug" id="j0"><div class="nom"><span class="n"></span><span class="turno">turno</span></div>
       <div class="cifras"><div>ronda<b class="ronda">$0</b></div><div>total<b class="total">$0</b></div></div></div>
@@ -140,7 +145,7 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
   </div>
   <div class="tablero"><div class="categoria" id="cat"></div><div class="frase" id="frase"></div></div>
   <div class="zona">
-    <div class="ruedabox"><div class="aguja"></div><canvas id="rueda" width="600" height="600"></canvas><div class="centro"></div></div>
+    <div class="ruedabox"><div class="aguja"></div><div class="aro"><canvas id="rueda" width="600" height="600"></canvas></div><div class="centro"></div></div>
     <div class="panel">
       <div class="aviso" id="aviso"></div>
       <div class="acciones">
@@ -162,7 +167,7 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 
 <div class="capa" id="modalFin"><div class="caja">
   <h2 id="fTitulo">Se terminó</h2><p id="fTexto"></p>
-  <div class="fila"><button class="ok" id="fBoton">Jugar de nuevo</button></div>
+  <div class="fila"><button class="ok" id="fBoton">Revancha</button></div>
 </div></div>
 
 <script>
@@ -193,7 +198,7 @@ const VOCALES="AEIOU", LETRAS="ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split("");
 const $=id=>document.getElementById(id);
 const norm=s=>s.toUpperCase().normalize("NFD").replace(/[\u0300-\u0304\u0306-\u036f]/g,"").replace(/\s+/g," ").trim();
 
-let modo="local", miJug=0, mq=null, sala="", rondasElegidas=3, holaTimer=null;
+let modo="local", miJug=0, mq=null, sala="", rondasElegidas=3, holaTimer=null, serie=[0,0], arranca=0;
 let S=null, V={mask:"",cat:"",usadas:[],jug:[{n:"",tot:0,ronda:0},{n:"",tot:0,ronda:0}],turno:0,fase:"girar",hayVoc:true,cons:1,aviso:""};
 let giroActual=0, animando=false;
 
@@ -224,8 +229,8 @@ function animarRueda(destino,alFinal){
   requestAnimationFrame(function frame(t){
     const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3.2);
     giroActual=ini+(destino-ini)*e;
-    cv.style.transform="rotate("+giroActual+"deg)";
-    const k=Math.floor(giroActual/paso);if(k!==ult){ult=k;bip(760,.03,"square",.035);}
+    cv.style.transform="rotate("+giroActual.toFixed(2)+"deg) translateZ(0)";
+    const k=Math.floor(giroActual/paso);if(k!==ult){if(ult>=0&&k%2===0)bip(760,.025,"square",.03);ult=k;}
     if(p<1)requestAnimationFrame(frame);else{animando=false;pintar();if(alFinal)alFinal();}
   });
 }
@@ -294,7 +299,9 @@ function recibirHost(d){
     if(S){publicar(V.aviso);return;}
     $("lobby").style.display="none";$("juego").style.display="block";armarTeclado();
     iniciarPartida(($("miNombre").value.trim()||"Jugador 1").slice(0,12),d.n);return;}
-  if(!S||S.turno!==1||animando)return;
+  if(!S)return;
+  if(d.a==="revancha"){if(S.fase==="fin")revancha();return;}
+  if(S.turno!==1||animando)return;
   if(d.a==="girar")hostGirar();
   else if(d.a==="vocal")hostVocal();
   else if(d.a==="letra")hostLetra(d.l);
@@ -304,13 +311,13 @@ function recibirGuest(d){
   if(d.tipo==="estado"){
     if(holaTimer){clearInterval(holaTimer);holaTimer=null;
       $("lobby").style.display="none";$("juego").style.display="block";armarTeclado();}
-    V=d.v;pintarTodo();}
+    V=d.v;if(V.fase!=="fin")$("modalFin").classList.remove("ver");pintarTodo();}
   else if(d.tipo==="giro")animarRueda(d.destino,null);
   else if(d.tipo==="fin"){$("fTexto").textContent=d.txt;$("modalFin").classList.add("ver");}
 }
 
 function iniciarPartida(n1,n2){
-  S={jug:[{n:n1,tot:0,ronda:0},{n:n2,tot:0,ronda:0}],turno:0,rondas:rondasElegidas,ronda:0,
+  S={jug:[{n:n1,tot:0,ronda:0},{n:n2,tot:0,ronda:0}],turno:arranca,rondas:rondasElegidas,ronda:0,
      mazo:[...FRASES].sort(()=>Math.random()-.5),valor:0,fase:"girar",abiertas:new Set(),usadas:new Set(),frase:"",cat:""};
   nuevaRonda();
 }
@@ -328,7 +335,7 @@ function publicar(txt){
   V={mask:mask(),cat:S.cat,usadas:[...S.usadas],
      jug:S.jug.map(j=>({n:j.n,tot:j.tot,ronda:j.ronda})),turno:S.turno,fase:S.fase,
      hayVoc:[...VOCALES].some(v=>!S.usadas.has(v)&&S.frase.includes(v)),
-     cons:consRestantes(),aviso:txt};
+     cons:consRestantes(),serie:serie.slice(),aviso:txt};
   if(modo!=="local")enviar({tipo:"estado",v:V});
   pintarTodo();
 }
@@ -403,11 +410,23 @@ function cambiarTurno(){S.turno=1-S.turno;S.fase="girar";S.valor=0;
   publicar("Le toca a <b>"+S.jug[S.turno].n+"</b>.");}
 function finDelJuego(){
   const [a,b]=S.jug;
-  const txt=a.tot===b.tot?"Empate en $"+a.tot+". Va la revancha."
-    :(a.tot>b.tot?a.n:b.n)+" gana con $"+Math.max(a.tot,b.tot)+" contra $"+Math.min(a.tot,b.tot)+".";
+  if(a.tot!==b.tot)serie[a.tot>b.tot?0:1]++;
+  const txt=(a.tot===b.tot?"Empate en $"+a.tot+"."
+    :(a.tot>b.tot?a.n:b.n)+" gana con $"+Math.max(a.tot,b.tot)+" contra $"+Math.min(a.tot,b.tot)+".")
+    +" Partidas del día: "+a.n+" "+serie[0]+" — "+serie[1]+" "+b.n+".";
   bip(880,.5,"sine",.08);
+  S.fase="fin";
+  publicar("Partida terminada.");
   if(modo!=="local")enviar({tipo:"fin",txt});
   $("fTexto").textContent=txt;$("modalFin").classList.add("ver");
+}
+function revancha(){
+  arranca=1-arranca;
+  S.jug.forEach(j=>{j.tot=0;j.ronda=0;});
+  S.turno=arranca;S.ronda=0;S.valor=0;S.fase="girar";
+  S.mazo=[...FRASES].sort(()=>Math.random()-.5);
+  $("modalFin").classList.remove("ver");
+  nuevaRonda();
 }
 
 function armarTeclado(){
@@ -425,6 +444,8 @@ function pintarTodo(){
       if(ch!=="_"){d.textContent=ch;d.classList.add("abierta");}w.appendChild(d);});
     cont.appendChild(w);});
   $("aviso").innerHTML="<span>"+(V.aviso||"")+"</span>";
+  const se=V.serie||[0,0];
+  $("serie").innerHTML=(se[0]||se[1])?("Partidas del día: "+V.jug[0].n+" <b>"+se[0]+"</b> — <b>"+se[1]+"</b> "+V.jug[1].n):"";
   pintar();
 }
 const esMiTurno=()=>modo==="local"||V.turno===miJug;
@@ -436,7 +457,7 @@ function pintar(){
     e.querySelector(".turno").style.visibility=i===V.turno?"visible":"hidden";
     e.querySelector(".ronda").textContent="$"+j.ronda;
     e.querySelector(".total").textContent="$"+j.tot;});
-  const mio=esMiTurno()&&!animando;
+  const mio=esMiTurno()&&!animando&&V.fase!=="fin";
   $("bGirar").disabled=!mio||V.fase!=="girar";
   const gratis=V.cons===0;
   $("bVocal").textContent=gratis?"Vocal gratis":"Comprar vocal $250";
@@ -457,7 +478,11 @@ $("confirmar").onclick=()=>{
   if(!t.trim())return;
   if(modo==="guest")enviar({a:"resolver",txt:t});else hostResolver(t);
 };
-$("fBoton").onclick=()=>location.reload();
+$("fBoton").onclick=()=>{
+  if(modo==="guest"){enviar({a:"revancha"});$("modalFin").classList.remove("ver");
+    $("aviso").innerHTML="<span>Pediste revancha. Esperando al otro jugador…</span>";}
+  else revancha();
+};
 document.addEventListener("keydown",e=>{
   if($("modalResolver").classList.contains("ver"))return;
   const k=e.key.toUpperCase();
