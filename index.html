@@ -25,8 +25,22 @@ h1,h2,.disp{font-family:'Archivo Black',sans-serif;letter-spacing:-.01em}
 button{font-family:inherit;cursor:pointer;border:none}
 button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 
-#setup,#lobby{max-width:520px;margin:5vh auto;text-align:center}
-#lobby{display:none}
+#setup,#lobby,#mundo{max-width:520px;margin:5vh auto;text-align:center}
+#lobby,#mundo{display:none}
+#mapa{display:grid;gap:10px;margin-bottom:18px}
+.destino{display:flex;align-items:center;gap:12px;text-align:left;padding:12px 14px;border-radius:16px;
+ background:#00000038;border:1px solid #FFFFFF14;color:var(--crema);width:100%}
+.destino .num{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto;
+ font-family:'Archivo Black';font-size:1.05rem;background:#2A1A3C;color:#B49FCE}
+.destino .txt{flex:1;min-width:0}
+.destino .nom{font-weight:700;font-size:1.02rem}
+.destino .cat{font-size:.78rem;color:#B49FCE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.destino.abierto{border-color:var(--agua)}
+.destino.abierto .num{background:var(--agua);color:var(--tinta)}
+.destino.ganado{border-color:var(--oro);background:#F5B3011A}
+.destino.ganado .num{background:var(--oro);color:var(--tinta)}
+.destino.cerrado{opacity:.45}
+.destino .marca{font-size:1.3rem}
 h1.titulo{font-size:clamp(2.6rem,10vw,4.2rem);line-height:.92;color:var(--oro);
  text-shadow:0 6px 0 #7A2E00,0 0 40px rgba(245,179,1,.35)}
 p.sub{margin:14px 0 24px;color:#C9B8DE}
@@ -180,8 +194,15 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
   <button class="btn-grande" id="bCrear">Crear sala y pasar el código</button>
   <button class="btn-grande sec" id="bUnirse">Entrar con un código</button>
   <button class="btn-grande sec" id="bLocal">Jugar los dos en este celular</button>
-  <button class="btn-grande sec" id="bBot">Jugar solo contra la máquina</button>
+  <button class="btn-grande sec" id="bBot">Mundo Uruguay — jugar solo</button>
 
+</section>
+
+<section id="mundo">
+  <h1 class="titulo" style="font-size:2.4rem">MUNDO URUGUAY</h1>
+  <p class="sub" id="subMundo">Ganale a cada rival y andá abriendo el país.</p>
+  <div id="mapa"></div>
+  <button class="btn-grande sec" id="salirMundo">Volver al inicio</button>
 </section>
 
 <section id="lobby">
@@ -239,7 +260,7 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 
 <div class="capa" id="modalFin"><div class="caja">
   <div id="fCopa">🏆</div><h2 id="fTitulo">Se terminó</h2><p id="fTexto"></p>
-  <div class="fila"><button class="ok" id="fBoton">Revancha</button></div>
+  <div class="fila"><button class="no" id="fMapa" style="display:none">Volver al mapa</button><button class="ok" id="fBoton">Revancha</button></div>
 </div></div>
 
 <script>
@@ -1296,6 +1317,46 @@ function conectar(alConectar,alFallar,i){
 $("rondas").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
  [...$("rondas").children].forEach(x=>x.setAttribute("aria-pressed",x===b));rondasElegidas=+b.dataset.r;});
 
+const MUNDO=[
+ {id:"durazno",n:"Durazno",r:"El Tío del Asado",rondas:3,cats:["Dicho popular","Persona"]},
+ {id:"montevideo",n:"Montevideo",r:"La Vecina Curiosa",rondas:3,cats:["Lugar","Casa y trabajo"]},
+ {id:"piriapolis",n:"Piriápolis",r:"El Guardavidas",rondas:3,cats:["Clima y verano","Viaje"]},
+ {id:"punta",n:"Punta del Este",r:"La Turista",rondas:4,cats:["Cosa","Cosas de la casa"]},
+ {id:"salto",n:"Salto y las termas",r:"El Parrillero",rondas:4,cats:["Comida","Animales"]},
+ {id:"tacuarembo",n:"Tacuarembó",r:"El Gaucho",rondas:4,cats:["Accion","Deporte"]},
+ {id:"polonio",n:"Cabo Polonio",r:"El Farolero",rondas:5,cats:["Musica y fiesta","Escuela e infancia"]},
+ {id:"colonia",n:"Colonia",r:"El Cinéfilo",rondas:5,cats:["Pelicula","Programa de TV"]},
+ {id:"centenario",n:"Estadio Centenario",r:"La Campeona",rondas:5,cats:["Personajes","Dicho popular"]}];
+let ganados=(()=>{try{return new Set(JSON.parse(localStorage.getItem("larueda_mundo")||"[]"));}catch(e){return new Set();}})();
+const guardarMundo=()=>{try{localStorage.setItem("larueda_mundo",JSON.stringify([...ganados]));}catch(e){}};
+let destino=null;
+
+function verMundo(){
+  $("setup").style.display="none";$("juego").style.display="none";
+  $("mundo").style.display="block";
+  $("subMundo").textContent="Ganaste "+ganados.size+" de "+MUNDO.length+" destinos.";
+  const m=$("mapa");m.innerHTML="";
+  MUNDO.forEach((d,i)=>{
+    const ganado=ganados.has(d.id);
+    const abierto=i===0||ganados.has(MUNDO[i-1].id);
+    const b=document.createElement("button");
+    b.className="destino "+(ganado?"ganado":abierto?"abierto":"cerrado");
+    b.innerHTML='<span class="num">'+(i+1)+'</span><span class="txt"><span class="nom">'+d.n+
+      '</span><span class="cat">contra '+d.r+' · '+d.cats.join(" y ")+' · '+d.rondas+' rondas</span></span>'+
+      '<span class="marca">'+(ganado?"★":abierto?"▶":"✖")+'</span>';
+    if(abierto)b.onclick=()=>empezarDestino(i);else b.disabled=true;
+    m.appendChild(b);
+  });
+}
+$("salirMundo").onclick=()=>{$("mundo").style.display="none";$("setup").style.display="block";};
+
+function empezarDestino(i){
+  destino=i;const d=MUNDO[i];
+  modo="bot";miJug=0;rondasElegidas=d.rondas;
+  $("mundo").style.display="none";$("juego").style.display="block";
+  armarTeclado();iniciarPartida($("miNombre").value.trim()||"Vos",d.r,d.cats);
+}
+
 let botT=null;
 function verStock(){
   const q=FRASES.filter(f=>!vistas.has(f.t)).length;
@@ -1306,9 +1367,7 @@ function verStock(){
 setTimeout(verStock,0);
 
 $("bBot").onclick=()=>{
-  modo="bot";miJug=0;
-  $("setup").style.display="none";$("juego").style.display="block";
-  armarTeclado();iniciarPartida($("miNombre").value.trim()||"Vos","Máquina");
+  verMundo();
 };
 
 function candidatos(){
@@ -1459,23 +1518,24 @@ function recibirGuest(d){
 
 let vistas=(()=>{try{return new Set(JSON.parse(localStorage.getItem("larueda_vistas")||"[]"));}catch(e){return new Set();}})();
 const guardarVistas=()=>{try{localStorage.setItem("larueda_vistas",JSON.stringify([...vistas]));}catch(e){}};
-function nuevoMazo(){
-  let d=FRASES.filter(f=>!vistas.has(f.t));
-  if(!d.length){vistas=new Set();guardarVistas();d=[...FRASES];}
+function nuevoMazo(cats){
+  const base=cats&&cats.length?FRASES.filter(f=>cats.includes(f.c)):FRASES;
+  let d=base.filter(f=>!vistas.has(f.t));
+  if(!d.length)d=[...base];
   return d.sort(()=>Math.random()-.5);
 }
-function iniciarPartida(n1,n2){
+function iniciarPartida(n1,n2,cats){
   S={jug:[{n:n1,tot:0,ronda:0},{n:n2,tot:0,ronda:0}],turno:arranca,rondas:rondasElegidas,ronda:0,
-     mazo:nuevoMazo(),valor:0,fase:"girar",abiertas:new Set(),usadas:new Set(),frase:"",cat:""};
+     cats:cats||null,mazo:nuevoMazo(cats),valor:0,fase:"girar",abiertas:new Set(),usadas:new Set(),frase:"",cat:""};
   nuevaRonda();
 }
 function nuevaRonda(){
   S.ronda++;
   if(S.ronda>S.rondas)return finDelJuego();
-  if(!S.mazo.length)S.mazo=nuevoMazo();
+  if(!S.mazo.length)S.mazo=nuevoMazo(S.cats);
   const f=S.mazo.pop();
   vistas.add(f.t);guardarVistas();
-  S.frase=f.t;S.catRaw=f.c;S.cat="Ronda "+S.ronda+" de "+S.rondas+" · "+f.c+" · quedan "+S.mazo.length+" frases nuevas";
+  S.frase=f.t;S.catRaw=f.c;S.cat=(destino!==null&&modo==="bot"?MUNDO[destino].n+" · ":"")+"Ronda "+S.ronda+" de "+S.rondas+" · "+f.c;
   S.abiertas=new Set();S.usadas=new Set();S.jug.forEach(j=>j.ronda=0);S.valor=0;S.fase="girar";
   publicar("Le toca a <b>"+S.jug[S.turno].n+"</b>. Girá la rueda para pedir una consonante.");
 }
@@ -1612,7 +1672,7 @@ function revancha(){
   arranca=1-arranca;
   S.jug.forEach(j=>{j.tot=0;j.ronda=0;});
   S.turno=arranca;S.ronda=0;S.valor=0;S.fase="girar";
-  S.mazo=nuevoMazo();
+  S.mazo=nuevoMazo(S.cats);
   $("modalFin").classList.remove("ver");
   nuevaRonda();
 }
@@ -1749,6 +1809,7 @@ $("confirmar").onclick=()=>{
   if(!t.trim())return;
   if(modo==="guest")enviar({a:"resolver",txt:t});else hostResolver(t);
 };
+$("fMapa").onclick=()=>{$("modalFin").classList.remove("ver");verMundo();};
 function volar(e){
   const d=document.createElement("div");d.className="emo";d.textContent=e;
   d.style.left=(28+Math.random()*44)+"%";document.body.appendChild(d);
