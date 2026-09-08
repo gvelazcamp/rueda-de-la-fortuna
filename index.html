@@ -365,10 +365,10 @@ let modo="local", miJug=0, mq=null, sala="", rondasElegidas=3, holaTimer=null, s
 let S=null, V={mask:"",cat:"",usadas:[],jug:[{n:"",tot:0,ronda:0},{n:"",tot:0,ronda:0}],turno:0,fase:"girar",hayVoc:true,cons:1,aviso:""};
 let giroActual=0, animando=false;
 
-// Prueba de Velocidad (Toss-Up): cada 3 rondas de juego aparece una ronda especial.
-// Cambiá TOSS_CADA_RONDAS si después querés que aparezca más o menos seguido.
-const TOSS_CADA_RONDAS=3, TOSS_DURACION=15000, TOSS_PASO=800;
-let tossSecuencia=0,tossTimer=null,tossRespondedor=null;
+// Prueba de Velocidad (Toss-Up): aparece después de cada 2 rondas normales.
+// No reemplaza ninguna ronda: se intercala entre ellas y luego continúa la partida normal.
+const TOSS_CADA_RONDAS=2, TOSS_DURACION=15000, TOSS_PASO=800;
+let tossTimer=null,tossRespondedor=null;
 
 // Ronda Bonus: R S T L N E + 3 consonantes + 1 vocal y 10 segundos para resolver.
 const BONUS_BASE="RSTLNE", BONUS_DURACION=10000, BONUS_PREMIO=2000;
@@ -725,11 +725,28 @@ function nuevoMazo(cats){
 }
 function iniciarPartida(n1,n2,cats){
   S={jug:[{n:n1,tot:0,ronda:0,rg:0},{n:n2,tot:0,ronda:0,rg:0}],turno:arranca,rondas:rondasElegidas,ronda:0,
-     cats:cats||null,mazo:nuevoMazo(cats),finYa:false,valor:0,fase:"girar",abiertas:new Set(),usadas:new Set(),frase:"",cat:""};
+     cats:cats||null,mazo:nuevoMazo(cats),finYa:false,valor:0,fase:"girar",abiertas:new Set(),usadas:new Set(),frase:"",cat:"",
+     normalesDesdeToss:0};
   nuevaRonda();
 }
 function nuevaRonda(){
   limpiarToss();
+
+  // Secuencia de pareja / Mundo Uruguay:
+  // 3 rondas => Normal, Normal, Toss-Up, Normal, Bonus.
+  // 5 rondas => Normal, Normal, Toss-Up, Normal, Normal, Toss-Up, Normal, Bonus.
+  // El Toss-Up NO consume una ronda normal y nunca aparece después de la última.
+  if(S.ronda>0&&S.ronda<S.rondas&&(S.normalesDesdeToss||0)>=TOSS_CADA_RONDAS){
+    S.normalesDesdeToss=0;
+    if(!S.mazo.length)S.mazo=nuevoMazo(S.cats);
+    const fToss=S.mazo.pop();
+    vistas.add(fToss.t);guardarVistas();
+    S.frase=fToss.t;S.catRaw=fToss.c;
+    S.abiertas=new Set();S.usadas=new Set();S.jug.forEach(j=>j.ronda=0);S.valor=0;S.doble=false;
+    iniciarTossUp(fToss);
+    return;
+  }
+
   S.ronda++;
   if(S.ronda>S.rondas){
     if($("capaResuelto").classList.contains("ver")){setTimeout(nuevaRonda2,900);S.ronda--;return;}
@@ -740,11 +757,7 @@ function nuevaRonda(){
   vistas.add(f.t);guardarVistas();
   S.frase=f.t;S.catRaw=f.c;
   S.abiertas=new Set();S.usadas=new Set();S.jug.forEach(j=>j.ronda=0);S.valor=0;S.doble=false;
-  tossSecuencia++;
-  if(tossSecuencia%TOSS_CADA_RONDAS===0){
-    iniciarTossUp(f);
-    return;
-  }
+  S.normalesDesdeToss=(S.normalesDesdeToss||0)+1;
   S.cat=(destino!==null&&modo==="bot"?MUNDO[destino].n+" · ":"")+"Ronda "+S.ronda+" de "+S.rondas+" · "+f.c;
   S.fase="girar";
   publicar("Le toca a <b>"+S.jug[S.turno].n+"</b>. Girá la rueda para pedir una consonante.");
@@ -1043,7 +1056,7 @@ function revancha(){
   limpiarToss();limpiarBonus();arranca=1-arranca;S.finYa=false;S.finalPendiente=null;
   S.bonusCons=[];S.bonusVocal=null;S.bonusGanador=null;S.bonusFin=0;
   S.jug.forEach(j=>{j.tot=0;j.ronda=0;j.rg=0;});
-  S.turno=arranca;S.ronda=0;S.valor=0;S.fase="girar";
+  S.turno=arranca;S.ronda=0;S.normalesDesdeToss=0;S.valor=0;S.fase="girar";
   S.mazo=nuevoMazo(S.cats);
   $("modalFin").classList.remove("ver");
   nuevaRonda();
