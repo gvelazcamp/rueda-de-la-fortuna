@@ -18,6 +18,9 @@
 <style>
 :root{--noche:#160B24;--noche2:#241239;--oro:#F5B301;--magenta:#E5197C;--agua:#37D6C0;--crema:#F6EFE2;--tinta:#1A1024}
 *{box-sizing:border-box;margin:0;padding:0}
+#fondoMundo{position:fixed;inset:0;z-index:-1;background-size:cover;background-position:center;
+ opacity:0;transition:opacity .6s}
+#fondoMundo.ver{opacity:.22}
 body{font-family:'Outfit',system-ui,sans-serif;
  background:radial-gradient(900px 500px at 50% -10%,#3B1B5C 0%,transparent 60%),var(--noche);
  color:var(--crema);min-height:100vh;padding:18px 14px 40px}
@@ -27,24 +30,31 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 
 #setup,#lobby,#mundo{max-width:520px;margin:5vh auto;text-align:center}
 #lobby,#mundo{display:none}
-#mapa{display:grid;gap:12px;margin-bottom:20px}
-.destino{display:flex;align-items:flex-start;gap:14px;text-align:left;padding:16px;border-radius:18px;
- background:#00000038;border:1px solid #FFFFFF14;color:var(--crema);width:100%}
-.destino .num{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto;
- font-family:'Archivo Black',sans-serif;font-size:1.1rem;background:#2A1A3C;color:#B49FCE}
-.destino .txt{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:6px}
-.destino .nom{font-weight:700;font-size:1.14rem;line-height:1.15}
-.destino .riv{font-size:.9rem;color:#C9B8DE;line-height:1.2}
-.destino .chips{display:flex;flex-wrap:wrap;gap:6px}
-.destino .chip{font-size:.72rem;padding:3px 9px;border-radius:99px;background:#FFFFFF12;color:#B49FCE;white-space:nowrap}
-.destino.abierto{border-color:var(--agua)}
+#mapa{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
+@media(min-width:620px){#mapa{grid-template-columns:repeat(3,1fr)}}
+.destino{position:relative;aspect-ratio:3/4;border-radius:18px;overflow:hidden;padding:0;
+ border:2px solid #FFFFFF14;background:#0C0616;color:var(--crema);width:100%;display:block;
+ background-size:cover;background-position:center;text-align:left;isolation:isolate}
+.destino::after{content:"";position:absolute;inset:0;
+ background:linear-gradient(180deg,#160B2400 32%,#160B24CC 72%,#160B24F2 100%)}
+.destino .info{position:absolute;left:0;right:0;bottom:0;padding:10px 11px;z-index:2;
+ display:flex;flex-direction:column;gap:3px}
+.destino .nom{font-family:'Archivo Black',sans-serif;font-size:.95rem;line-height:1.1}
+.destino .riv{font-size:.72rem;color:#D6C7E8;line-height:1.15}
+.destino .chip{font-size:.66rem;color:#B49FCE}
+.destino .num{position:absolute;top:8px;left:8px;z-index:2;width:28px;height:28px;border-radius:50%;
+ display:grid;place-items:center;font-family:'Archivo Black',sans-serif;font-size:.85rem;
+ background:#160B24CC;color:var(--crema);border:1px solid #FFFFFF33}
+.destino .marca{position:absolute;top:8px;right:8px;z-index:2;font-size:.95rem;
+ background:#160B24CC;border-radius:99px;padding:2px 8px}
+.destino.abierto{border-color:var(--agua);box-shadow:0 0 22px #37D6C033}
 .destino.abierto .num{background:var(--agua);color:var(--tinta)}
-.destino.ganado{border-color:var(--oro);background:#F5B3011A}
-.destino.ganado .num{background:var(--oro);color:var(--tinta)}
-.destino.cerrado{opacity:.4}
-.destino .marca{flex:0 0 auto;font-size:1.05rem;color:#B49FCE;margin-top:10px}
-.destino.ganado .marca{color:var(--oro)}
 .destino.abierto .marca{color:var(--agua)}
+.destino.ganado{border-color:var(--oro);box-shadow:0 0 24px #F5B30140}
+.destino.ganado .num{background:var(--oro);color:var(--tinta)}
+.destino.ganado .marca{color:var(--oro)}
+.destino.cerrado{filter:grayscale(.9) brightness(.5)}
+.destino.cerrado .marca{color:#B49FCE}
 h1.titulo{font-size:clamp(2.6rem,10vw,4.2rem);line-height:.92;color:var(--oro);
  text-shadow:0 6px 0 #7A2E00,0 0 40px rgba(245,179,1,.35)}
 p.sub{margin:14px 0 24px;color:#C9B8DE}
@@ -212,6 +222,8 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 
 </section>
 
+<div id="fondoMundo"></div>
+
 <section id="mundo">
   <h1 class="titulo" style="font-size:2.4rem">MUNDO URUGUAY</h1>
   <p class="sub" id="subMundo">Ganale a cada rival y andá abriendo el país.</p>
@@ -376,20 +388,21 @@ $("rondas").addEventListener("click",e=>{const b=e.target.closest("button");if(!
  [...$("rondas").children].forEach(x=>x.setAttribute("aria-pressed",x===b));rondasElegidas=+b.dataset.r;});
 
 const MUNDO=[
- {id:"durazno",n:"Durazno",r:"El Tío del Asado",rondas:3,cats:["Dicho popular","Persona"]},
- {id:"montevideo",n:"Montevideo",r:"La Vecina Curiosa",rondas:3,cats:["Lugar","Casa y trabajo"]},
- {id:"piriapolis",n:"Piriápolis",r:"El Guardavidas",rondas:3,cats:["Clima y verano","Viaje"]},
- {id:"punta",n:"Punta del Este",r:"La Turista",rondas:4,cats:["Cosa","Cosas de la casa"]},
- {id:"salto",n:"Salto y las termas",r:"El Parrillero",rondas:4,cats:["Comida","Animales"]},
- {id:"tacuarembo",n:"Tacuarembó",r:"El Gaucho",rondas:4,cats:["Accion","Deporte"]},
- {id:"polonio",n:"Cabo Polonio",r:"El Farolero",rondas:5,cats:["Musica y fiesta","Escuela e infancia"]},
- {id:"colonia",n:"Colonia",r:"El Cinéfilo",rondas:5,cats:["Pelicula","Programa de TV"]},
- {id:"centenario",n:"Estadio Centenario",r:"La Campeona",rondas:5,cats:["Personajes","Dicho popular"]}];
+ {id:"durazno",bg:"assets/worlds/durazno.webp",n:"Durazno",r:"El Tío del Asado",rondas:3,cats:["Dicho popular","Persona"]},
+ {id:"montevideo",bg:"assets/worlds/montevideo.webp",n:"Montevideo",r:"La Vecina Curiosa",rondas:3,cats:["Lugar","Casa y trabajo"]},
+ {id:"piriapolis",bg:"assets/worlds/piriapolis.webp",n:"Piriápolis",r:"El Guardavidas",rondas:3,cats:["Clima y verano","Viaje"]},
+ {id:"punta",bg:"assets/worlds/punta-del-este.webp",n:"Punta del Este",r:"La Turista",rondas:4,cats:["Cosa","Cosas de la casa"]},
+ {id:"salto",bg:"assets/worlds/salto.webp",n:"Salto y las termas",r:"El Parrillero",rondas:4,cats:["Comida","Animales"]},
+ {id:"tacuarembo",bg:"assets/worlds/tacuarembo.webp",n:"Tacuarembó",r:"El Gaucho",rondas:4,cats:["Accion","Deporte"]},
+ {id:"polonio",bg:"assets/worlds/cabo-polonio.webp",n:"Cabo Polonio",r:"El Farolero",rondas:5,cats:["Musica y fiesta","Escuela e infancia"]},
+ {id:"colonia",bg:"assets/worlds/colonia.webp",n:"Colonia",r:"El Cinéfilo",rondas:5,cats:["Pelicula","Programa de TV"]},
+ {id:"centenario",bg:"assets/worlds/estadio-centenario.webp",n:"Estadio Centenario",r:"La Campeona",rondas:5,cats:["Personajes","Dicho popular"]}];
 let ganados=(()=>{try{return new Set(JSON.parse(localStorage.getItem("larueda_mundo")||"[]"));}catch(e){return new Set();}})();
 const guardarMundo=()=>{try{localStorage.setItem("larueda_mundo",JSON.stringify([...ganados]));}catch(e){}};
 let destino=null;
 
 function verMundo(){
+  $("fondoMundo").classList.remove("ver");
   $("setup").style.display="none";$("juego").style.display="none";
   $("mundo").style.display="block";
   $("subMundo").textContent="Ganaste "+ganados.size+" de "+MUNDO.length+" destinos.";
@@ -399,20 +412,22 @@ function verMundo(){
     const abierto=i===0||ganados.has(MUNDO[i-1].id);
     const b=document.createElement("button");
     b.className="destino "+(ganado?"ganado":abierto?"abierto":"cerrado");
+    if(d.bg)b.style.backgroundImage="url('"+d.bg+"')";
     b.innerHTML='<span class="num">'+(i+1)+'</span>'+
-      '<span class="txt"><span class="nom">'+d.n+'</span>'+
+      '<span class="marca">'+(ganado?"★":abierto?"▶":"✖")+'</span>'+
+      '<span class="info"><span class="nom">'+d.n+'</span>'+
       '<span class="riv">contra '+d.r+'</span>'+
-      '<span class="chips"><span class="chip">'+d.cats.join('</span><span class="chip">')+
-      '</span><span class="chip">'+d.rondas+' rondas</span></span></span>'+
-      '<span class="marca">'+(ganado?"★":abierto?"▶":"✖")+'</span>';
+      '<span class="chip">'+d.cats.join(" · ")+' · '+d.rondas+' rondas</span></span>';
     if(abierto)b.onclick=()=>empezarDestino(i);else b.disabled=true;
     m.appendChild(b);
   });
 }
-$("salirMundo").onclick=()=>{$("mundo").style.display="none";$("setup").style.display="block";};
+$("salirMundo").onclick=()=>{$("mundo").style.display="none";$("setup").style.display="block";
+  $("fondoMundo").classList.remove("ver");};
 
 function empezarDestino(i){
   destino=i;const d=MUNDO[i];
+  if(d.bg){$("fondoMundo").style.backgroundImage="url('"+d.bg+"')";$("fondoMundo").classList.add("ver");}
   modo="bot";miJug=0;rondasElegidas=d.rondas;
   $("mundo").style.display="none";$("juego").style.display="block";
   armarTeclado();iniciarPartida($("miNombre").value.trim()||"Vos",d.r,d.cats);
