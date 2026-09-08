@@ -224,14 +224,14 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
   <button class="btn-grande" id="bCrear">Crear sala y pasar el código</button>
   <button class="btn-grande sec" id="bUnirse">Entrar con un código</button>
   <button class="btn-grande sec" id="bLocal">Jugar los dos en este celular</button>
-  <button class="btn-grande sec" id="bBot">Mundo Uruguay — jugar solo</button>
+  <button class="btn-grande sec" id="bBot">Uruguay — jugar solo</button>
 
 </section>
 
 <div id="fondoMundo"></div>
 
 <section id="mundo">
-  <h1 class="titulo" style="font-size:2.4rem">MUNDO URUGUAY</h1>
+  <h1 class="titulo" style="font-size:2.4rem">URUGUAY</h1>
   <p class="sub" id="subMundo">Ganale a cada rival y andá abriendo el país.</p>
   <div id="mapa"></div>
   <button class="btn-grande sec" id="salirMundo">Volver al inicio</button>
@@ -297,7 +297,7 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 
 <div class="capa" id="modalFin"><div class="caja">
   <div id="fCopa">🏆</div><h2 id="fTitulo">Se terminó</h2><p id="fTexto"></p>
-  <div class="fila"><button class="no" id="fMapa" style="display:none">Volver al mapa</button><button class="ok" id="fBoton">Revancha</button></div>
+  <div class="fila"><button class="no" id="fMapa" style="display:none">Volver al mapa</button><button class="no" id="fSalir" style="display:none">Salir</button><button class="ok" id="fBoton">Revancha</button></div>
 </div></div>
 
 <script>
@@ -609,7 +609,7 @@ function nuevoMazo(cats){
   return d.sort(()=>Math.random()-.5);
 }
 function iniciarPartida(n1,n2,cats){
-  S={jug:[{n:n1,tot:0,ronda:0},{n:n2,tot:0,ronda:0}],turno:arranca,rondas:rondasElegidas,ronda:0,
+  S={jug:[{n:n1,tot:0,ronda:0,rg:0},{n:n2,tot:0,ronda:0,rg:0}],turno:arranca,rondas:rondasElegidas,ronda:0,
      cats:cats||null,mazo:nuevoMazo(cats),finYa:false,valor:0,fase:"girar",abiertas:new Set(),usadas:new Set(),frase:"",cat:""};
   nuevaRonda();
 }
@@ -679,7 +679,7 @@ function hostGirar(){
       S.abiertas.add(l);S.usadas.add(l);
       [0,110,220].forEach((m,k)=>setTimeout(()=>bip([784,1046,1318][k],.2,"sine",.07),m));
       if([...S.frase].filter(c=>c!==" ").every(c=>S.abiertas.has(c))){
-        const j=S.jug[S.turno];j.tot+=j.ronda;S.fase="girar";
+        const j=S.jug[S.turno];j.tot+=j.ronda;j.rg++;S.fase="girar";
         publicar("<b>COMODÍN</b> te regaló la «"+l+"» y completó la frase. "+j.n+" se lleva $"+j.ronda+".","comodin");
         setTimeout(nuevaRonda,3000);return;}
       S.fase="girar";
@@ -709,7 +709,7 @@ function hostLetra(l){
     bip(1046,.16,"sine",.07);S.abiertas.add(l);
     if(!voc){S.jug[S.turno].ronda+=S.valor*veces*(S.doble?2:1);S.doble=false;}
     if([...S.frase].filter(c=>c!==" ").every(c=>S.abiertas.has(c))){
-      const j=S.jug[S.turno];j.tot+=j.ronda;
+      const j=S.jug[S.turno];j.tot+=j.ronda;j.rg++;
       publicar("¡Frase completa! <b>"+j.n+"</b> se lleva $"+j.ronda+".","resuelto");
       setTimeout(nuevaRonda,5200);return;
     }
@@ -726,7 +726,7 @@ function hostResolver(txt){
   if(animando)return;
   if(norm(txt)===norm(S.frase)){
     bip(1318,.25,"sine",.08);[...S.frase].forEach(c=>S.abiertas.add(c));
-    const j=S.jug[S.turno];j.tot+=j.ronda;
+    const j=S.jug[S.turno];j.tot+=j.ronda;j.rg++;
     publicar("¡Correcto! <b>"+j.n+"</b> resolvió y suma $"+j.ronda+".","resuelto");
     setTimeout(nuevaRonda,5200);
   }else{
@@ -740,24 +740,50 @@ function cambiarTurno(){S.turno=1-S.turno;S.fase="girar";S.valor=0;S.doble=false
 function finDelJuego(){
   if(S.finYa)return;S.finYa=true;
   const [a,b]=S.jug;
-  if(a.tot!==b.tot){const g=a.tot>b.tot?0:1;serie[g]++;
-    if(ultGanador===g)racha++;else{ultGanador=g;racha=1;}}
-  else{ultGanador=-1;racha=0;}
-  const tit=a.tot===b.tot?"¡Empate!":"¡Victoria, "+(a.tot>b.tot?a.n:b.n)+"!";
-  const txt=(a.tot===b.tot?"Empate en $"+a.tot+"."
-    :(a.tot>b.tot?a.n:b.n)+" gana con $"+Math.max(a.tot,b.tot)+" contra $"+Math.min(a.tot,b.tot)+".")
-    +" Partidas del día: "+a.n+" "+serie[0]+" — "+serie[1]+" "+b.n+".";
+  let g=-1;
+  if(a.rg!==b.rg)g=a.rg>b.rg?0:1;
+  else if(a.tot!==b.tot)g=a.tot>b.tot?0:1;
+  const detalle=(g<0?"Empataron "+a.rg+" rondas a "+b.rg+".":
+    "Ganó las rondas "+Math.max(a.rg,b.rg)+" a "+Math.min(a.rg,b.rg)+
+    " · $"+S.jug[g].tot+" contra $"+S.jug[1-g].tot+".");
+  let tit,txt=detalle,extra="";
+  if(modo==="bot"){
+    const d=destino!==null?MUNDO[destino]:null;
+    if(g===0){
+      tit=d?"¡"+d.n+" conquistado!":"¡Ganaste!";
+      if(d&&!ganados.has(d.id)){ganados.add(d.id);guardarMundo();
+        extra=MUNDO[destino+1]?" Se abrió "+MUNDO[destino+1].n+".":" ¡Terminaste el mapa!";}
+    }else if(g<0)tit="¡Empate!";
+    else{tit="Te ganó "+b.n;extra=" Probá de nuevo cuando quieras.";}
+  }else{
+    if(g<0){tit="¡Empate!";ultGanador=-1;racha=0;}
+    else{tit="¡Victoria, "+S.jug[g].n+"!";
+      serie[g]++;
+      if(ultGanador===g)racha++;else{ultGanador=g;racha=1;}
+      extra=" Partidas del día: "+a.n+" "+serie[0]+" — "+serie[1]+" "+b.n+
+        (racha>=2?" · "+S.jug[g].n+" lleva "+racha+" al hilo.":".");}
+  }
   bip(880,.5,"sine",.08);
   S.fase="fin";pararReloj();
   publicar("Partida terminada.");
-  if(modo!=="local"&&modo!=="bot")enviar({tipo:"fin",txt,tit});
-  mostrarFin(tit,txt);
+  if(modo!=="local"&&modo!=="bot")enviar({tipo:"fin",txt:txt+extra,tit});
+  $("fMapa").style.display=(modo==="bot"&&destino!==null)?"block":"none";
+  $("fSalir").style.display=(modo==="bot")?"none":"block";
+  mostrarFin(tit,txt+extra);
+}
+function revancha(){
+  arranca=1-arranca;S.finYa=false;
+  S.jug.forEach(j=>{j.tot=0;j.ronda=0;j.rg=0;});
+  S.turno=arranca;S.ronda=0;S.valor=0;S.fase="girar";
+  S.mazo=nuevoMazo(S.cats);
+  $("modalFin").classList.remove("ver");
+  nuevaRonda();
 }
 function mostrarFin(tit,txt){
   $("capaResuelto").classList.remove("ver");
   $("capaResuelto").querySelectorAll(".papel").forEach(x=>x.remove());
   $("capaRueda").classList.remove("ver");
-  $("fCopa").textContent=tit.startsWith("¡Empate")?"🤝":"🏆";
+  $("fCopa").textContent=tit.startsWith("¡Empate")?"🤝":tit.startsWith("¡Victoria")?"🏆":tit.startsWith("Te ganó")?"😤":"🏅";
   $("fTitulo").textContent=tit;$("fTexto").textContent=txt;
   $("modalFin").classList.add("ver");
   [0,180,360,620].forEach((ms,i)=>setTimeout(()=>bip([784,988,1175,1568][i],.28,"sine",.07),ms));
@@ -933,6 +959,7 @@ $("confirmar").onclick=()=>{
   if(!t.trim())return;
   if(modo==="guest")enviar({a:"resolver",txt:t});else hostResolver(t);
 };
+$("fSalir").onclick=()=>location.reload();
 $("fMapa").onclick=()=>{$("modalFin").classList.remove("ver");verMundo();};
 function volar(e){
   const d=document.createElement("div");d.className="emo";d.textContent=e;
