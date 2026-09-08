@@ -367,8 +367,8 @@ let giroActual=0, animando=false;
 
 // Prueba de Velocidad (Toss-Up): aparece después de cada 2 rondas normales.
 // No reemplaza ninguna ronda: se intercala entre ellas y luego continúa la partida normal.
-const TOSS_CADA_RONDAS=2, TOSS_DURACION=15000, TOSS_PASO=800;
-let tossTimer=null,tossRespondedor=null;
+const TOSS_CADA_RONDAS=2, TOSS_DURACION=15000, TOSS_PASO=800, TOSS_RESPUESTA_DURACION=5000;
+let tossTimer=null,tossRespuestaTimer=null,tossRespondedor=null;
 
 // Ronda Bonus: R S T L N E + 3 consonantes + 1 vocal y 10 segundos para resolver.
 const BONUS_BASE="RSTLNE", BONUS_DURACION=10000, BONUS_PREMIO=2000;
@@ -696,6 +696,8 @@ function recibirHost(d){
   if(d.a==="reaccion"){volar(d.e);return;}
   if(!S)return;
   if(d.a==="revancha"){if(S.fase==="fin")revancha();return;}
+  if(S.fase==="tossup"&&d.a==="toss_pausa"){pausarToss(1);return;}
+  if(S.fase==="tossup"&&d.a==="toss_cancelar"){cancelarPausaToss(1);return;}
   if(S.fase==="tossup"&&d.a==="resolver"){hostResolver(d.txt,1);return;}
   if(S.fase==="bonus_elegir"&&S.turno===1&&d.a==="letra"){hostLetraBonus(d.l);return;}
   if(S.fase==="bonus_resolver"&&S.turno===1&&d.a==="resolver"){hostResolverBonus(d.txt);return;}
@@ -709,7 +711,12 @@ function recibirGuest(d){
   if(d.tipo==="estado"){
     if(holaTimer){clearInterval(holaTimer);holaTimer=null;
       $("lobby").style.display="none";$("juego").style.display="block";armarTeclado();}
-    V=d.v;if(V.fase!=="fin")$("modalFin").classList.remove("ver");pintarTodo();}
+    V=d.v;if(V.fase!=="fin")$("modalFin").classList.remove("ver");
+    if(tossRespondedor===1&&$("modalResolver").classList.contains("ver")&&
+      (V.fase!=="tossup"||!V.tossPausado||V.tossRespondedor!==1)){
+      $("modalResolver").classList.remove("ver");tossRespondedor=null;
+    }
+    pintarTodo();}
   else if(d.tipo==="giro")animarRueda(d.destino,null);
   else if(d.tipo==="reaccion")volar(d.e);
   else if(d.tipo==="fin")mostrarFin(d.tit||"Se terminó",d.txt);
@@ -765,15 +772,16 @@ function nuevaRonda(){
 function nuevaRonda2(){S.ronda++;
   if($("capaResuelto").classList.contains("ver")){setTimeout(nuevaRonda2,600);S.ronda--;return;}
   finDelJuego();}
-function limpiarToss(){if(tossTimer){clearInterval(tossTimer);tossTimer=null;}}
-function iniciarTossUp(f){
-  S.fase="tossup";S.tossPos=new Set();S.tossBloq=[false,false];
-  S.tossOrden=[...S.frase].map((c,i)=>c===" "?null:i).filter(i=>i!==null).sort(()=>Math.random()-.5);
-  S.tossFin=Date.now()+TOSS_DURACION;S.tossProx=Date.now()+TOSS_PASO;
-  S.cat=(destino!==null&&modo==="bot"?MUNDO[destino].n+" · ":"")+"⚡ Prueba de velocidad · "+f.c;
-  publicar("<b>PRUEBA DE VELOCIDAD</b> — las letras aparecen solas. Resolvé antes de que se terminen los 15 segundos.");
+function limpiarToss(){
+  if(tossTimer){clearInterval(tossTimer);tossTimer=null;}
+  if(tossRespuestaTimer){clearTimeout(tossRespuestaTimer);tossRespuestaTimer=null;}
+  if(S){S.tossPausado=false;S.tossRespondedor=null;S.tossRestante=0;S.tossHastaProx=0;}
+}
+function arrancarIntervaloToss(){
+  if(tossTimer)clearInterval(tossTimer);
   tossTimer=setInterval(()=>{
     if(!S||S.fase!=="tossup"){limpiarToss();return;}
+    if(S.tossPausado)return;
     const ahora=Date.now();
     let cambio=false;
     while(S.tossOrden.length&&ahora>=S.tossProx){S.tossPos.add(S.tossOrden.shift());S.tossProx+=TOSS_PASO;cambio=true;}
@@ -781,8 +789,65 @@ function iniciarTossUp(f){
     if(cambio)publicar("<b>PRUEBA DE VELOCIDAD</b> — mirá bien y resolvé cuando la sepas.");
   },120);
 }
+function iniciarTossUp(f){
+  S.fase="tossup";S.tossPos=new Set();S.tossBloq=[false,false];
+  S.tossPausado=false;S.tossRespondedor=null;S.tossRestante=TOSS_DURACION;S.tossHastaProx=TOSS_PASO;
+  S.tossOrden=[...S.frase].map((c,i)=>c===" "?null:i).filter(i=>i!==null).sort(()=>Math.random()-.5);
+  S.tossFin=Date.now()+TOSS_DURACION;S.tossProx=Date.now()+TOSS_PASO;
+  S.cat=(destino!==null&&modo==="bot"?MUNDO[destino].n+" · ":"")+"⚡ Prueba de velocidad · "+f.c;
+  publicar("<b>PRUEBA DE VELOCIDAD</b> — las letras aparecen solas. Resolvé antes de que se terminen los 15 segundos.");
+  arrancarIntervaloToss();
+}
+function pausarToss(jugador){
+  if(!S||S.fase!=="tossup"||S.tossPausado)return false;
+  jugador=(jugador===0||jugador===1)?jugador:0;
+  if(S.tossBloq&&S.tossBloq[jugador]&&modo!=="bot")return false;
+  const ahora=Date.now();
+  S.tossRestante=Math.max(0,S.tossFin-ahora);
+  S.tossHastaProx=Math.max(0,S.tossProx-ahora);
+  S.tossPausado=true;S.tossRespondedor=jugador;
+  if(tossTimer){clearInterval(tossTimer);tossTimer=null;}
+  if(tossRespuestaTimer)clearTimeout(tossRespuestaTimer);
+  tossRespuestaTimer=setTimeout(()=>finRespuestaToss(jugador),TOSS_RESPUESTA_DURACION);
+  publicar("<b>"+S.jug[jugador].n+" apretó RESOLVER</b> — tablero y reloj congelados. Tiene 5 segundos para responder.");
+  return true;
+}
+function reanudarToss(mensaje){
+  if(!S||S.fase!=="tossup"||!S.tossPausado)return;
+  if(tossRespuestaTimer){clearTimeout(tossRespuestaTimer);tossRespuestaTimer=null;}
+  const ahora=Date.now(),restante=Math.max(0,S.tossRestante||0);
+  S.tossPausado=false;S.tossRespondedor=null;
+  if(restante<=0){finTossTiempo();return;}
+  S.tossFin=ahora+restante;
+  S.tossProx=ahora+Math.max(80,Math.min(S.tossHastaProx||TOSS_PASO,restante));
+  arrancarIntervaloToss();
+  publicar(mensaje||"<b>PRUEBA DE VELOCIDAD</b> — continúa la aparición de letras.");
+}
+function cancelarPausaToss(jugador){
+  if(!S||S.fase!=="tossup"||!S.tossPausado)return;
+  jugador=(jugador===0||jugador===1)?jugador:0;
+  if(S.tossRespondedor!==jugador)return;
+  reanudarToss("<b>"+S.jug[jugador].n+" canceló</b>. La Prueba de Velocidad continúa.");
+}
+function finRespuestaToss(jugador){
+  if(!S||S.fase!=="tossup"||!S.tossPausado||S.tossRespondedor!==jugador)return;
+  tossRespuestaTimer=null;
+  if(tossRespondedor===jugador){$("modalResolver").classList.remove("ver");tossRespondedor=null;}
+  if(modo==="bot"){
+    reanudarToss("Se terminaron los <b>5 segundos para responder</b>. La prueba continúa.");
+    return;
+  }
+  S.tossBloq[jugador]=true;
+  if(S.tossBloq[0]&&S.tossBloq[1]){
+    limpiarToss();abrirTodoToss();S.fase="toss_fin";
+    publicar("Los dos quedaron fuera de la Prueba de Velocidad. La respuesta queda revelada.","error");
+    setTimeout(nuevaRonda,3600);return;
+  }
+  reanudarToss("<b>"+S.jug[jugador].n+" no respondió en 5 segundos</b> y queda fuera. El otro jugador todavía puede resolver.");
+}
 function premioToss(){
-  const resto=Math.max(0,S.tossFin-Date.now())/TOSS_DURACION;
+  const ms=S.tossPausado?Math.max(0,S.tossRestante||0):Math.max(0,S.tossFin-Date.now());
+  const resto=ms/TOSS_DURACION;
   return Math.max(300,Math.round((300+1200*resto)/50)*50);
 }
 function abrirTodoToss(){[...S.frase].forEach(c=>{if(c!==" ")S.abiertas.add(c);});}
@@ -797,21 +862,27 @@ function hostResolverToss(txt,jugador){
   if(!S||S.fase!=="tossup")return;
   jugador=(jugador===0||jugador===1)?jugador:0;
   if(S.tossBloq&&S.tossBloq[jugador]&&modo!=="bot")return;
+  if(!S.tossPausado){if(!pausarToss(jugador))return;}
+  if(S.tossRespondedor!==jugador)return;
+  if(tossRespuestaTimer){clearTimeout(tossRespuestaTimer);tossRespuestaTimer=null;}
   if(norm(txt)===norm(S.frase)){
-    limpiarToss();const premio=premioToss();abrirTodoToss();
+    const premio=premioToss();limpiarToss();abrirTodoToss();
     const j=S.jug[jugador];j.ronda=premio;j.tot+=premio;j.rg++;S.turno=jugador;S.fase="toss_fin";
     publicar("¡Correcto! <b>"+j.n+"</b> resolvió la Prueba de Velocidad y gana $"+premio+".","resuelto");
     setTimeout(nuevaRonda,5200);
   }else{
     bip(140,.35,"square",.07);
-    if(modo==="bot"){publicar("«"+txt.toUpperCase()+"» no era. Todavía podés seguir mirando y volver a intentar.","error");return;}
+    if(modo==="bot"){
+      reanudarToss("«"+txt.toUpperCase()+"» no era. La prueba continúa y podés volver a intentar.");
+      return;
+    }
     S.tossBloq[jugador]=true;
     if(S.tossBloq[0]&&S.tossBloq[1]){
       limpiarToss();abrirTodoToss();S.fase="toss_fin";
       publicar("Los dos intentaron y no era. La respuesta queda revelada.","error");
       setTimeout(nuevaRonda,3600);return;
     }
-    publicar("«"+txt.toUpperCase()+"» no era. <b>"+S.jug[jugador].n+"</b> queda fuera de esta Prueba de Velocidad.","error");
+    reanudarToss("«"+txt.toUpperCase()+"» no era. <b>"+S.jug[jugador].n+"</b> queda fuera; el otro jugador todavía puede resolver.");
   }
 }
 function limpiarBonus(){if(bonusTimer){clearInterval(bonusTimer);bonusTimer=null;}}
@@ -904,13 +975,14 @@ function publicar(txt,fx){
      jug:S.jug.map(j=>({n:j.n,tot:j.tot,ronda:j.ronda})),turno:S.turno,fase:S.fase,
      hayVoc:[...VOCALES].some(v=>!S.usadas.has(v)&&S.frase.includes(v)),
      cons:consRestantes(),serie:serie.slice(),doble:!!S.doble,
-     tossBloq:S.tossBloq?S.tossBloq.slice():[false,false],
+     tossBloq:S.tossBloq?S.tossBloq.slice():[false,false],tossPausado:!!S.tossPausado,tossRespondedor:S.tossRespondedor,
      bonusCons:S.bonusCons?S.bonusCons.slice():[],bonusVocal:S.bonusVocal||null,bonusGanador:S.bonusGanador,
      racha:{g:ultGanador,n:racha},aviso:txt,fx:fx||"",fxId:fx?++fxN:0};
   const esToss=S.fase==="tossup",esBonusReloj=S.fase==="bonus_resolver";
   const vivo=(S.fase==="girar"||S.fase==="consonante"||S.fase==="vocal")&&!animando;
   if(vivo)arrancarReloj();else pararReloj();
-  V.seg=esToss?Math.max(1,Math.ceil((S.tossFin-Date.now())/1000)):
+  const tossMs=esToss?(S.tossPausado?Math.max(0,S.tossRestante||0):Math.max(0,S.tossFin-Date.now())):0;
+  V.seg=esToss?Math.max(1,Math.ceil(tossMs/1000)):
     (esBonusReloj?Math.max(1,Math.ceil((S.bonusFin-Date.now())/1000)):(vivo?Math.max(1,Math.round((S.tFin-Date.now())/1000)):0));
   V.relojMax=esToss?15:(esBonusReloj?10:25);
   if(modo==="bot")setTimeout(programarBot,0);
@@ -1163,6 +1235,12 @@ function pintarTodo(){
   $("aviso").innerHTML="<span>"+(V.aviso||"")+"</span>";
   const esToss=V.fase==="tossup",esBonus=V.fase==="bonus_elegir"||V.fase==="bonus_resolver"||V.fase==="bonus_fin";
   $("tossInfo").classList.toggle("ver",esToss);
+  if(esToss){
+    const ts=$("tossInfo").querySelector("span");
+    ts.textContent=(V.tossPausado&&V.tossRespondedor!==null&&V.jug[V.tossRespondedor])?
+      V.jug[V.tossRespondedor].n+" está respondiendo · tablero y reloj congelados por 5 segundos.":
+      "Las letras aparecen solas. El primero que toque Resolver congela el tablero y tiene 5 segundos para responder.";
+  }
   $("tossBuzz").classList.toggle("ver",esToss&&modo==="local");
   $("bonusInfo").classList.toggle("ver",esBonus);
   if(esBonus){
@@ -1174,7 +1252,8 @@ function pintarTodo(){
   document.querySelector(".acciones").classList.toggle("toss",esToss||esBonus);
   if(esToss&&V.jug&&V.jug.length){
     $("tossJ0").textContent=V.jug[0].n+" resuelve";$("tossJ1").textContent=V.jug[1].n+" resuelve";
-    $("tossJ0").disabled=!!(V.tossBloq&&V.tossBloq[0]);$("tossJ1").disabled=!!(V.tossBloq&&V.tossBloq[1]);
+    $("tossJ0").disabled=!!V.tossPausado||!!(V.tossBloq&&V.tossBloq[0]);
+    $("tossJ1").disabled=!!V.tossPausado||!!(V.tossBloq&&V.tossBloq[1]);
   }
   const se=V.serie||[0,0],ra=V.racha||{g:-1,n:0};
   let linea=(se[0]||se[1])?("Partidas del día: "+V.jug[0].n+" <b>"+se[0]+"</b> — <b>"+se[1]+"</b> "+V.jug[1].n):"";
@@ -1230,7 +1309,7 @@ function pintar(){
     setMonto(e.querySelector(".ronda"),j.ronda,i,0);
     setMonto(e.querySelector(".total"),j.tot,i,1);});
   const mio=esMiTurno()&&!animando&&V.fase!=="fin";
-  const esToss=V.fase==="tossup",miToss=(modo==="local"?false:!(V.tossBloq&&V.tossBloq[miJug]));
+  const esToss=V.fase==="tossup",miToss=(modo==="local"?false:(!V.tossPausado&&!(V.tossBloq&&V.tossBloq[miJug])));
   const bonusElegir=V.fase==="bonus_elegir",bonusResolver=V.fase==="bonus_resolver",esBonus=bonusElegir||bonusResolver||V.fase==="bonus_fin";
   const miBonus=modo==="local"||V.bonusGanador===miJug;
   $("bGirar").disabled=!mio||V.fase!=="girar"||V.cons===0;
@@ -1249,11 +1328,18 @@ $("bGirar").onclick=()=>{if(modo==="guest")enviar({a:"girar"});else hostGirar();
 $("bVocal").onclick=()=>{if(modo==="guest")enviar({a:"vocal"});else hostVocal();};
 function accionLetra(l){if(modo==="guest")enviar({a:"letra",l});else hostLetra(l);}
 function abrirResolver(jugador){
-  tossRespondedor=(jugador===0||jugador===1)?jugador:null;
   const esToss=V.fase==="tossup",esBonus=V.fase==="bonus_resolver";
+  tossRespondedor=(jugador===0||jugador===1)?jugador:null;
+  if(esToss){
+    const j=tossRespondedor!==null?tossRespondedor:(modo==="guest"?1:0);
+    tossRespondedor=j;
+    if(V.tossPausado||(V.tossBloq&&V.tossBloq[j])){tossRespondedor=null;return;}
+    if(modo==="guest")enviar({a:"toss_pausa"});
+    else if(!pausarToss(j)){tossRespondedor=null;return;}
+  }
   $("modalResolver").querySelector("h2").textContent=esToss?"⚡ Resolver la Prueba":esBonus?"⭐ Resolver Ronda Bonus":"Decí la frase";
   $("modalResolver").querySelector("p").textContent=esToss?
-    ((tossRespondedor!==null&&V.jug[tossRespondedor])?V.jug[tossRespondedor].n+", escribí la frase completa.":"Escribí la frase completa antes de que termine el tiempo."):
+    ((tossRespondedor!==null&&V.jug[tossRespondedor])?V.jug[tossRespondedor].n+", el tablero está congelado. Tenés 5 segundos para escribir la frase completa.":"Tenés 5 segundos para escribir la frase completa."):
     (esBonus?"Tenés 10 segundos. Podés intentar más de una vez mientras quede tiempo.":"Si acertás te llevás la plata de la ronda. Si errás, pasa el turno.");
   $("modalResolver").classList.add("ver");$("respuesta").value="";$("respuesta").focus();
 }
@@ -1263,11 +1349,17 @@ $("bResolver").onclick=()=>{
 };
 $("tossJ0").onclick=()=>abrirResolver(0);
 $("tossJ1").onclick=()=>abrirResolver(1);
-$("cancelar").onclick=()=>$("modalResolver").classList.remove("ver");
+$("cancelar").onclick=()=>{
+  const eraToss=V.fase==="tossup",j=tossRespondedor;
+  $("modalResolver").classList.remove("ver");
+  if(eraToss&&j!==null){if(modo==="guest")enviar({a:"toss_cancelar"});else cancelarPausaToss(j);}
+  tossRespondedor=null;
+};
 $("respuesta").addEventListener("keydown",e=>{if(e.key==="Enter")$("confirmar").click();});
 $("confirmar").onclick=()=>{
-  const t=$("respuesta").value;$("modalResolver").classList.remove("ver");
-  if(!t.trim())return;
+  const t=$("respuesta").value;
+  if(!t.trim()){$("respuesta").focus();return;}
+  $("modalResolver").classList.remove("ver");
   if(modo==="guest")enviar({a:"resolver",txt:t});else hostResolver(t,tossRespondedor);
   tossRespondedor=null;
 };
