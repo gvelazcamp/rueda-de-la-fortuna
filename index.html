@@ -52,7 +52,7 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 .region.gris{filter:grayscale(.92) brightness(.4)}
 .senda{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .senda path{fill:none;stroke-linecap:round;vector-effect:non-scaling-stroke}
-.s-base{stroke:#FFFFFF4D;stroke-width:5;stroke-dasharray:.012 .02}
+.s-base{stroke:#FFFFFF33;stroke-width:5;stroke-dasharray:.012 .02}
 .s-hecha{stroke:#F5B301;stroke-width:5;stroke-dasharray:.012 .02;filter:drop-shadow(0 0 5px #F5B301)}
 .nodo{position:absolute;transform:translate(-50%,-50%);z-index:3;display:grid;place-items:center;
  gap:6px;background:none;border:none;padding:0;color:var(--crema);width:130px}
@@ -414,20 +414,19 @@ $("rondas").addEventListener("click",e=>{const b=e.target.closest("button");if(!
  [...$("rondas").children].forEach(x=>x.setAttribute("aria-pressed",x===b));rondasElegidas=+b.dataset.r;});
 
 const MUNDO=[
- {id:"durazno",bg:"assets/worlds/durazno.webp",n:"Durazno",r:"El Tío del Asado",rondas:3,cats:["Dicho popular","Persona"]},
- {id:"montevideo",bg:"assets/worlds/montevideo.webp",n:"Montevideo",r:"La Vecina Curiosa",rondas:3,cats:["Lugar","Casa y trabajo"]},
- {id:"piriapolis",bg:"assets/worlds/piriapolis.webp",n:"Piriápolis",r:"El Guardavidas",rondas:3,cats:["Clima y verano","Viaje"]},
- {id:"punta",bg:"assets/worlds/punta-del-este.webp",n:"Punta del Este",r:"La Turista",rondas:4,cats:["Cosa","Cosas de la casa"]},
- {id:"salto",bg:"assets/worlds/salto.webp",n:"Salto y las termas",r:"El Parrillero",rondas:4,cats:["Comida","Animales"]},
- {id:"tacuarembo",bg:"assets/worlds/tacuarembo.webp",n:"Tacuarembó",r:"El Gaucho",rondas:4,cats:["Accion","Deporte"]},
- {id:"polonio",bg:"assets/worlds/cabo-polonio.webp",n:"Cabo Polonio",r:"El Farolero",rondas:5,cats:["Musica y fiesta","Escuela e infancia"]},
- {id:"colonia",bg:"assets/worlds/colonia.webp",n:"Colonia",r:"El Cinéfilo",rondas:5,cats:["Pelicula","Programa de TV"]},
- {id:"centenario",bg:"assets/worlds/estadio-centenario.webp",n:"Estadio Centenario",r:"La Campeona",rondas:5,cats:["Personajes","Dicho popular"]}];
+ {id:"durazno",nx:53,ny:43,bg:"assets/worlds/durazno.webp",n:"Durazno",r:"El Tío del Asado",rondas:3,cats:["Dicho popular","Persona"]},
+ {id:"montevideo",nx:62,ny:49,bg:"assets/worlds/montevideo.webp",n:"Montevideo",r:"La Vecina Curiosa",rondas:3,cats:["Lugar","Casa y trabajo"]},
+ {id:"piriapolis",nx:52,ny:44,bg:"assets/worlds/piriapolis.webp",n:"Piriápolis",r:"El Guardavidas",rondas:3,cats:["Clima y verano","Viaje"]},
+ {id:"punta",nx:51,ny:48,bg:"assets/worlds/punta-del-este.webp",n:"Punta del Este",r:"La Turista",rondas:4,cats:["Cosa","Cosas de la casa"]},
+ {id:"salto",nx:52,ny:44,bg:"assets/worlds/salto.webp",n:"Salto y las termas",r:"El Parrillero",rondas:4,cats:["Comida","Animales"]},
+ {id:"tacuarembo",nx:55,ny:47,bg:"assets/worlds/tacuarembo.webp",n:"Tacuarembó",r:"El Gaucho",rondas:4,cats:["Accion","Deporte"]},
+ {id:"polonio",nx:51,ny:42,bg:"assets/worlds/cabo-polonio.webp",n:"Cabo Polonio",r:"El Farolero",rondas:5,cats:["Musica y fiesta","Escuela e infancia"]},
+ {id:"colonia",nx:55,ny:40,bg:"assets/worlds/colonia.webp",n:"Colonia",r:"El Cinéfilo",rondas:5,cats:["Pelicula","Programa de TV"]},
+ {id:"centenario",nx:52,ny:53,bg:"assets/worlds/estadio-centenario.webp",n:"Estadio Centenario",r:"La Campeona",rondas:5,cats:["Personajes","Dicho popular"]}];
 let ganados=(()=>{try{return new Set(JSON.parse(localStorage.getItem("larueda_mundo")||"[]"));}catch(e){return new Set();}})();
 const guardarMundo=()=>{try{localStorage.setItem("larueda_mundo",JSON.stringify([...ganados]));}catch(e){}};
 let destino=null;
 
-const XS=[32,68,36,70,50,30,66,40,58];
 function verMundo(){
   $("fondoMundo").classList.remove("ver");
   $("setup").style.display="none";$("juego").style.display="none";
@@ -445,11 +444,11 @@ function verMundo(){
     tira.appendChild(r);
   });
 
-  const pts=MUNDO.map((d,i)=>({x:XS[i%XS.length],y:i*100+50}));
+  const pts=MUNDO.map((d,i)=>({x:(d.nx!==undefined?d.nx:50),y:i*100+(d.ny!==undefined?d.ny:50)}));
   let dpath="M"+pts[0].x+" "+pts[0].y;
   for(let i=1;i<pts.length;i++){
     const a=pts[i-1],b=pts[i];
-    dpath+=" C"+a.x+" "+(a.y+46)+", "+b.x+" "+(b.y-46)+", "+b.x+" "+b.y;
+    dpath+=" C"+a.x+" "+(a.y+40)+", "+b.x+" "+(b.y-40)+", "+b.x+" "+b.y;
   }
   let hechos=0;while(hechos<N&&ganados.has(MUNDO[hechos].id))hechos++;
   const avance=N>1?Math.min(1,hechos/(N-1)):0;
