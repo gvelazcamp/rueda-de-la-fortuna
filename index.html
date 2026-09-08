@@ -80,6 +80,9 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
  border:1px solid #FFFFFF14;display:grid;place-items:center;font-family:'Archivo Black';
  font-size:clamp(.95rem,3.8vw,1.5rem);color:transparent;transition:background .18s,color .18s}
 .ficha.abierta{background:var(--crema);color:var(--tinta)}
+.ficha.entra{animation:entraFicha .4s cubic-bezier(.2,1.5,.4,1) backwards}
+@keyframes entraFicha{0%{opacity:0;transform:scale(.2) rotateY(90deg)}
+ 60%{opacity:1;transform:scale(1.12) rotateY(0)}100%{opacity:1;transform:scale(1)}}
 .ficha.destape{animation:destape .42s ease-out;z-index:2}
 @keyframes destape{0%{transform:rotateY(0) scale(1)}
  45%{transform:rotateY(88deg) scale(1.22);box-shadow:0 0 22px #F5B30188}
@@ -1613,7 +1616,7 @@ function armarTeclado(){
     if(VOCALES.includes(l))b.classList.add("vocal");
     b.onclick=()=>accionLetra(l);$("teclado").appendChild(b);});
 }
-let maskPrevia="",fxVisto=0;
+let maskPrevia="",fxVisto=0,catPrevia="";
 function vibrar(p){try{navigator.vibrate&&navigator.vibrate(p);}catch(e){}}
 function efecto(f){
   if(f==="error"||f==="quiebra"){
@@ -1639,13 +1642,16 @@ function efecto(f){
 function pintarTodo(){
   $("cat").textContent=V.cat;
   const cont=$("frase");cont.innerHTML="";
+  const rondaNueva=V.cat!==catPrevia;
+  if(rondaNueva){catPrevia=V.cat;maskPrevia="";}
   const prev=(maskPrevia.length===V.mask.length)?maskPrevia:"";
-  const nuevas=[];let i=0;
+  const nuevas=[];let i=0,orden=0;
   V.mask.split(" ").forEach((pal,wi)=>{
     if(wi>0)i++;
     const w=document.createElement("div");w.className="palabra";
     [...pal].forEach(ch=>{
       const d=document.createElement("div");d.className="ficha";
+      if(rondaNueva){d.classList.add("entra");d.style.animationDelay=(orden*45)+"ms";orden++;}
       if(ch!=="_"){
         if(prev&&prev[i]==="_")nuevas.push([d,ch]);
         else{d.textContent=ch;d.classList.add("abierta");}
@@ -1654,6 +1660,7 @@ function pintarTodo(){
     });
     cont.appendChild(w);
   });
+  if(rondaNueva)for(let q=0;q<orden;q+=3)setTimeout(()=>bip(900+q*8,.03,"square",.03),q*45);
   maskPrevia=V.mask;
   if(V.mask&&V.mask.indexOf("_")<0&&!vistas.has(V.mask)){vistas.add(V.mask);guardarVistas();}
   const paso=nuevas.length>6?110:200;
