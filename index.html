@@ -70,6 +70,13 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 .nodo.cerrado{opacity:.75}
 .nodo.cerrado .bola{background:#160B24CC;color:#8B7AA3}
 @keyframes latido{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.paso{position:absolute;transform:translate(-50%,-50%);z-index:3;width:34px;height:34px;
+ border-radius:50%;display:grid;place-items:center;font-size:.82rem;font-weight:700;
+ background:#160B24CC;color:#B49FCE;border:2px solid #FFFFFF33;padding:0}
+.paso.listo{background:var(--oro);color:var(--tinta);border-color:#FFFFFF88}
+.paso.ahora{background:var(--agua);color:var(--tinta);border-color:#FFFFFF88;
+ box-shadow:0 0 18px #37D6C0AA;animation:latido 1.5s ease-in-out infinite}
+.paso:disabled{opacity:.55}
 .pin{position:absolute;transform:translate(-50%,-158%);z-index:4;font-size:1.7rem;
  filter:drop-shadow(0 3px 6px #000);animation:salta2 1.3s ease-in-out infinite;pointer-events:none}
 @keyframes salta2{0%,100%{transform:translate(-50%,-158%)}50%{transform:translate(-50%,-192%)}}
@@ -414,18 +421,21 @@ $("rondas").addEventListener("click",e=>{const b=e.target.closest("button");if(!
  [...$("rondas").children].forEach(x=>x.setAttribute("aria-pressed",x===b));rondasElegidas=+b.dataset.r;});
 
 const MUNDO=[
- {id:"durazno",nx:53,ny:43,bg:"assets/worlds/durazno.webp",n:"Durazno",r:"El Tío del Asado",rondas:3,cats:["Dicho popular","Persona"]},
- {id:"montevideo",nx:62,ny:49,bg:"assets/worlds/montevideo.webp",n:"Montevideo",r:"La Vecina Curiosa",rondas:3,cats:["Lugar","Casa y trabajo"]},
- {id:"piriapolis",nx:52,ny:44,bg:"assets/worlds/piriapolis.webp",n:"Piriápolis",r:"El Guardavidas",rondas:3,cats:["Clima y verano","Viaje"]},
- {id:"punta",nx:51,ny:48,bg:"assets/worlds/punta-del-este.webp",n:"Punta del Este",r:"La Turista",rondas:4,cats:["Cosa","Cosas de la casa"]},
- {id:"salto",nx:52,ny:44,bg:"assets/worlds/salto.webp",n:"Salto y las termas",r:"El Parrillero",rondas:4,cats:["Comida","Animales"]},
- {id:"tacuarembo",nx:55,ny:47,bg:"assets/worlds/tacuarembo.webp",n:"Tacuarembó",r:"El Gaucho",rondas:4,cats:["Accion","Deporte"]},
- {id:"polonio",nx:51,ny:42,bg:"assets/worlds/cabo-polonio.webp",n:"Cabo Polonio",r:"El Farolero",rondas:5,cats:["Musica y fiesta","Escuela e infancia"]},
- {id:"colonia",nx:55,ny:40,bg:"assets/worlds/colonia.webp",n:"Colonia",r:"El Cinéfilo",rondas:5,cats:["Pelicula","Programa de TV"]},
- {id:"centenario",nx:52,ny:53,bg:"assets/worlds/estadio-centenario.webp",n:"Estadio Centenario",r:"La Campeona",rondas:5,cats:["Personajes","Dicho popular"]}];
+ {id:"durazno",pasos:[[27, 14], [37, 19], [28, 23], [17, 35]],nx:53,ny:43,bg:"assets/worlds/durazno.webp",n:"Durazno",r:"El Tío del Asado",rondas:3,cats:["Dicho popular","Persona"]},
+ {id:"montevideo",pasos:[[19, 13], [31, 18], [39, 24], [24, 42]],nx:62,ny:49,bg:"assets/worlds/montevideo.webp",n:"Montevideo",r:"La Vecina Curiosa",rondas:3,cats:["Lugar","Casa y trabajo"]},
+ {id:"piriapolis",pasos:[[27, 13], [37, 18], [27, 23], [45, 37]],nx:52,ny:44,bg:"assets/worlds/piriapolis.webp",n:"Piriápolis",r:"El Guardavidas",rondas:3,cats:["Clima y verano","Viaje"]},
+ {id:"punta",pasos:[[23, 14], [35, 18], [39, 24], [38, 34]],nx:51,ny:48,bg:"assets/worlds/punta-del-este.webp",n:"Punta del Este",r:"La Turista",rondas:4,cats:["Cosa","Cosas de la casa"]},
+ {id:"salto",pasos:[[27, 13], [36, 18], [27, 23], [35, 30]],nx:52,ny:44,bg:"assets/worlds/salto.webp",n:"Salto y las termas",r:"El Parrillero",rondas:4,cats:["Comida","Animales"]},
+ {id:"tacuarembo",pasos:[[26, 15], [36, 19], [27, 26], [41, 32]],nx:55,ny:47,bg:"assets/worlds/tacuarembo.webp",n:"Tacuarembó",r:"El Gaucho",rondas:4,cats:["Accion","Deporte"]},
+ {id:"polonio",pasos:[[44, 12], [42, 20], [51, 26], [34, 33]],nx:51,ny:42,bg:"assets/worlds/cabo-polonio.webp",n:"Cabo Polonio",r:"El Farolero",rondas:5,cats:["Musica y fiesta","Escuela e infancia"]},
+ {id:"colonia",pasos:[[26, 14], [35, 19], [38, 25], [32, 35]],nx:55,ny:40,bg:"assets/worlds/colonia.webp",n:"Colonia",r:"El Cinéfilo",rondas:5,cats:["Pelicula","Programa de TV"]},
+ {id:"centenario",pasos:[[27, 13], [33, 18], [25, 23], [18, 38]],nx:52,ny:53,bg:"assets/worlds/estadio-centenario.webp",n:"Estadio Centenario",r:"La Campeona",rondas:5,cats:["Personajes","Dicho popular"]}];
 let ganados=(()=>{try{return new Set(JSON.parse(localStorage.getItem("larueda_mundo")||"[]"));}catch(e){return new Set();}})();
 const guardarMundo=()=>{try{localStorage.setItem("larueda_mundo",JSON.stringify([...ganados]));}catch(e){}};
-let destino=null;
+let destino=null,pasoActual=null;
+let progreso=(()=>{try{return JSON.parse(localStorage.getItem("larueda_pasos")||"{}");}catch(e){return {};}})();
+const guardarPasos=()=>{try{localStorage.setItem("larueda_pasos",JSON.stringify(progreso));}catch(e){}};
+const hechos=id=>progreso[id]||0;
 
 function verMundo(){
   $("fondoMundo").classList.remove("ver");
@@ -450,8 +460,9 @@ function verMundo(){
     const a=pts[i-1],b=pts[i];
     dpath+=" C"+a.x+" "+(a.y+40)+", "+b.x+" "+(b.y-40)+", "+b.x+" "+b.y;
   }
-  let hechos=0;while(hechos<N&&ganados.has(MUNDO[hechos].id))hechos++;
-  const avance=N>1?Math.min(1,hechos/(N-1)):0;
+  let vencidos=0;while(vencidos<N&&ganados.has(MUNDO[vencidos].id))vencidos++;
+  const parcial=vencidos<N?Math.min(1,hechos(MUNDO[vencidos].id)/((MUNDO[vencidos].pasos||[1]).length+1)):0;
+  const avance=N>1?Math.min(1,(vencidos+parcial)/(N-1)):0;
   const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
   svg.setAttribute("class","senda");
   svg.setAttribute("viewBox","0 0 100 "+(N*100));
@@ -461,19 +472,35 @@ function verMundo(){
   tira.appendChild(svg);
 
   MUNDO.forEach((d,i)=>{
+    const abierto0=i===0||ganados.has(MUNDO[i-1].id);
+    (d.pasos||[]).forEach((pp,k)=>{
+      const hp=hechos(d.id);
+      const pb=document.createElement("button");
+      pb.className="paso "+(k<hp?"listo":(k===hp&&abierto0&&!ganados.has(d.id)?"ahora":""));
+      pb.style.left=pp[0]+"%";
+      pb.style.top=((i*100+pp[1])/(N*100)*100)+"%";
+      pb.textContent=k<hp?"✓":(k+1);
+      if(abierto0&&k<=hp&&!ganados.has(d.id))pb.onclick=()=>empezarDestino(i,k);
+      else pb.disabled=true;
+      tira.appendChild(pb);
+    });
+  });
+
+  MUNDO.forEach((d,i)=>{
     const ganado=ganados.has(d.id);
-    const abierto=i===0||ganados.has(MUNDO[i-1].id);
+    const listo=hechos(d.id)>=(d.pasos?d.pasos.length:0);
+    const abierto=(i===0||ganados.has(MUNDO[i-1].id))&&listo;
     const b=document.createElement("button");
     b.className="nodo "+(ganado?"ganado":abierto?"abierto":"cerrado");
     b.style.left=pts[i].x+"%";
     b.style.top=(pts[i].y/(N*100)*100)+"%";
-    b.innerHTML='<span class="bola">'+(ganado?"★":abierto?(i+1):"✖")+'</span>'+
+    b.innerHTML='<span class="bola">'+(ganado?"★":abierto?(i+1):"🔒")+'</span>'+
       '<span class="rot">'+d.n+'</span>';
     if(abierto)b.onclick=()=>empezarDestino(i);else b.disabled=true;
     tira.appendChild(b);
   });
 
-  const act=Math.min(hechos,N-1);
+  const act=Math.min(vencidos,N-1);
   const pin=document.createElement("div");pin.className="pin";pin.textContent="🚗";
   pin.style.left=pts[act].x+"%";pin.style.top=(pts[act].y/(N*100)*100)+"%";
   tira.appendChild(pin);
@@ -487,12 +514,13 @@ function verMundo(){
 $("salirMundo").onclick=()=>{$("mundo").style.display="none";$("setup").style.display="block";
   $("fondoMundo").classList.remove("ver");};
 
-function empezarDestino(i){
-  destino=i;const d=MUNDO[i];
+function empezarDestino(i,paso){
+  destino=i;pasoActual=(paso===undefined?null:paso);const d=MUNDO[i];
   if(d.bg){$("fondoMundo").style.backgroundImage="url('"+d.bg+"')";$("fondoMundo").classList.add("ver");}
-  modo="bot";miJug=0;rondasElegidas=d.rondas;
+  modo="bot";miJug=0;rondasElegidas=(pasoActual===null?d.rondas:1);
   $("mundo").style.display="none";$("juego").style.display="block";
-  armarTeclado();iniciarPartida($("miNombre").value.trim()||"Vos",d.r,d.cats);
+  armarTeclado();iniciarPartida($("miNombre").value.trim()||"Vos",
+    pasoActual===null?d.r:"Máquina",d.cats);
 }
 
 let botT=null;
@@ -801,7 +829,16 @@ function finDelJuego(){
     "Ganó las rondas "+Math.max(a.rg,b.rg)+" a "+Math.min(a.rg,b.rg)+
     " · $"+S.jug[g].tot+" contra $"+S.jug[1-g].tot+".");
   let tit,txt=detalle,extra="";
-  if(modo==="bot"){
+  if(modo==="bot"&&pasoActual!==null){
+    const d=MUNDO[destino];
+    if(g===0){
+      tit="¡Paso "+(pasoActual+1)+" superado!";
+      if(hechos(d.id)<=pasoActual){progreso[d.id]=pasoActual+1;guardarPasos();}
+      extra=(progreso[d.id]>=d.pasos.length)?" Se destrabó el desafío contra "+d.r+".":
+        " Te falta llegar hasta "+d.r+".";
+    }else if(g<0)tit="¡Empate!";
+    else{tit="No pudiste";extra=" Probá este paso de nuevo.";}
+  }else if(modo==="bot"){
     const d=destino!==null?MUNDO[destino]:null;
     if(g===0){
       tit=d?"¡"+d.n+" conquistado!":"¡Ganaste!";
@@ -837,7 +874,8 @@ function mostrarFin(tit,txt){
   $("capaResuelto").classList.remove("ver");
   $("capaResuelto").querySelectorAll(".papel").forEach(x=>x.remove());
   $("capaRueda").classList.remove("ver");
-  $("fCopa").textContent=tit.startsWith("¡Empate")?"🤝":tit.startsWith("¡Victoria")?"🏆":tit.startsWith("Te ganó")?"😤":"🏅";
+  $("fCopa").textContent=tit.startsWith("¡Empate")?"🤝":tit.startsWith("¡Victoria")?"🏆":
+    (tit.startsWith("Te ganó")||tit.startsWith("No pudiste"))?"😤":tit.startsWith("¡Paso")?"✅":"🏅";
   $("fTitulo").textContent=tit;$("fTexto").textContent=txt;
   $("modalFin").classList.add("ver");
   [0,180,360,620].forEach((ms,i)=>setTimeout(()=>bip([784,988,1175,1568][i],.28,"sine",.07),ms));
