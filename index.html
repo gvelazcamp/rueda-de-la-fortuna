@@ -189,6 +189,7 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 .tablero.bien{animation:bien .6s ease-out}
 @keyframes bien{0%,100%{background:#0C0616}40%{background:#2E2405;box-shadow:0 0 40px #F5B30155}}
 .capa{position:fixed;inset:0;background:#0A0412E6;display:none;place-items:center;padding:20px;z-index:9}
+#modalFin{z-index:30}
 .capa.ver{display:grid}
 .caja{background:var(--noche2);border:1px solid #FFFFFF1F;border-radius:20px;padding:26px 22px;max-width:440px;width:100%;text-align:center}
 .caja h2{font-size:1.7rem;color:var(--oro);margin-bottom:10px}
@@ -609,12 +610,15 @@ function nuevoMazo(cats){
 }
 function iniciarPartida(n1,n2,cats){
   S={jug:[{n:n1,tot:0,ronda:0},{n:n2,tot:0,ronda:0}],turno:arranca,rondas:rondasElegidas,ronda:0,
-     cats:cats||null,mazo:nuevoMazo(cats),valor:0,fase:"girar",abiertas:new Set(),usadas:new Set(),frase:"",cat:""};
+     cats:cats||null,mazo:nuevoMazo(cats),finYa:false,valor:0,fase:"girar",abiertas:new Set(),usadas:new Set(),frase:"",cat:""};
   nuevaRonda();
 }
 function nuevaRonda(){
   S.ronda++;
-  if(S.ronda>S.rondas)return finDelJuego();
+  if(S.ronda>S.rondas){
+    if($("capaResuelto").classList.contains("ver")){setTimeout(nuevaRonda2,900);S.ronda--;return;}
+    return finDelJuego();
+  }
   if(!S.mazo.length)S.mazo=nuevoMazo(S.cats);
   const f=S.mazo.pop();
   vistas.add(f.t);guardarVistas();
@@ -622,6 +626,9 @@ function nuevaRonda(){
   S.abiertas=new Set();S.usadas=new Set();S.jug.forEach(j=>j.ronda=0);S.valor=0;S.fase="girar";
   publicar("Le toca a <b>"+S.jug[S.turno].n+"</b>. Girá la rueda para pedir una consonante.");
 }
+function nuevaRonda2(){S.ronda++;
+  if($("capaResuelto").classList.contains("ver")){setTimeout(nuevaRonda2,600);S.ronda--;return;}
+  finDelJuego();}
 const mask=()=>[...S.frase].map(c=>c===" "?" ":(S.abiertas.has(c)?c:"_")).join("");
 const consRestantes=()=>[...new Set(S.frase.replace(/ /g,""))].filter(c=>!VOCALES.includes(c)&&!S.abiertas.has(c)).length;
 const BILLETE='<svg viewBox="0 0 28 18" aria-hidden="true"><rect x="1" y="1" width="26" height="16" rx="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="14" cy="9" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.6 5.4h1.5M21.9 12.6h1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
@@ -731,6 +738,7 @@ function hostResolver(txt){
 function cambiarTurno(){S.turno=1-S.turno;S.fase="girar";S.valor=0;S.doble=false;
   publicar("Le toca a <b>"+S.jug[S.turno].n+"</b>.");}
 function finDelJuego(){
+  if(S.finYa)return;S.finYa=true;
   const [a,b]=S.jug;
   if(a.tot!==b.tot){const g=a.tot>b.tot?0:1;serie[g]++;
     if(ultGanador===g)racha++;else{ultGanador=g;racha=1;}}
@@ -746,13 +754,16 @@ function finDelJuego(){
   mostrarFin(tit,txt);
 }
 function mostrarFin(tit,txt){
+  $("capaResuelto").classList.remove("ver");
+  $("capaResuelto").querySelectorAll(".papel").forEach(x=>x.remove());
+  $("capaRueda").classList.remove("ver");
   $("fCopa").textContent=tit.startsWith("¡Empate")?"🤝":"🏆";
   $("fTitulo").textContent=tit;$("fTexto").textContent=txt;
   $("modalFin").classList.add("ver");
   [0,180,360,620].forEach((ms,i)=>setTimeout(()=>bip([784,988,1175,1568][i],.28,"sine",.07),ms));
 }
 function revancha(){
-  arranca=1-arranca;
+  arranca=1-arranca;S.finYa=false;
   S.jug.forEach(j=>{j.tot=0;j.ronda=0;});
   S.turno=arranca;S.ronda=0;S.valor=0;S.fase="girar";
   S.mazo=nuevoMazo(S.cats);
