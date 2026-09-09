@@ -45,7 +45,8 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 #setup,#lobby,#mundo{max-width:520px;margin:5vh auto;text-align:center}
 #lobby,#mundo{display:none}
 #mapa{max-height:72vh;overflow-y:auto;border-radius:22px;border:1px solid #FFFFFF1F;
- margin-bottom:16px;-webkit-overflow-scrolling:touch;background:#0C0616}
+ margin-bottom:16px;-webkit-overflow-scrolling:touch;background:#0C0616;touch-action:pan-y;cursor:grab}
+#mapa.arrastrando{cursor:grabbing}
 #mapa::-webkit-scrollbar{width:0}
 .tira{position:relative;width:100%}
 .region{width:100%;aspect-ratio:3/4;background-size:cover;background-position:center;display:block}
@@ -89,9 +90,9 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 .dz-vidas span{font-weight:700;font-size:1.15rem}
 .dz-vidas small{color:#B49FCE;font-size:.72rem}
 .dz-monedas{font-weight:700;font-size:1.15rem;color:var(--oro)}
-.dz-viewport{position:relative;width:100%;height:min(82vh,900px);overflow-y:auto;overflow-x:hidden;
+.dz-viewport{position:relative;width:100%;height:min(62vh,700px);overflow-y:auto;overflow-x:hidden;
  border-radius:22px;border:1px solid #FFFFFF1F;background:#0C0616;cursor:grab;
- -webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain}
+ -webkit-overflow-scrolling:touch;touch-action:pan-y}
 .dz-viewport::-webkit-scrollbar{width:0}
 .dz-viewport.dz-arrastrando{cursor:grabbing}
 .dz-canvas{position:relative;width:100%}
@@ -118,8 +119,9 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 .dz-sello{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:700;
  background:#160B24CC;border:2px solid #FFFFFF33;color:#8B7AA3}
 .dz-sello.listo{background:var(--oro);color:var(--tinta);border-color:#FFFFFF88}
-.mundo-hud{display:flex;justify-content:center;gap:18px;margin-bottom:10px;font-weight:700}
+.mundo-hud{display:flex;justify-content:center;align-items:center;gap:18px;margin-bottom:10px;font-weight:700}
 .mundo-hud .mh-monedas{color:var(--oro)}
+.mh-pasaporte{background:#2A1A3C;border:1px solid #FFFFFF26;border-radius:12px;width:38px;height:38px;font-size:1.15rem}
 h1.titulo{font-size:clamp(2.6rem,10vw,4.2rem);line-height:.92;color:var(--oro);
  text-shadow:0 6px 0 #7A2E00,0 0 40px rgba(245,179,1,.35)}
 p.sub{margin:14px 0 24px;color:#C9B8DE}
@@ -354,7 +356,8 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
 
 <section id="mundo">
   <h1 class="titulo" style="font-size:2.4rem">URUGUAY</h1>
-  <div class="mundo-hud"><span id="mhVidas">❤️ 5</span><span class="mh-monedas" id="mhMonedas">🪙 500</span></div>
+  <div class="mundo-hud"><span id="mhVidas">❤️ 5</span><span class="mh-monedas" id="mhMonedas">🪙 500</span>
+    <button class="mh-pasaporte" id="mhPasaporte" title="Pasaporte de Durazno">🛂</button></div>
   <p class="sub" id="subMundo">Ganale a cada rival y andá abriendo el país.</p>
   <div id="mapa"></div>
   <button class="btn-grande sec" id="salirMundo">Volver al inicio</button>
@@ -380,7 +383,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
     </div>
   </div>
   <button class="btn-grande" id="dzBoton">JUGAR ❤️ 1</button>
-  <button class="btn-grande sec" id="dzSalir">Volver al inicio</button>
+  <button class="btn-grande sec" id="dzSalir">Volver al mapa</button>
 </section>
 
 <div class="capa" id="modalPasaporte"><div class="caja">
@@ -664,11 +667,11 @@ setInterval(()=>{
 /* ---- Durazno 3D ---- */
 const DZ=MUNDO[0];
 const DZ_NODOS=[
-  {tipo:"paso",x:49,y:88},
-  {tipo:"paso",x:51,y:62},
-  {tipo:"paso",x:45,y:47},
+  {tipo:"paso",x:20,y:30},
   {tipo:"paso",x:35,y:34},
-  {tipo:"rival",x:20,y:30}
+  {tipo:"paso",x:45,y:47},
+  {tipo:"paso",x:51,y:62},
+  {tipo:"rival",x:49,y:88}
 ];
 const dzHechos=()=>hechos(DZ.id);
 const dzGanado=()=>ganados.has(DZ.id);
@@ -753,16 +756,16 @@ function abrirDurazno(){
   if(img.complete)requestAnimationFrame(dzScrollAFoco);
   else img.addEventListener("load",()=>requestAnimationFrame(dzScrollAFoco),{once:true});
 }
-$("dzSalir").onclick=()=>{$("pantDurazno").style.display="none";$("setup").style.display="block";};
-(function(){
-  const vp=$("duraznoViewport");
+$("dzSalir").onclick=()=>verMundo();
+$("mhPasaporte").onclick=dzAbrirPasaporte;
+function activarArrastre(vp,claseArrastrando){
   let arrastrando=false,startY=0,startScroll=0,moved=false;
   vp.addEventListener("pointerdown",e=>{
     if(e.pointerType==="touch")return;
     if(e.target.closest("button"))return;
     arrastrando=true;moved=false;startY=e.clientY;startScroll=vp.scrollTop;
     vp.setPointerCapture(e.pointerId);
-    vp.classList.add("dz-arrastrando");
+    vp.classList.add(claseArrastrando);
   });
   vp.addEventListener("pointermove",e=>{
     if(!arrastrando)return;
@@ -770,12 +773,14 @@ $("dzSalir").onclick=()=>{$("pantDurazno").style.display="none";$("setup").style
     if(Math.abs(dy)>3)moved=true;
     vp.scrollTop=startScroll-dy;
   });
-  function soltar(){if(!arrastrando)return;arrastrando=false;vp.classList.remove("dz-arrastrando");}
+  function soltar(){if(!arrastrando)return;arrastrando=false;vp.classList.remove(claseArrastrando);}
   vp.addEventListener("pointerup",soltar);
   vp.addEventListener("pointercancel",soltar);
   vp.addEventListener("pointerleave",soltar);
   vp.addEventListener("click",e=>{if(moved){e.stopPropagation();e.preventDefault();moved=false;}},true);
-})();
+}
+activarArrastre($("duraznoViewport"),"dz-arrastrando");
+activarArrastre($("mapa"),"arrastrando");
 
 function verMundo(){
   $("fondoMundo").classList.remove("ver");
@@ -821,7 +826,7 @@ function verMundo(){
       pb.style.left=pp[0]+"%";
       pb.style.top=((i*100+pp[1])/(N*100)*100)+"%";
       pb.textContent=k<hp?"✓":(k+1);
-      if(abierto0&&k<=hp&&!ganados.has(d.id)&&meta.vidas>0)pb.onclick=()=>empezarDestino(i,k);
+      if(abierto0&&k<=hp&&!ganados.has(d.id)&&meta.vidas>0)pb.onclick=()=>(i===0?abrirDurazno():empezarDestino(i,k));
       else pb.disabled=true;
       tira.appendChild(pb);
     });
@@ -837,7 +842,7 @@ function verMundo(){
     b.style.top=(pts[i].y/(N*100)*100)+"%";
     b.innerHTML='<span class="bola">'+(ganado?"★":abierto?(i+1):"🔒")+'</span>'+
       '<span class="rot">'+d.n+'</span>';
-    if(abierto&&meta.vidas>0)b.onclick=()=>empezarDestino(i);else b.disabled=true;
+    if(abierto&&meta.vidas>0)b.onclick=()=>(i===0?abrirDurazno():empezarDestino(i));else b.disabled=true;
     tira.appendChild(b);
   });
 
@@ -875,7 +880,7 @@ function verStock(){
 setTimeout(verStock,0);
 
 $("bBot").onclick=()=>{
-  if(!ganados.has(DZ.id))abrirDurazno();else verMundo();
+  verMundo();
 };
 
 function candidatos(){
