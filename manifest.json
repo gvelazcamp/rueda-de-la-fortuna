@@ -1,6 +1,6 @@
 {
- "name": "La Rueda",
- "short_name": "La Rueda",
+ "name": "Girá y Adiviná",
+ "short_name": "Girá y Adiviná",
  "start_url": "./index.html",
  "display": "standalone",
  "background_color": "#160B24",
