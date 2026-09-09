@@ -127,6 +127,9 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 .dz-coleccion-fab:active{transform:scale(.94)}
 @media(hover:hover){.dz-coleccion-fab:hover{box-shadow:0 6px 18px #000000AA,0 0 24px #F5B301AA}}
 @media(max-width:600px){.dz-coleccion-fab{width:52px;height:52px;left:10px;bottom:10px;font-size:1.3rem}}
+.dz-resumen{display:flex;justify-content:space-between;gap:10px;font-size:.78rem;color:#C9B8DE;
+ background:#00000033;border:1px solid #FFFFFF1F;border-radius:12px;padding:8px 12px;margin-bottom:10px}
+.dz-resumen b{color:var(--crema)}
 .dz-sobre-bloque{display:flex;align-items:center;gap:10px;font-size:.78rem;color:#C9B8DE;
  background:#00000033;border:1px solid #FFFFFF1F;border-radius:12px;padding:8px 12px;margin-bottom:10px}
 .dz-sobre-bloque span:first-child{flex-shrink:0;font-weight:700}
@@ -588,6 +591,10 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
       <div class="dz-progreso-tit" id="dzProgTxt">DURAZNO — 0%</div>
       <div class="dz-barra"><i id="dzBarra"></i></div>
     </div>
+  </div>
+  <div class="dz-resumen" id="dzResumen">
+    <span>🏅 Pasaporte <b id="dzResumenSellos">0/5</b></span>
+    <span>🎒 Colección <b id="dzResumenColeccion">0/6</b></span>
   </div>
   <div class="dz-sobre-bloque" id="dzSobreBloque">
     <span>🎁 Próximo sobre</span>
@@ -1508,6 +1515,9 @@ function dzActualizarHud(){
     pintarMiMarco("dzJugadorFrameImg");
   }else jug.style.visibility="hidden";
   colActualizarBloqueDurazno();
+  $("dzResumenSellos").textContent=dzSellos()+"/5";
+  const cm=coleccionMeta[dzCiudad().id],c=COLECCIONES[dzCiudad().id];
+  $("dzResumenColeccion").textContent=(cm?new Set(cm.coleccionables).size:0)+"/"+(c?c.items.length:6);
 }
 function dzActualizarBoton(){
   const b=$("dzBoton");
