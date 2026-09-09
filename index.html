@@ -106,22 +106,60 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
  box-shadow:0 0 22px #37D6C0AA;animation:latido 1.5s ease-in-out infinite}
 .dz-nodo.bloqueado{opacity:.6;background:#160B24CC;color:#8B7AA3}
 .dz-nodo.rival{width:58px;height:58px;font-size:1.35rem}
+.dz-viewport-wrap{position:relative}
+.dz-pasaporte-fab{position:absolute;right:14px;bottom:14px;z-index:20;width:80px;height:80px;
+ border-radius:50%;padding:6px;background:radial-gradient(circle at 35% 30%,#2A1A3C,#120A1D);
+ border:2px solid #F5B301AA;box-shadow:0 6px 18px #000000AA,0 0 16px #F5B30155;
+ display:grid;place-items:center;transition:transform .12s ease}
+.dz-pasaporte-fab img{width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none;-webkit-user-drag:none}
+.dz-pasaporte-fab:active{transform:scale(.94)}
+@media(hover:hover){.dz-pasaporte-fab:hover{box-shadow:0 6px 18px #000000AA,0 0 24px #F5B301AA}}
+@media(max-width:600px){.dz-pasaporte-fab{width:70px;height:70px;right:10px;bottom:10px}}
 .dz-panel{display:flex;align-items:center;gap:14px;margin:14px 0 10px}
-.dz-pasaporte{background:#2A1A3C;border:1px solid #FFFFFF26;border-radius:14px;width:52px;height:52px;
- font-size:1.4rem;flex-shrink:0}
 .dz-progreso{flex:1;text-align:left}
 .dz-progreso-tit{font-weight:700;font-size:.85rem;color:#C9B8DE;margin-bottom:6px}
 .dz-barra{height:10px;border-radius:99px;background:#00000044;border:1px solid #FFFFFF1F;overflow:hidden}
 .dz-barra i{display:block;height:100%;width:0%;background:linear-gradient(90deg,#F5B301,#FFE39B);
  transition:width .4s ease}
 #dzBoton:disabled{opacity:.5}
-.dz-sellos{display:flex;justify-content:center;gap:10px;margin:14px 0}
-.dz-sello{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:700;
- background:#160B24CC;border:2px solid #FFFFFF33;color:#8B7AA3}
-.dz-sello.listo{background:var(--oro);color:var(--tinta);border-color:#FFFFFF88}
 .mundo-hud{display:flex;justify-content:center;align-items:center;gap:18px;margin-bottom:10px;font-weight:700}
 .mundo-hud .mh-monedas{color:var(--oro)}
-.mh-pasaporte{background:#2A1A3C;border:1px solid #FFFFFF26;border-radius:12px;width:38px;height:38px;font-size:1.15rem}
+
+/* Pasaporte de Durazno */
+.passport-backdrop{position:fixed;inset:0;z-index:100;display:none;place-items:center;
+ background:#050915cc;backdrop-filter:blur(8px);padding:16px}
+.passport-backdrop.ver{display:grid}
+.passport-panel{position:relative;width:min(94vw,920px);max-height:90vh;overflow-y:auto;
+ border-radius:24px;border:3px solid #F5B301;box-shadow:0 20px 60px #000000AA;
+ background:linear-gradient(rgba(243,230,200,.93),rgba(235,217,174,.93)),
+  url('assets/passport/passport-durazno-base.webp') center/cover;
+ padding:28px 22px 30px;text-align:center;animation:passportIn .22s ease}
+@keyframes passportIn{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+.passport-cerrar{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;
+ background:#0B1E4D;color:#F5D98A;font-size:1.15rem;font-weight:700;border:2px solid #F5B301;z-index:2}
+.passport-tit{font-family:'Archivo Black',sans-serif;color:#0B1E4D;font-size:clamp(1.3rem,4vw,1.9rem);
+ letter-spacing:-.01em;margin:4px 0 18px}
+.passport-progreso{display:flex;align-items:center;gap:12px;background:#F8F1DFcc;border:1px solid #0B1E4D2E;
+ border-radius:99px;padding:10px 20px;margin:0 auto 24px;max-width:520px;font-weight:700;color:#0B1E4D}
+.passport-barra{flex:1;height:12px;border-radius:99px;background:#0B1E4D22;overflow:hidden}
+.passport-barra i{display:block;height:100%;width:0%;background:linear-gradient(90deg,#0B1E4D,#3D63C4);
+ transition:width .4s ease}
+.dz-sellos{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;max-width:760px;margin:0 auto}
+@media(max-width:640px){.dz-sellos{grid-template-columns:repeat(3,1fr)}}
+.dz-sello-card{position:relative;border-radius:12px;overflow:hidden;background:#00000010;
+ box-shadow:0 4px 10px #00000033}
+.dz-sello-card img{width:100%;display:block}
+.dz-sello-card.bloqueado img{filter:grayscale(.85) brightness(.6)}
+.dz-sello-card .candado{position:absolute;inset:0;display:grid;place-items:center;font-size:1.7rem;
+ color:#fff;text-shadow:0 2px 6px #000;background:#00000022}
+.dz-sello-card .check{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;
+ background:#1DBF5F;color:#fff;display:grid;place-items:center;font-weight:900;box-shadow:0 2px 6px #0006;
+ animation:selloPop .3s ease}
+@keyframes selloPop{from{transform:scale(0)}to{transform:scale(1)}}
+.dz-sello-card .encurso{position:absolute;left:0;right:0;bottom:0;background:var(--agua);color:var(--tinta);
+ font-size:.62rem;font-weight:800;text-align:center;padding:3px 0;letter-spacing:.03em}
+.dz-sello-card.actual{outline:3px solid var(--agua);box-shadow:0 0 16px #37D6C0AA}
+.dz-sello-card.completado{outline:2px solid #1DBF5F}
 h1.titulo{font-size:clamp(2.6rem,10vw,4.2rem);line-height:.92;color:var(--oro);
  text-shadow:0 6px 0 #7A2E00,0 0 40px rgba(245,179,1,.35)}
 .logo-inicio{width:min(64vw,280px);display:block;margin:0 auto;filter:drop-shadow(0 6px 18px #00000066)}
@@ -357,8 +395,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
 
 <section id="mundo">
   <h1 class="titulo" style="font-size:2.4rem">URUGUAY</h1>
-  <div class="mundo-hud"><span id="mhVidas">❤️ 5</span><span class="mh-monedas" id="mhMonedas">🪙 500</span>
-    <button class="mh-pasaporte" id="mhPasaporte" title="Pasaporte de Durazno">🛂</button></div>
+  <div class="mundo-hud"><span id="mhVidas">❤️ 5</span><span class="mh-monedas" id="mhMonedas">🪙 500</span></div>
   <p class="sub" id="subMundo">Ganale a cada rival y andá abriendo el país.</p>
   <div id="mapa"></div>
   <button class="btn-grande sec" id="salirMundo">Volver al inicio</button>
@@ -370,14 +407,18 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
     <div class="dz-vidas"><span id="dzVidas">❤️ 5</span><small id="dzProxima"></small></div>
     <div class="dz-monedas" id="dzMonedas">🪙 500</div>
   </div>
-  <div id="duraznoViewport" class="dz-viewport">
-    <div id="duraznoCanvas" class="dz-canvas">
-      <img src="assets/worlds/durazno.webp" id="duraznoImg" draggable="false" alt="Durazno">
-      <div id="dzNodos"></div>
+  <div class="dz-viewport-wrap">
+    <div id="duraznoViewport" class="dz-viewport">
+      <div id="duraznoCanvas" class="dz-canvas">
+        <img src="assets/worlds/durazno.webp" id="duraznoImg" draggable="false" alt="Durazno">
+        <div id="dzNodos"></div>
+      </div>
     </div>
+    <button class="dz-pasaporte-fab" id="dzPasaporte" title="Pasaporte de Durazno" aria-label="Abrir pasaporte">
+      <img src="assets/passport/passport-icon.webp" alt="" draggable="false">
+    </button>
   </div>
   <div class="dz-panel">
-    <button class="dz-pasaporte" id="dzPasaporte" title="Pasaporte de Durazno">🛂</button>
     <div class="dz-progreso">
       <div class="dz-progreso-tit" id="dzProgTxt">DURAZNO — 0%</div>
       <div class="dz-barra"><i id="dzBarra"></i></div>
@@ -387,12 +428,18 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
   <button class="btn-grande sec" id="dzSalir">Volver al mapa</button>
 </section>
 
-<div class="capa" id="modalPasaporte"><div class="caja">
-  <h2>Pasaporte de Durazno</h2>
-  <div class="dz-sellos" id="dzSellos"></div>
-  <p id="dzPasTxt">0 / 5 sellos · 0%</p>
-  <div class="fila"><button class="ok" id="dzPasCerrar">Cerrar</button></div>
-</div></div>
+<div class="passport-backdrop" id="modalPasaporte">
+  <div class="passport-panel" id="passportPanel">
+    <button class="passport-cerrar" id="dzPasCerrar" aria-label="Cerrar pasaporte">✕</button>
+    <h2 class="passport-tit">PASAPORTE DE DURAZNO</h2>
+    <div class="passport-progreso">
+      <span id="dzPasTxt">0 / 5 sellos</span>
+      <div class="passport-barra"><i id="dzPasBarra"></i></div>
+      <span id="dzPasPct">0%</span>
+    </div>
+    <div class="dz-sellos" id="dzSellos"></div>
+  </div>
+</div>
 
 <section id="lobby">
   <h1 class="titulo" style="font-size:2.2rem">SALA</h1>
@@ -727,20 +774,49 @@ function dzActualizarBoton(){
     b.onclick=()=>empezarDestino(0,rival?undefined:dzHechos());
   }
 }
+const DZ_SELLOS=[
+  {img:"assets/passport/durazno-sello-1.webp",nombre:"La Plaza"},
+  {img:"assets/passport/durazno-sello-2.webp",nombre:"El Río"},
+  {img:"assets/passport/durazno-sello-3.webp",nombre:"La Historia"},
+  {img:"assets/passport/durazno-sello-4.webp",nombre:"La Gente"},
+  {img:"assets/passport/durazno-sello-rival.webp",nombre:"El Tío del Asado"}
+];
 function dzAbrirPasaporte(){
   const cont=$("dzSellos");cont.innerHTML="";
-  const s=dzSellos();
-  ["1","2","3","4","👑"].forEach((lab,i)=>{
-    const e=document.createElement("div");
-    e.className="dz-sello"+(i<s?" listo":"");
-    e.textContent=i<s?"✓":lab;
-    cont.appendChild(e);
+  const h=dzHechos(),gan=dzGanado();
+  DZ_SELLOS.forEach((s,i)=>{
+    let estado;
+    if(i<4){
+      if(h>i)estado="completado";
+      else if(h===i&&!gan)estado="actual";
+      else estado="bloqueado";
+    }else{
+      if(gan)estado="completado";
+      else if(h>=4)estado="actual";
+      else estado="bloqueado";
+    }
+    const card=document.createElement("div");
+    card.className="dz-sello-card "+estado;
+    card.innerHTML='<img src="'+s.img+'" alt="'+s.nombre+'" draggable="false">'+
+      (estado==="completado"?'<span class="check">✓</span>':'')+
+      (estado==="bloqueado"?'<span class="candado">🔒</span>':'')+
+      (estado==="actual"?'<span class="encurso">EN CURSO</span>':'');
+    cont.appendChild(card);
   });
-  $("dzPasTxt").textContent=s+" / 5 sellos · "+Math.round(s/5*100)+"%";
+  const s=dzSellos(),pct=Math.round(s/5*100);
+  $("dzPasTxt").textContent=s+" / 5 sellos";
+  $("dzPasPct").textContent=pct+"%";
+  $("dzPasBarra").style.width=pct+"%";
   $("modalPasaporte").classList.add("ver");
 }
 $("dzPasaporte").onclick=dzAbrirPasaporte;
 $("dzPasCerrar").onclick=()=>$("modalPasaporte").classList.remove("ver");
+$("modalPasaporte").addEventListener("click",e=>{
+  if(e.target.id==="modalPasaporte")$("modalPasaporte").classList.remove("ver");
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape")$("modalPasaporte").classList.remove("ver");
+});
 function dzScrollAFoco(){
   const vp=$("duraznoViewport"),cv=$("duraznoCanvas");
   const idx=dzGanado()?4:Math.min(dzHechos(),4);
@@ -748,17 +824,22 @@ function dzScrollAFoco(){
   const y=cv.clientHeight*n.y/100;
   vp.scrollTo({top:Math.max(0,y-vp.clientHeight*.6),behavior:"smooth"});
 }
+let dzAssetsPrecargados=false;
+function dzPrecargarPasaporte(){
+  if(dzAssetsPrecargados)return;dzAssetsPrecargados=true;
+  ["assets/passport/passport-icon.webp","assets/passport/passport-durazno-base.webp"]
+    .concat(DZ_SELLOS.map(s=>s.img)).forEach(src=>{const im=new Image();im.src=src;});
+}
 function abrirDurazno(){
   $("fondoMundo").classList.remove("ver");
   $("setup").style.display="none";$("juego").style.display="none";$("mundo").style.display="none";
   $("pantDurazno").style.display="block";
-  dzRenderNodos();dzProgresoTxt();dzActualizarBoton();dzActualizarHud();
+  dzRenderNodos();dzProgresoTxt();dzActualizarBoton();dzActualizarHud();dzPrecargarPasaporte();
   const img=$("duraznoImg");
   if(img.complete)requestAnimationFrame(dzScrollAFoco);
   else img.addEventListener("load",()=>requestAnimationFrame(dzScrollAFoco),{once:true});
 }
 $("dzSalir").onclick=()=>verMundo();
-$("mhPasaporte").onclick=dzAbrirPasaporte;
 function activarArrastre(vp,claseArrastrando){
   let arrastrando=false,startY=0,startScroll=0,moved=false;
   vp.addEventListener("pointerdown",e=>{
