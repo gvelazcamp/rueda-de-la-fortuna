@@ -195,6 +195,27 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 .tn-comprar{background:var(--oro);color:var(--tinta);font-weight:800;border-radius:10px;padding:10px 14px;
  flex-shrink:0;font-size:.85rem;white-space:nowrap}
 .tn-comprar:disabled{opacity:.4}
+
+/* Logros */
+.lg-caja{max-width:440px;max-height:82vh;overflow-y:auto}
+.lg-resumen{color:#C9B8DE;margin-bottom:12px;font-weight:700}
+.lg-lista{text-align:left}
+.lg-item{display:flex;align-items:center;gap:12px;background:#00000033;border:1px solid #FFFFFF1F;
+ border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.lg-item.bloqueado{opacity:.45}
+.lg-icono{font-size:1.6rem;flex-shrink:0;width:40px;text-align:center}
+.lg-info{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.lg-info b{font-size:.92rem}
+.lg-info span{font-size:.76rem;color:#B49FCE}
+.lg-check{font-size:1.3rem;color:#1DBF5F;flex-shrink:0}
+.logro-toast{position:fixed;top:-120px;left:50%;transform:translateX(-50%);z-index:200;
+ display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#F5B301,#FFE39B);
+ color:var(--tinta);border-radius:16px;padding:12px 20px;box-shadow:0 10px 30px #000000AA;
+ transition:top .45s cubic-bezier(.34,1.56,.64,1);max-width:92vw}
+.logro-toast.ver{top:16px}
+.logro-toast-icono{font-size:2rem;flex-shrink:0}
+.logro-toast b{display:block;font-family:'Archivo Black',sans-serif;font-size:.82rem}
+.logro-toast span{font-size:.85rem;font-weight:700}
 h1.titulo{font-size:clamp(2.6rem,10vw,4.2rem);line-height:.92;color:var(--oro);
  text-shadow:0 6px 0 #7A2E00,0 0 40px rgba(245,179,1,.35)}
 .logo-inicio{width:min(64vw,280px);display:block;margin:0 auto;filter:drop-shadow(0 6px 18px #00000066)}
@@ -446,6 +467,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
   <button class="btn-grande sec" id="bBot">Uruguay — jugar solo</button>
   <button class="btn-grande sec rw-boton" id="bRuleta">🎡 Ruleta de premios<span id="rwBotonEstado" class="rw-badge"></span></button>
   <button class="btn-grande sec" id="bTienda">🛍️ Tienda</button>
+  <button class="btn-grande sec" id="bLogros">🏅 Logros</button>
   <button class="btn-grande sec" id="bTV">📺 Sala TV / Familia</button>
   <button class="btn-grande sec" id="bEntrarTV">📱 Entrar a Sala TV</button>
 
@@ -551,6 +573,18 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
   </div>
   <button class="no" id="tnCerrar" style="width:100%;border-radius:14px;padding:13px;font-weight:700;margin-top:10px">Cerrar</button>
 </div></div>
+
+<div class="capa" id="capaLogros"><div class="caja lg-caja">
+  <h2>🏅 Logros</h2>
+  <p class="lg-resumen" id="lgResumen">0 / 0 desbloqueados</p>
+  <div class="lg-lista" id="lgLista"></div>
+  <button class="no" id="lgCerrar" style="width:100%;border-radius:14px;padding:13px;font-weight:700;margin-top:10px">Cerrar</button>
+</div></div>
+
+<div class="logro-toast" id="logroToast">
+  <span class="logro-toast-icono" id="logroToastIcono"></span>
+  <div><b>¡Logro desbloqueado!</b><span id="logroToastNombre"></span></div>
+</div>
 
 <section id="lobby">
   <h1 class="titulo" style="font-size:2.2rem">SALA</h1>
@@ -806,7 +840,7 @@ function gastarVida(){regenerarVidas();if(meta.vidas<=0)return false;
   meta.vidas--;if(!meta.proxima)meta.proxima=Date.now()+VIDA_MS;guardarMeta();return true;}
 function recuperarVida(){meta.vidas=Math.min(VIDAS_MAX,meta.vidas+1);
   if(meta.vidas>=VIDAS_MAX)meta.proxima=0;guardarMeta();}
-function sumarMonedas(n){meta.monedas+=n;guardarMeta();}
+function sumarMonedas(n){meta.monedas+=n;guardarMeta();if(meta.monedas>=1000)logroDesbloquear("monedas1000");}
 function textoProxima(){
   if(meta.vidas>=VIDAS_MAX||!meta.proxima)return"";
   const rest=Math.max(0,meta.proxima-Date.now());
@@ -902,6 +936,8 @@ $("rwGirar").onclick=()=>{
     $("rwEstado").textContent=rwTextoEspera();
     mundoActualizarHud();rwActualizarBadge();
     rwGirando=false;bip(190,.16,"triangle",.07);
+    logroDesbloquear("ruleta");
+    if(premio.valor===500)logroDesbloquear("jackpot");
   });
 };
 rwActualizarBadge();
@@ -934,8 +970,60 @@ document.querySelectorAll(".tn-comprar").forEach(b=>{
     tnActualizar();mundoActualizarHud();rwActualizarBadge();
     if($("pantDurazno").style.display==="block"){dzActualizarHud();dzActualizarBoton();}
     bip(190,.16,"triangle",.07);
+    logroDesbloquear("tienda");
   };
 });
+
+/* ---- Logros ---- */
+const LOGROS=[
+  {id:"avatar",nombre:"Con identidad",desc:"Elegí tu nombre y tu avatar",icono:"🧑",premio:30},
+  {id:"paso1",nombre:"Primeros pasos",desc:"Superá el Paso 1 de Durazno",icono:"🥾",premio:50},
+  {id:"paso4",nombre:"Casi campeón",desc:"Superá los 4 pasos de Durazno",icono:"🏁",premio:75},
+  {id:"durazno100",nombre:"Conquistador de Durazno",desc:"Derrotá a El Tío del Asado",icono:"👑",premio:150},
+  {id:"ruleta",nombre:"Con suerte",desc:"Girá la ruleta de premios",icono:"🎡",premio:30},
+  {id:"jackpot",nombre:"¡Pozo grande!",desc:"Ganá el premio mayor de la ruleta",icono:"💰",premio:100},
+  {id:"tienda",nombre:"Comprador",desc:"Comprá algo en la tienda",icono:"🛍️",premio:30},
+  {id:"monedas1000",nombre:"Ahorrista",desc:"Juntá 1000 monedas",icono:"🪙",premio:50}
+];
+function cargarLogros(){
+  try{return new Set(JSON.parse(localStorage.getItem("gya_logros")||"[]"));}catch(e){return new Set();}
+}
+let logrosGanados=cargarLogros();
+const guardarLogros=()=>{try{localStorage.setItem("gya_logros",JSON.stringify([...logrosGanados]));}catch(e){}};
+let logroToastTimer=null;
+function logroToast(l){
+  $("logroToastIcono").textContent=l.icono;
+  $("logroToastNombre").textContent=l.nombre+" +"+l.premio+" 🪙";
+  $("logroToast").classList.add("ver");
+  bip(700,.2,"sine",.08);
+  clearTimeout(logroToastTimer);
+  logroToastTimer=setTimeout(()=>$("logroToast").classList.remove("ver"),2600);
+}
+function logroDesbloquear(id){
+  if(logrosGanados.has(id))return;
+  logrosGanados.add(id);guardarLogros();
+  const l=LOGROS.find(x=>x.id===id);
+  if(!l)return;
+  sumarMonedas(l.premio);mundoActualizarHud();
+  if($("pantDurazno").style.display==="block")dzActualizarHud();
+  logroToast(l);
+}
+function lgAbrir(){
+  const cont=$("lgLista");cont.innerHTML="";
+  LOGROS.forEach(l=>{
+    const ganado=logrosGanados.has(l.id);
+    const d=document.createElement("div");
+    d.className="lg-item "+(ganado?"":"bloqueado");
+    d.innerHTML='<div class="lg-icono">'+l.icono+'</div>'+
+      '<div class="lg-info"><b>'+l.nombre+'</b><span>'+l.desc+'</span></div>'+
+      (ganado?'<span class="lg-check">✓</span>':'');
+    cont.appendChild(d);
+  });
+  $("lgResumen").textContent=logrosGanados.size+" / "+LOGROS.length+" desbloqueados";
+  $("capaLogros").classList.add("ver");
+}
+$("bLogros").onclick=lgAbrir;
+$("lgCerrar").onclick=()=>$("capaLogros").classList.remove("ver");
 
 /* ---- Durazno 3D ---- */
 const DZ=MUNDO[0];
@@ -1226,6 +1314,7 @@ function guardarPerfil(nombre,avatar){
   }catch(e){}
   $("miNombre").value=nombre;
   actualizarChipPerfil();
+  logroDesbloquear("avatar");
 }
 let avatarElegido=null,perfilCallback=null;
 function renderAvatarGrid(){
@@ -1947,6 +2036,8 @@ function finDelJuego(){
         if(destino===0){
           selloImg=DZ_SELLOS[pasoActual].img;
           if(pasoActual+1<d.pasos.length)fSiguientePaso=pasoActual+1;
+          if(pasoActual===0)logroDesbloquear("paso1");
+          if(pasoActual===3)logroDesbloquear("paso4");
         }}
       extra=(progreso[d.id]>=d.pasos.length)?" Se destrabó el desafío contra "+d.r+". +100 🪙":
         " Te falta llegar hasta "+d.r+". +100 🪙";
@@ -1965,7 +2056,7 @@ function finDelJuego(){
       let selloImg;
       if(d&&!ganados.has(d.id)){ganados.add(d.id);guardarMundo();
         sumarMonedas(500);recuperarVida();
-        if(destino===0)selloImg=DZ_SELLOS[4].img;
+        if(destino===0){selloImg=DZ_SELLOS[4].img;logroDesbloquear("durazno100");}
         extra=(MUNDO[destino+1]?" Se abrió "+MUNDO[destino+1].n+".":" ¡Terminaste el mapa!")+" +500 🪙";}
       iniciarBonus(g,{g,tit,extra,selloImg});return;
     }
