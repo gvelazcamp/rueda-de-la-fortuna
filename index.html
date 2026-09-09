@@ -563,7 +563,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
 </section>
 
 <section id="pantDurazno">
-  <h1 class="titulo" style="font-size:2.4rem">DURAZNO</h1>
+  <h1 class="titulo" style="font-size:2.4rem" id="dzCiudadTitulo">DURAZNO</h1>
   <div class="dz-hud">
     <div class="dz-jugador" id="dzJugador"><span class="avatar-wrap"><img id="dzJugadorAvatar" src="" alt=""><img class="avatar-frame" id="dzJugadorFrameImg" alt=""></span><span id="dzJugadorNombre"></span></div>
     <div class="dz-vidasmonedas">
@@ -601,7 +601,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
 <div class="passport-backdrop" id="modalPasaporte">
   <div class="passport-panel" id="passportPanel">
     <button class="passport-cerrar" id="dzPasCerrar" aria-label="Cerrar pasaporte">✕</button>
-    <h2 class="passport-tit">PASAPORTE DE DURAZNO</h2>
+    <h2 class="passport-tit" id="passportTit">PASAPORTE DE DURAZNO</h2>
     <div class="passport-progreso">
       <span id="dzPasTxt">0 / 5 sellos</span>
       <div class="passport-barra"><i id="dzPasBarra"></i></div>
@@ -648,6 +648,11 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
     <div class="tn-info"><b>Sobre de Durazno</b><span>Un sobre para tu colección</span></div>
     <button class="tn-comprar" data-tipo="sobre_durazno" data-precio="400">🪙 400</button>
   </div>
+  <div class="tn-item">
+    <div class="tn-icono">🎁</div>
+    <div class="tn-info"><b>Sobre de Montevideo</b><span>Un sobre para tu colección</span></div>
+    <button class="tn-comprar" data-tipo="sobre_montevideo" data-precio="400">🪙 400</button>
+  </div>
   <h3 class="tn-subtitulo">🖼️ Marcos de avatar</h3>
   <div class="frame-grid" id="frameGrid"></div>
   <button class="no" id="tnCerrar" style="width:100%;border-radius:14px;padding:13px;font-weight:700;margin-top:10px">Cerrar</button>
@@ -661,8 +666,8 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
 </div></div>
 
 <div class="capa" id="modalSobreConseguido"><div class="caja">
-  <img class="sobre-conseguido-img" src="assets/collectibles/durazno/sobre-durazno.webp" alt="">
-  <h2>🎁 ¡SOBRE DE DURAZNO CONSEGUIDO!</h2>
+  <img class="sobre-conseguido-img" id="sobreConseguidoImg" src="assets/collectibles/durazno/sobre-durazno.webp" alt="">
+  <h2 id="sobreConseguidoTit">🎁 ¡SOBRE DE DURAZNO CONSEGUIDO!</h2>
   <p>Ganaste 3 rondas.</p>
   <div class="fila">
     <button class="no" id="sobreGuardar">GUARDAR PARA DESPUÉS</button>
@@ -671,7 +676,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
 </div></div>
 
 <div class="capa" id="capaColeccion"><div class="caja col-caja">
-  <h2>COLECCIÓN DURAZNO</h2>
+  <h2 id="colTitulo">COLECCIÓN DURAZNO</h2>
   <p class="col-resumen" id="colResumen">0 / 6 encontrados</p>
   <div class="col-sobres">
     <span id="colSobresTxt">🎁 Sobres disponibles: 0</span>
@@ -812,6 +817,8 @@ const FONDO={QUIEBRA:"#12060F",PIERDE:"#5A2E86",COMODIN:"#0F6E56",X2:"#F5B301"};
 const TINTA={QUIEBRA:"#F5B301",PIERDE:"#F6EFE2",COMODIN:"#9FE1CB",X2:"#160B24"};
 const VOCALES="AEIOU", LETRAS="ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split("");
 const $=id=>document.getElementById(id);
+let matchToken=0;
+function tk(fn){const t=matchToken;return function(){if(t===matchToken)fn.apply(null,arguments);};}
 const norm=s=>s.toUpperCase().normalize("NFD").replace(/[\u0300-\u0304\u0306-\u036f]/g,"").replace(/\s+/g," ").trim();
 
 let modo="local", miJug=0, mq=null, sala="", rondasElegidas=3, holaTimer=null, serie=[0,0], arranca=0, ultGanador=-1, racha=0, relojID=null;
@@ -912,8 +919,8 @@ $("rondas").addEventListener("click",e=>{const b=e.target.closest("button");if(!
  [...$("rondas").children].forEach(x=>x.setAttribute("aria-pressed",x===b));rondasElegidas=+b.dataset.r;});
 
 const MUNDO=[
- {id:"durazno",pasos:[[24, 16], [36, 23], [20, 36], [33, 50]],nx:50,ny:60,bg:"assets/worlds/durazno.webp",n:"Durazno",r:"El Tío del Asado",rondas:3,cats:["Dicho popular","Persona"]},
- {id:"montevideo",pasos:[[20, 22], [34, 31], [46, 41], [30, 55]],nx:58,ny:60,bg:"assets/worlds/montevideo.webp",n:"Montevideo",r:"La Vecina Curiosa",rondas:3,cats:["Lugar","Casa y trabajo"]},
+ {id:"durazno",pasos:[[24, 16], [36, 23], [20, 36], [33, 50]],nx:50,ny:60,bg:"assets/worlds/durazno.webp",n:"Durazno",r:"El Tío del Asado",rondas:3,cats:["Dicho popular","Persona"],rica:true},
+ {id:"montevideo",pasos:[[20, 22], [34, 31], [46, 41], [30, 55]],nx:58,ny:60,bg:"assets/worlds/montevideo.webp",n:"Montevideo",r:"La Vecina Curiosa",rondas:3,cats:["Lugar","Casa y trabajo"],rica:true},
  {id:"piriapolis",pasos:[[22, 20], [35, 28], [26, 40], [40, 52]],nx:56,ny:58,bg:"assets/worlds/piriapolis.webp",n:"Piriápolis",r:"El Guardavidas",rondas:3,cats:["Clima y verano","Viaje"]},
  {id:"punta",pasos:[[20, 22], [32, 30], [24, 42], [38, 52]],nx:50,ny:62,bg:"assets/worlds/punta-del-este.webp",n:"Punta del Este",r:"La Turista",rondas:4,cats:["Cosa","Cosas de la casa"]},
  {id:"salto",pasos:[[22, 20], [34, 28], [24, 40], [38, 50]],nx:52,ny:46,bg:"assets/worlds/salto.webp",n:"Salto y las termas",r:"El Parrillero",rondas:4,cats:["Comida","Animales"]},
@@ -1117,7 +1124,10 @@ document.querySelectorAll(".tn-comprar").forEach(b=>{
     if(tipo==="vida")recuperarVida();
     else if(tipo==="recarga"){meta.vidas=VIDAS_MAX;meta.proxima=0;}
     else if(tipo==="ruleta")meta.ultimaRuleta=0;
-    else if(tipo==="sobre_durazno"){coleccionMeta.durazno.sobres++;guardarColeccionMeta();}
+    else if(tipo.indexOf("sobre_")===0){
+      const ciudadId=tipo.slice(6);
+      if(coleccionMeta[ciudadId]){coleccionMeta[ciudadId].sobres++;guardarColeccionMeta();}
+    }
     guardarMeta();
     tnActualizar();mundoActualizarHud();rwActualizarBadge();
     if($("pantDurazno").style.display==="block"){dzActualizarHud();dzActualizarBoton();}
@@ -1250,6 +1260,20 @@ const COLECCIONES={
       {id:"asado",nombre:"Asado",img:"assets/collectibles/durazno/coleccion-durazno-asado.webp"},
       {id:"plaza",nombre:"Plaza / Parque",img:"assets/collectibles/durazno/coleccion-durazno-plaza.webp"}
     ]
+  },
+  montevideo:{
+    nombre:"Montevideo",
+    sobreCerrado:"assets/collectibles/montevideo/sobre-montevideo.webp",
+    sobreAbierto:"assets/collectibles/montevideo/sobre-montevideo-abierto.webp",
+    frameExclusivo:"frame-montevideo", // preparado a futuro: NO activar hasta subir assets/frames/frame-montevideo.png
+    items:[
+      {id:"rambla",nombre:"Rambla",img:"assets/collectibles/montevideo/coleccion-montevideo-rambla.webp"},
+      {id:"palacio-salvo",nombre:"Palacio Salvo",img:"assets/collectibles/montevideo/coleccion-montevideo-palacio-salvo.webp"},
+      {id:"centenario",nombre:"Estadio Centenario",img:"assets/collectibles/montevideo/coleccion-montevideo-centenario.webp"},
+      {id:"mate",nombre:"Mate de Montevideo",img:"assets/collectibles/montevideo/coleccion-montevideo-mate.webp"},
+      {id:"mercado-puerto",nombre:"Mercado del Puerto",img:"assets/collectibles/montevideo/coleccion-montevideo-mercado-puerto.webp"},
+      {id:"omnibus",nombre:"Ómnibus",img:"assets/collectibles/montevideo/coleccion-montevideo-omnibus.webp"}
+    ]
   }
 };
 function cargarColeccionMeta(){
@@ -1277,14 +1301,14 @@ function mostrarToast(icono,texto){
   logroToastTimer=setTimeout(()=>$("logroToast").classList.remove("ver"),2600);
 }
 function colActualizarBloqueDurazno(){
-  const cm=coleccionMeta.durazno;if(!cm)return;
+  const cm=coleccionMeta[dzCiudad().id];if(!cm)return;
   const el=$("dzSobreTxt");if(!el)return;
   el.textContent=cm.rondasProgreso+" / 3 rondas";
   $("dzSobreBarra").style.width=Math.round(cm.rondasProgreso/3*100)+"%";
 }
 function sumarRondaColeccion(cual){
-  // Solo cuenta en Mundo Uruguay -> Durazno -> jugador solo (evita ventajas/duplicados en multijugador).
-  if(modo!=="bot"||destino!==0)return;
+  // Solo cuenta en Mundo Uruguay -> ciudad con colección -> jugador solo (evita ventajas/duplicados en multijugador).
+  if(modo!=="bot"||destino===null||!MUNDO[destino]||MUNDO[destino].id!==cual)return;
   const cm=coleccionMeta[cual];if(!cm)return;
   cm.rondasProgreso++;
   if(cm.rondasProgreso>=3){
@@ -1296,6 +1320,8 @@ function sumarRondaColeccion(cual){
 let colSobreCualActual=null,colVolverAModal=false;
 function colMostrarSobreConseguido(cual){
   colSobreCualActual=cual;
+  $("sobreConseguidoImg").src=COLECCIONES[cual].sobreCerrado;
+  $("sobreConseguidoTit").textContent="🎁 ¡SOBRE DE "+COLECCIONES[cual].nombre.toUpperCase()+" CONSEGUIDO!";
   $("modalSobreConseguido").classList.add("ver");
 }
 function colElegirPremio(cual){
@@ -1324,7 +1350,7 @@ let colAbriendo=false;
 function colAbrirSobre(cual){
   const cm=coleccionMeta[cual];
   if(colAbriendo||cm.sobres<=0)return;
-  colAbriendo=true;
+  colAbriendo=true;colSobreCualActual=cual;
   cm.sobres--;guardarColeccionMeta();
   $("capaColeccion").classList.remove("ver");
   $("sobreAnimFase").style.display="block";
@@ -1362,6 +1388,7 @@ function colAbrirSobre(cual){
 function colRenderModal(cual){
   const c=COLECCIONES[cual],cm=coleccionMeta[cual];
   const tenidos=new Set(cm.coleccionables);
+  $("colTitulo").textContent="COLECCIÓN "+c.nombre.toUpperCase();
   $("colResumen").textContent=tenidos.size+" / "+c.items.length+" encontrados";
   $("colSobresTxt").textContent="🎁 Sobres disponibles: "+cm.sobres;
   $("colAbrirBtn").disabled=cm.sobres<=0;
@@ -1377,7 +1404,7 @@ function colRenderModal(cual){
     cont.appendChild(card);
   });
 }
-$("dzColeccionBtn").onclick=()=>{colRenderModal("durazno");$("capaColeccion").classList.add("ver");};
+$("dzColeccionBtn").onclick=()=>{colRenderModal(dzCiudad().id);$("capaColeccion").classList.add("ver");};
 $("colCerrar").onclick=()=>$("capaColeccion").classList.remove("ver");
 $("sobreGuardar").onclick=()=>$("modalSobreConseguido").classList.remove("ver");
 $("sobreAbrirAhora").onclick=()=>{
@@ -1387,25 +1414,54 @@ $("sobreAbrirAhora").onclick=()=>{
 };
 $("sobrePremioCerrar").onclick=()=>{
   $("capaAbrirSobre").classList.remove("ver");
-  if(colVolverAModal){colRenderModal("durazno");$("capaColeccion").classList.add("ver");}
+  if(colVolverAModal){colRenderModal(colSobreCualActual);$("capaColeccion").classList.add("ver");}
 };
 
-/* ---- Durazno 3D ---- */
-const DZ=MUNDO[0];
-const DZ_NODOS=[
-  {tipo:"paso",x:20,y:30},
-  {tipo:"paso",x:35,y:34},
-  {tipo:"paso",x:45,y:47},
-  {tipo:"paso",x:51,y:62},
-  {tipo:"rival",x:49,y:88}
-];
-const dzHechos=()=>hechos(DZ.id);
-const dzGanado=()=>ganados.has(DZ.id);
+/* ---- Ciudades "ricas" (mapa 3D + pasaporte + sellos) — Durazno y Montevideo comparten esta pantalla ---- */
+const CIUDAD_RICA={
+  durazno:{
+    nodos:[
+      {tipo:"paso",x:20,y:30},
+      {tipo:"paso",x:35,y:34},
+      {tipo:"paso",x:45,y:47},
+      {tipo:"paso",x:51,y:62},
+      {tipo:"rival",x:49,y:88}
+    ],
+    sellos:[
+      {img:"assets/passport/durazno-sello-1.webp",nombre:"La Plaza"},
+      {img:"assets/passport/durazno-sello-2.webp",nombre:"El Río"},
+      {img:"assets/passport/durazno-sello-3.webp",nombre:"La Historia"},
+      {img:"assets/passport/durazno-sello-4.webp",nombre:"La Gente"},
+      {img:"assets/passport/durazno-sello-rival.webp",nombre:"El Tío del Asado"}
+    ]
+  },
+  montevideo:{
+    nodos:[
+      {tipo:"paso",x:28,y:18},
+      {tipo:"paso",x:45,y:30},
+      {tipo:"paso",x:40,y:48},
+      {tipo:"paso",x:30,y:66},
+      {tipo:"rival",x:20,y:86}
+    ],
+    sellos:[
+      {img:"assets/passport/montevideo-sello-1.webp",nombre:"Rambla"},
+      {img:"assets/passport/montevideo-sello-2.webp",nombre:"Ciudad Vieja"},
+      {img:"assets/passport/montevideo-sello-3.webp",nombre:"Estadio Centenario"},
+      {img:"assets/passport/montevideo-sello-4.webp",nombre:"Mercado del Puerto"},
+      {img:"assets/passport/montevideo-sello-rival.webp",nombre:"La Vecina Curiosa"}
+    ]
+  }
+};
+let dzCiudadIdx=0;
+const dzCiudad=()=>MUNDO[dzCiudadIdx];
+const dzCfg=()=>CIUDAD_RICA[dzCiudad().id];
+const dzHechos=()=>hechos(dzCiudad().id);
+const dzGanado=()=>ganados.has(dzCiudad().id);
 const dzSellos=()=>dzGanado()?5:dzHechos();
 function dzRenderNodos(){
   const cont=$("dzNodos");cont.innerHTML="";
   const h=dzHechos(),gan=dzGanado();
-  DZ_NODOS.forEach((n,i)=>{
+  dzCfg().nodos.forEach((n,i)=>{
     const b=document.createElement("button");
     let estado,label;
     if(i<4){
@@ -1420,14 +1476,14 @@ function dzRenderNodos(){
     b.className="dz-nodo "+estado+(i===4?" rival":"");
     b.style.left=n.x+"%";b.style.top=n.y+"%";
     b.textContent=label;
-    if(estado==="ahora")b.onclick=()=>{if(meta.vidas>0)empezarDestino(0,i<4?i:undefined);};
+    if(estado==="ahora")b.onclick=()=>{if(meta.vidas>0)empezarDestino(dzCiudadIdx,i<4?i:undefined);};
     else b.disabled=true;
     cont.appendChild(b);
   });
 }
 function dzProgresoTxt(){
   const s=dzSellos(),pct=Math.round(s/5*100);
-  $("dzProgTxt").textContent="DURAZNO — "+pct+"%";
+  $("dzProgTxt").textContent=dzCiudad().n.toUpperCase()+" — "+pct+"%";
   $("dzBarra").style.width=pct+"%";
 }
 function dzActualizarHud(){
@@ -1457,20 +1513,13 @@ function dzActualizarBoton(){
     b.disabled=true;b.onclick=null;
   }else{
     b.disabled=false;
-    b.onclick=()=>empezarDestino(0,rival?undefined:dzHechos());
+    b.onclick=()=>empezarDestino(dzCiudadIdx,rival?undefined:dzHechos());
   }
 }
-const DZ_SELLOS=[
-  {img:"assets/passport/durazno-sello-1.webp",nombre:"La Plaza"},
-  {img:"assets/passport/durazno-sello-2.webp",nombre:"El Río"},
-  {img:"assets/passport/durazno-sello-3.webp",nombre:"La Historia"},
-  {img:"assets/passport/durazno-sello-4.webp",nombre:"La Gente"},
-  {img:"assets/passport/durazno-sello-rival.webp",nombre:"El Tío del Asado"}
-];
 function dzAbrirPasaporte(){
   const cont=$("dzSellos");cont.innerHTML="";
   const h=dzHechos(),gan=dzGanado();
-  DZ_SELLOS.forEach((s,i)=>{
+  dzCfg().sellos.forEach((s,i)=>{
     let estado;
     if(i<4){
       if(h>i)estado="completado";
@@ -1490,6 +1539,7 @@ function dzAbrirPasaporte(){
     cont.appendChild(card);
   });
   const s=dzSellos(),pct=Math.round(s/5*100);
+  $("passportTit").textContent="PASAPORTE DE "+dzCiudad().n.toUpperCase();
   $("dzPasTxt").textContent=s+" / 5 sellos";
   $("dzPasPct").textContent=pct+"%";
   $("dzPasBarra").style.width=pct+"%";
@@ -1506,25 +1556,33 @@ document.addEventListener("keydown",e=>{
 function dzScrollAFoco(){
   const vp=$("duraznoViewport"),cv=$("duraznoCanvas");
   const idx=dzGanado()?4:Math.min(dzHechos(),4);
-  const n=DZ_NODOS[idx];
+  const n=dzCfg().nodos[idx];
   const y=cv.clientHeight*n.y/100;
   vp.scrollTo({top:Math.max(0,y-vp.clientHeight*.6),behavior:"smooth"});
 }
-let dzAssetsPrecargados=false;
+let dzAssetsPrecargados={};
 function dzPrecargarPasaporte(){
-  if(dzAssetsPrecargados)return;dzAssetsPrecargados=true;
+  const id=dzCiudad().id;
+  if(dzAssetsPrecargados[id])return;dzAssetsPrecargados[id]=true;
   ["assets/passport/passport-icon.webp","assets/passport/passport-durazno-base.webp"]
-    .concat(DZ_SELLOS.map(s=>s.img)).forEach(src=>{const im=new Image();im.src=src;});
+    .concat(dzCfg().sellos.map(s=>s.img)).forEach(src=>{const im=new Image();im.src=src;});
 }
-function abrirDurazno(){
+function abrirCiudadRica(idx){
+  dzCiudadIdx=idx;
   $("fondoMundo").classList.remove("ver");
   $("setup").style.display="none";$("juego").style.display="none";$("mundo").style.display="none";
   $("pantDurazno").style.display="block";
+  $("dzCiudadTitulo").textContent=dzCiudad().n.toUpperCase();
+  $("dzPasaporte").title="Pasaporte de "+dzCiudad().n;
+  $("dzColeccionBtn").title="Colección "+dzCiudad().n;
   dzRenderNodos();dzProgresoTxt();dzActualizarBoton();dzActualizarHud();dzPrecargarPasaporte();
   const img=$("duraznoImg");
-  if(img.complete)requestAnimationFrame(dzScrollAFoco);
-  else img.addEventListener("load",()=>requestAnimationFrame(dzScrollAFoco),{once:true});
+  img.alt=dzCiudad().n;
+  const irAFoco=()=>requestAnimationFrame(dzScrollAFoco);
+  if(img.src.endsWith(dzCiudad().bg)&&img.complete)irAFoco();
+  else{img.src=dzCiudad().bg;img.addEventListener("load",irAFoco,{once:true});}
 }
+function abrirDurazno(){abrirCiudadRica(0);}
 $("dzSalir").onclick=()=>verMundo();
 function activarArrastre(vp,claseArrastrando){
   let arrastrando=false,startY=0,startScroll=0,moved=false;
@@ -1586,7 +1644,7 @@ function verMundo(){
   tira.appendChild(svg);
 
   MUNDO.forEach((d,i)=>{
-    if(i===0)return; // los pasos de Durazno viven únicamente en su pantalla 3D, no se duplican acá
+    if(d.rica)return; // los pasos de las ciudades "ricas" viven únicamente en su pantalla dedicada, no se duplican acá
     const abierto0=ganados.has(MUNDO[i-1].id);
     (d.pasos||[]).forEach((pp,k)=>{
       const hp=hechos(d.id);
@@ -1604,11 +1662,12 @@ function verMundo(){
   MUNDO.forEach((d,i)=>{
     const ganado=ganados.has(d.id);
     const b=document.createElement("button");
-    if(i===0){
-      b.className="nodo "+(ganado?"ganado":"abierto");
+    if(d.rica){
+      const abiertaRica=i===0||ganados.has(MUNDO[i-1].id);
+      b.className="nodo "+(ganado?"ganado":abiertaRica?"abierto":"cerrado");
       b.style.left=pts[i].x+"%";b.style.top=(pts[i].y/(N*100)*100)+"%";
-      b.innerHTML='<span class="bola">'+(ganado?"★":"1")+'</span><span class="rot">'+d.n+'</span>';
-      b.onclick=()=>abrirDurazno();
+      b.innerHTML='<span class="bola">'+(ganado?"★":abiertaRica?(i+1):"🔒")+'</span><span class="rot">'+d.n+'</span>';
+      if(abiertaRica)b.onclick=()=>abrirCiudadRica(i);else b.disabled=true;
       tira.appendChild(b);return;
     }
     const listo=hechos(d.id)>=(d.pasos?d.pasos.length:0);
@@ -1846,6 +1905,7 @@ function recibirTVGuest(d){
   if(d.tipo==="reaccion")volar(d.e);
 }
 function iniciarPartidaJugadores(jugadores,cats){
+  matchToken++;
   const js=jugadores.map((j,i)=>({id:j.id||null,n:(j.n||("Jugador "+(i+1))).slice(0,12),av:j.av||null,frame:j.frame||null,tot:0,ronda:0,rg:0}));
   arranca=((arranca%js.length)+js.length)%js.length;
   S={jug:js,turno:arranca,rondas:rondasElegidas,ronda:0,cats:cats||null,mazo:nuevoMazo(cats),finYa:false,valor:0,fase:"girar",abiertas:new Set(),usadas:new Set(),frase:"",cat:"",normalesDesdeToss:0};
@@ -2061,7 +2121,7 @@ function nuevaRonda(){
 
   S.ronda++;
   if(S.ronda>S.rondas){
-    if($("capaResuelto").classList.contains("ver")){setTimeout(nuevaRonda2,900);S.ronda--;return;}
+    if($("capaResuelto").classList.contains("ver")){setTimeout(tk(nuevaRonda2),900);S.ronda--;return;}
     return finDelJuego();
   }
   if(!S.mazo.length)S.mazo=nuevoMazo(S.cats);
@@ -2075,7 +2135,7 @@ function nuevaRonda(){
   publicar("Le toca a <b>"+S.jug[S.turno].n+"</b>. Girá la rueda para pedir una consonante.");
 }
 function nuevaRonda2(){S.ronda++;
-  if($("capaResuelto").classList.contains("ver")){setTimeout(nuevaRonda2,600);S.ronda--;return;}
+  if($("capaResuelto").classList.contains("ver")){setTimeout(tk(nuevaRonda2),600);S.ronda--;return;}
   finDelJuego();}
 function limpiarToss(){
   if(tossTimer){clearInterval(tossTimer);tossTimer=null;}
@@ -2146,7 +2206,7 @@ function finRespuestaToss(jugador){
   if(S.tossBloq.every(Boolean)){
     limpiarToss();abrirTodoToss();S.fase="toss_fin";
     publicar((S.jug.length>2?"Todos quedaron fuera de la Prueba de Velocidad. La respuesta queda revelada.":"Los dos quedaron fuera de la Prueba de Velocidad. La respuesta queda revelada."),"error");
-    setTimeout(nuevaRonda,3600);return;
+    setTimeout(tk(nuevaRonda),3600);return;
   }
   reanudarToss("<b>"+S.jug[jugador].n+" no respondió en 5 segundos</b> y queda fuera. El otro jugador todavía puede resolver.");
 }
@@ -2161,7 +2221,7 @@ function finTossTiempo(){
   limpiarToss();abrirTodoToss();
   if(modo==="bot"){S.jug[1].rg++;S.fase="toss_fin";publicar("Se terminó el tiempo. <b>"+S.jug[1].n+"</b> se lleva la ronda.","error");}
   else{S.fase="toss_fin";publicar("Se terminó el tiempo. Nadie resolvió la Prueba de Velocidad.","error");}
-  setTimeout(nuevaRonda,3600);
+  setTimeout(tk(nuevaRonda),3600);
 }
 function hostResolverToss(txt,jugador){
   if(!S||S.fase!=="tossup")return;
@@ -2174,8 +2234,8 @@ function hostResolverToss(txt,jugador){
     const premio=premioToss();limpiarToss();abrirTodoToss();
     const j=S.jug[jugador];j.ronda=premio;j.tot+=premio;j.rg++;S.turno=jugador;S.fase="toss_fin";
     publicar("¡Correcto! <b>"+j.n+"</b> resolvió la Prueba de Velocidad y gana $"+premio+".","resuelto");
-    if(jugador===miJug)sumarRondaColeccion("durazno");
-    setTimeout(nuevaRonda,5200);
+    if(jugador===miJug&&destino!==null)sumarRondaColeccion(MUNDO[destino].id);
+    setTimeout(tk(nuevaRonda),5200);
   }else{
     bip(140,.35,"square",.07);
     if(modo==="bot"){
@@ -2186,7 +2246,7 @@ function hostResolverToss(txt,jugador){
     if(S.tossBloq.every(Boolean)){
       limpiarToss();abrirTodoToss();S.fase="toss_fin";
       publicar((S.jug.length>2?"Todos intentaron y no era. La respuesta queda revelada.":"Los dos intentaron y no era. La respuesta queda revelada."),"error");
-      setTimeout(nuevaRonda,3600);return;
+      setTimeout(tk(nuevaRonda),3600);return;
     }
     reanudarToss("«"+txt.toUpperCase()+"» no era. <b>"+S.jug[jugador].n+"</b> queda fuera; el otro jugador todavía puede resolver.");
   }
@@ -2232,7 +2292,7 @@ function hostResolverBonus(txt){
     const j=S.jug[S.bonusGanador];j.ronda=BONUS_PREMIO;j.tot+=BONUS_PREMIO;
     S.fase="bonus_fin";
     publicar("¡BONUS RESUELTO! <b>"+j.n+"</b> gana $"+BONUS_PREMIO+" extra.","resuelto");
-    setTimeout(()=>finalizarPartidaPendiente(true),5200);
+    setTimeout(tk(()=>finalizarPartidaPendiente(true)),5200);
   }else{
     bip(140,.28,"square",.06);
     publicar("«"+txt.toUpperCase()+"» no era. Seguí intentando: el reloj continúa.","error");
@@ -2242,7 +2302,7 @@ function finBonusTiempo(){
   if(!S||S.fase!=="bonus_resolver")return;
   limpiarBonus();abrirTodoBonus();S.fase="bonus_fin";
   publicar("Se terminó el tiempo de la Ronda Bonus. La respuesta era <b>"+S.frase+"</b>.","error");
-  setTimeout(()=>finalizarPartidaPendiente(false),3600);
+  setTimeout(tk(()=>finalizarPartidaPendiente(false)),3600);
 }
 function calcularGanador(){
   if(!S||!S.jug.length)return -1;
@@ -2283,7 +2343,7 @@ function arrancarReloj(){
     if(!S||!S.tFin)return;
     if(Date.now()>=S.tFin){pararReloj();
       publicar("Se acabó el tiempo de "+S.jug[S.turno].n+". Pasa el turno.","error");
-      setTimeout(cambiarTurno,1600);}
+      setTimeout(tk(cambiarTurno),1600);}
   },250);
 }
 function publicar(txt,fx){
@@ -2315,10 +2375,10 @@ function hostGirar(){
     const s=SEG[Math.floor(local/paso)%SEG.length];
     if(s.t==="QUIEBRA"){bip(120,.5,"sawtooth",.09);S.jug[S.turno].ronda=0;
       publicar("<b>QUIEBRA</b> — "+S.jug[S.turno].n+" pierde la plata de la ronda.","quiebra");
-      setTimeout(cambiarTurno,1800);return;}
+      setTimeout(tk(cambiarTurno),1800);return;}
     if(s.t==="PIERDE"){bip(200,.35,"triangle",.07);
       publicar("<b>Pierde turno</b> — pasa al siguiente jugador.","pierde");
-      setTimeout(cambiarTurno,1600);return;}
+      setTimeout(tk(cambiarTurno),1600);return;}
     if(s.t==="COMODIN"){
       const ocultas=[...new Set(S.frase.replace(/ /g,""))].filter(c=>!S.abiertas.has(c));
       const cons=ocultas.filter(c=>!VOCALES.includes(c));
@@ -2329,8 +2389,8 @@ function hostGirar(){
       if([...S.frase].filter(c=>c!==" ").every(c=>S.abiertas.has(c))){
         const j=S.jug[S.turno];j.tot+=j.ronda;j.rg++;S.fase="girar";
         publicar("<b>COMODÍN</b> te regaló la «"+l+"» y completó la frase. "+j.n+" se lleva $"+j.ronda+".","comodin");
-        if(S.turno===miJug)sumarRondaColeccion("durazno");
-        setTimeout(nuevaRonda,3000);return;}
+        if(S.turno===miJug&&destino!==null)sumarRondaColeccion(MUNDO[destino].id);
+        setTimeout(tk(nuevaRonda),3000);return;}
       S.fase="girar";
       publicar("<b>COMODÍN</b> — te regala la letra «"+l+"». Seguís vos.","comodin");return;
     }
@@ -2361,8 +2421,8 @@ function hostLetra(l){
     if([...S.frase].filter(c=>c!==" ").every(c=>S.abiertas.has(c))){
       const j=S.jug[S.turno];j.tot+=j.ronda;j.rg++;
       publicar("¡Frase completa! <b>"+j.n+"</b> se lleva $"+j.ronda+".","resuelto");
-      if(S.turno===miJug)sumarRondaColeccion("durazno");
-      setTimeout(nuevaRonda,5200);return;
+      if(S.turno===miJug&&destino!==null)sumarRondaColeccion(MUNDO[destino].id);
+      setTimeout(tk(nuevaRonda),5200);return;
     }
     S.fase="girar";
     publicar("Hay <b>"+veces+"</b> «"+l+"». Sigue "+S.jug[S.turno].n+
@@ -2370,7 +2430,7 @@ function hostLetra(l){
   }else{
     bip(160,.3,"square",.06);
     publicar("No hay «"+l+"». Pasa el turno.","error");
-    setTimeout(cambiarTurno,1500);
+    setTimeout(tk(cambiarTurno),1500);
   }
 }
 function hostResolver(txt,jugadorToss){
@@ -2381,12 +2441,12 @@ function hostResolver(txt,jugadorToss){
     bip(1318,.25,"sine",.08);[...S.frase].forEach(c=>S.abiertas.add(c));
     const j=S.jug[S.turno];j.tot+=j.ronda;j.rg++;
     publicar("¡Correcto! <b>"+j.n+"</b> resolvió y suma $"+j.ronda+".","resuelto");
-    if(S.turno===miJug)sumarRondaColeccion("durazno");
-    setTimeout(nuevaRonda,5200);
+    if(S.turno===miJug&&destino!==null)sumarRondaColeccion(MUNDO[destino].id);
+    setTimeout(tk(nuevaRonda),5200);
   }else{
     bip(140,.35,"square",.07);
     publicar("«"+txt.toUpperCase()+"» no era. Pasa el turno.","error");
-    setTimeout(cambiarTurno,1700);
+    setTimeout(tk(cambiarTurno),1700);
   }
 }
 function cambiarTurno(){S.turno=(S.turno+1)%S.jug.length;S.fase="girar";S.valor=0;S.doble=false;
@@ -2406,11 +2466,13 @@ function finDelJuego(){
       tit="¡Paso "+(pasoActual+1)+" superado!";
       if(hechos(d.id)<=pasoActual){progreso[d.id]=pasoActual+1;guardarPasos();
         sumarMonedas(100);recuperarVida();
-        if(destino===0){
-          selloImg=DZ_SELLOS[pasoActual].img;
+        if(CIUDAD_RICA[d.id]){
+          selloImg=CIUDAD_RICA[d.id].sellos[pasoActual].img;
           if(pasoActual+1<d.pasos.length)fSiguientePaso=pasoActual+1;
-          if(pasoActual===0)logroDesbloquear("paso1");
-          if(pasoActual===3)logroDesbloquear("paso4");
+          if(d.id==="durazno"){
+            if(pasoActual===0)logroDesbloquear("paso1");
+            if(pasoActual===3)logroDesbloquear("paso4");
+          }
         }}
       extra=(progreso[d.id]>=d.pasos.length)?" Se destrabó el desafío contra "+d.r+". +100 🪙":
         " Te falta llegar hasta "+d.r+". +100 🪙";
@@ -2429,7 +2491,7 @@ function finDelJuego(){
       let selloImg;
       if(d&&!ganados.has(d.id)){ganados.add(d.id);guardarMundo();
         sumarMonedas(500);recuperarVida();
-        if(destino===0){selloImg=DZ_SELLOS[4].img;logroDesbloquear("durazno100");}
+        if(CIUDAD_RICA[d.id]){selloImg=CIUDAD_RICA[d.id].sellos[4].img;if(d.id==="durazno")logroDesbloquear("durazno100");}
         extra=(MUNDO[destino+1]?" Se abrió "+MUNDO[destino+1].n+".":" ¡Terminaste el mapa!")+" +500 🪙";}
       iniciarBonus(g,{g,tit,extra,selloImg});return;
     }
@@ -2458,10 +2520,13 @@ function finDelJuego(){
 }
 function revancha(){
   if(modo==="bot"&&destino!==null&&!gastarVida()){
+    matchToken++;
     $("modalFin").classList.remove("ver");
-    if(destino===0&&!ganados.has(DZ.id))abrirDurazno();else verMundo();
+    const dCur=MUNDO[destino];
+    if(CIUDAD_RICA[dCur.id]&&!ganados.has(dCur.id))abrirCiudadRica(destino);else verMundo();
     return;
   }
+  matchToken++;
   limpiarToss();limpiarBonus();arranca=(arranca+1)%S.jug.length;S.finYa=false;S.finalPendiente=null;
   S.bonusCons=[];S.bonusVocal=null;S.bonusGanador=null;S.bonusFin=0;
   S.jug.forEach(j=>{j.tot=0;j.ronda=0;j.rg=0;});
@@ -2720,11 +2785,12 @@ $("confirmar").onclick=()=>{
   tossRespondedor=null;
 };
 $("fSalir").onclick=()=>location.reload();
-$("fMapa").onclick=()=>{$("modalFin").classList.remove("ver");
+$("fMapa").onclick=()=>{matchToken++;$("modalFin").classList.remove("ver");
   if(fSiguientePaso!==null){const p=fSiguientePaso;fSiguientePaso=null;
-    if(meta.vidas>0){empezarDestino(0,p);return;}
-    abrirDurazno();return;}
-  if(destino===0&&!ganados.has(DZ.id))abrirDurazno();else verMundo();};
+    if(meta.vidas>0){empezarDestino(destino,p);return;}
+    abrirCiudadRica(destino);return;}
+  const dCur=destino!==null?MUNDO[destino]:null;
+  if(dCur&&CIUDAD_RICA[dCur.id]&&!ganados.has(dCur.id))abrirCiudadRica(destino);else verMundo();};
 function volar(e){
   const d=document.createElement("div");d.className="emo";d.textContent=e;
   d.style.left=(28+Math.random()*44)+"%";document.body.appendChild(d);
