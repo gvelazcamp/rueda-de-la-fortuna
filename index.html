@@ -819,7 +819,15 @@ const TINTA={QUIEBRA:"#F5B301",PIERDE:"#F6EFE2",COMODIN:"#9FE1CB",X2:"#160B24"};
 const VOCALES="AEIOU", LETRAS="ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split("");
 const $=id=>document.getElementById(id);
 let matchToken=0;
-function tk(fn){const t=matchToken;return function(){if(t===matchToken)fn.apply(null,arguments);};}
+let botPausado=0;
+function tk(fn){
+  const t=matchToken;
+  botPausado++;
+  return function(){
+    botPausado=Math.max(0,botPausado-1);
+    if(t===matchToken)fn.apply(null,arguments);
+  };
+}
 const norm=s=>s.toUpperCase().normalize("NFD").replace(/[\u0300-\u0304\u0306-\u036f]/g,"").replace(/\s+/g," ").trim();
 
 let modo="local", miJug=0, mq=null, sala="", rondasElegidas=3, holaTimer=null, serie=[0,0], arranca=0, ultGanador=-1, racha=0, relojID=null;
@@ -1808,11 +1816,11 @@ function letraHumana(solo){
 }
 function programarBot(){
   clearTimeout(botT);
-  if(modo!=="bot"||!S||S.turno!==1||S.fase==="fin"||animando)return;
+  if(modo!=="bot"||!S||S.turno!==1||S.fase==="fin"||animando||botPausado>0)return;
   botT=setTimeout(jugarBot,1200+Math.random()*1400);
 }
 function jugarBot(){
-  if(modo!=="bot"||S.turno!==1||animando)return;
+  if(modo!=="bot"||S.turno!==1||animando||botPausado>0)return;
   if(S.fase==="consonante"){const c=letraHumana("cons");if(c)hostLetra(c);return;}
   if(S.fase==="vocal"){const v=letraHumana("voc");if(v)hostLetra(v);return;}
   if(S.fase!=="girar")return;
@@ -1906,7 +1914,7 @@ function recibirTVGuest(d){
   if(d.tipo==="reaccion")volar(d.e);
 }
 function iniciarPartidaJugadores(jugadores,cats){
-  matchToken++;
+  matchToken++;botPausado=0;
   const js=jugadores.map((j,i)=>({id:j.id||null,n:(j.n||("Jugador "+(i+1))).slice(0,12),av:j.av||null,frame:j.frame||null,tot:0,ronda:0,rg:0}));
   arranca=((arranca%js.length)+js.length)%js.length;
   S={jug:js,turno:arranca,rondas:rondasElegidas,ronda:0,cats:cats||null,mazo:nuevoMazo(cats),finYa:false,valor:0,fase:"girar",abiertas:new Set(),usadas:new Set(),frase:"",cat:"",normalesDesdeToss:0};
@@ -2524,13 +2532,13 @@ function finDelJuego(){
 }
 function revancha(){
   if(modo==="bot"&&destino!==null&&!gastarVida()){
-    matchToken++;
+    matchToken++;botPausado=0;
     $("modalFin").classList.remove("ver");
     const dCur=MUNDO[destino];
     if(CIUDAD_RICA[dCur.id]&&!ganados.has(dCur.id))abrirCiudadRica(destino);else verMundo();
     return;
   }
-  matchToken++;
+  matchToken++;botPausado=0;
   limpiarToss();limpiarBonus();arranca=(arranca+1)%S.jug.length;S.finYa=false;S.finalPendiente=null;
   S.bonusCons=[];S.bonusVocal=null;S.bonusGanador=null;S.bonusFin=0;
   S.jug.forEach(j=>{j.tot=0;j.ronda=0;j.rg=0;});
@@ -2797,7 +2805,7 @@ $("confirmar").onclick=()=>{
   tossRespondedor=null;
 };
 $("fSalir").onclick=()=>location.reload();
-$("fMapa").onclick=()=>{matchToken++;$("modalFin").classList.remove("ver");
+$("fMapa").onclick=()=>{matchToken++;botPausado=0;$("modalFin").classList.remove("ver");
   if(fSiguientePaso!==null){const p=fSiguientePaso;fSiguientePaso=null;
     const dd=MUNDO[destino];
     if(meta.vidas>0){
