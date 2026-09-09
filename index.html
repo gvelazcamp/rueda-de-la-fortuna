@@ -86,6 +86,10 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 #pantDurazno{display:none;max-width:620px;margin:3vh auto;text-align:center}
 .dz-hud{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;
  background:#00000033;border:1px solid #FFFFFF1F;border-radius:14px;padding:10px 14px}
+.dz-jugador{display:flex;align-items:center;gap:8px;min-width:0}
+.dz-jugador img{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #F5B30188;flex-shrink:0}
+.dz-jugador span{font-weight:700;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px}
+.dz-vidasmonedas{display:flex;align-items:center;gap:14px;flex-shrink:0}
 .dz-vidas{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
 .dz-vidas span{font-weight:700;font-size:1.15rem}
 .dz-vidas small{color:#B49FCE;font-size:.72rem}
@@ -432,8 +436,11 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
 <section id="pantDurazno">
   <h1 class="titulo" style="font-size:2.4rem">DURAZNO</h1>
   <div class="dz-hud">
-    <div class="dz-vidas"><span id="dzVidas">❤️ 5</span><small id="dzProxima"></small></div>
-    <div class="dz-monedas" id="dzMonedas">🪙 500</div>
+    <div class="dz-jugador" id="dzJugador"><img id="dzJugadorAvatar" src="" alt=""><span id="dzJugadorNombre"></span></div>
+    <div class="dz-vidasmonedas">
+      <div class="dz-vidas"><span id="dzVidas">❤️ 5</span><small id="dzProxima"></small></div>
+      <div class="dz-monedas" id="dzMonedas">🪙 500</div>
+    </div>
   </div>
   <div class="dz-viewport-wrap">
     <div id="duraznoViewport" class="dz-viewport">
@@ -785,6 +792,12 @@ function dzActualizarHud(){
   $("dzVidas").textContent="❤️ "+meta.vidas;
   $("dzMonedas").textContent="🪙 "+meta.monedas;
   $("dzProxima").textContent=textoProxima();
+  const jug=$("dzJugador");
+  if(perfilExiste()){
+    jug.style.visibility="visible";
+    $("dzJugadorAvatar").src="assets/avatars/"+perfil.avatar+".png";
+    $("dzJugadorNombre").textContent=perfil.nombre;
+  }else jug.style.visibility="hidden";
 }
 function dzActualizarBoton(){
   const b=$("dzBoton");
