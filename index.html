@@ -169,6 +169,15 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 .campo span{font-size:.85rem;color:#B49FCE;min-width:74px;text-align:left}
 .campo input{flex:1;background:transparent;border:none;color:var(--crema);font-size:1.05rem;font-weight:700}
 .campo input:focus{outline:none}
+.perfil-chip{display:none;align-items:center;justify-content:center;gap:9px;margin:0 0 16px;font-size:.85rem;color:#C9B8DE}
+.perfil-chip img{width:30px;height:30px;border-radius:50%;object-fit:cover;border:1px solid #FFFFFF33}
+.perfil-chip button{background:none;border:none;color:var(--agua);text-decoration:underline;font-weight:700;font-size:.82rem;padding:4px}
+#pantPerfil{display:none;max-width:480px;margin:5vh auto;text-align:center}
+.avatar-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 22px}
+.avatar-opcion{position:relative;border-radius:50%;padding:0;border:3px solid transparent;background:none;aspect-ratio:1;overflow:hidden}
+.avatar-opcion img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.avatar-opcion.elegido{border-color:var(--agua);box-shadow:0 0 16px #37D6C0AA}
+#perfilContinuar:disabled{opacity:.5}
 .rondas{display:flex;gap:8px;justify-content:center;margin:4px 0 22px}
 .rondas button{background:#00000033;border:1px solid #FFFFFF1F;color:#C9B8DE;border-radius:12px;padding:9px 16px;font-weight:700}
 .rondas button[aria-pressed="true"]{background:var(--oro);color:var(--tinta);border-color:var(--oro)}
@@ -189,6 +198,10 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 .jug.activo{border-color:var(--oro);background:#F5B3011A;box-shadow:0 0 26px #F5B30126}
 .jug.yo .n::after{content:" (vos)";color:var(--agua);font-size:.78rem;font-weight:500}
 .jug .nom{font-weight:700;font-size:1.05rem;display:flex;justify-content:space-between;align-items:center}
+.jug .quien{display:flex;align-items:center;gap:7px;min-width:0}
+.jug .av{width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0;display:none;border:1px solid #FFFFFF33}
+.jug .av.ver{display:block}
+.jug .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .jug .turno{font-size:.7rem;background:var(--oro);color:var(--tinta);padding:2px 8px;border-radius:99px;font-weight:700}
 .jug .cifras{display:flex;gap:16px;margin-top:6px;font-size:.85rem;color:#B49FCE}
 .jug .cifras b svg{width:20px;height:13px;margin-right:6px;vertical-align:1px;opacity:.85;
@@ -333,7 +346,9 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
  color:var(--oro);background:#0C0616;border:1px solid #F5B30166;border-radius:20px;padding:14px 18px;margin:8px 0 14px;
  text-shadow:0 4px 0 #7A2E00,0 0 30px #F5B30155}
 #tvLista{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:16px 0}
-.tv-persona{background:#0C0616;border:1px solid #FFFFFF22;border-radius:14px;padding:12px;font-weight:700}
+.tv-persona{background:#0C0616;border:1px solid #FFFFFF22;border-radius:14px;padding:12px;font-weight:700;
+ display:flex;align-items:center;gap:8px}
+.tv-persona .av{width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid #FFFFFF33}
 .tv-persona::before{content:'📱 ';opacity:.9}
 .tv-ayuda{color:#C9B8DE;line-height:1.45;margin:10px 0}
 .tv-link{font-size:.82rem;color:#9FE1CB;word-break:break-all;margin:8px 0 14px}
@@ -369,6 +384,11 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
 <section id="setup">
   <img src="assets/logo.webp" alt="Girá y Adiviná Rioplatense" class="logo-inicio">
   <p class="sub">Girá, pedí una consonante y adiviná la frase antes que el otro.</p>
+  <div class="perfil-chip" id="perfilChip">
+    <img id="perfilAvatarImg" src="" alt="">
+    <span id="perfilNombreTxt"></span>
+    <button id="cambiarPerfil" type="button">Cambiar perfil</button>
+  </div>
   <div class="campo"><span>Tu nombre</span><input id="miNombre" placeholder="escribí tu nombre" maxlength="12" autocomplete="off"></div>
   <div class="rondas" id="rondas">
     <button data-r="3" aria-pressed="true">3 rondas</button>
@@ -383,6 +403,14 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
   <button class="btn-grande sec" id="bTV">📺 Sala TV / Familia</button>
   <button class="btn-grande sec" id="bEntrarTV">📱 Entrar a Sala TV</button>
 
+</section>
+
+<section id="pantPerfil">
+  <h1 class="titulo" style="font-size:2.1rem">ELEGÍ TU JUGADOR</h1>
+  <div class="campo"><span>Nombre</span><input id="perfilNombre" placeholder="escribí tu nombre" maxlength="12" autocomplete="off"></div>
+  <p class="sub" style="margin:18px 0 10px">Elegí tu avatar</p>
+  <div class="avatar-grid" id="avatarGrid"></div>
+  <button class="btn-grande" id="perfilContinuar" disabled>CONTINUAR</button>
 </section>
 
 <div id="splash">
@@ -495,9 +523,9 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
 <section id="juego">
   <div class="serie" id="serie"></div>
   <div class="marcador" id="marcador">
-    <div class="jug" id="j0"><div class="nom"><span class="n"></span><span class="turno">turno</span></div>
+    <div class="jug" id="j0"><div class="nom"><span class="quien"><img class="av"><span class="n"></span></span><span class="turno">turno</span></div>
       <div class="cifras"><div>ronda<b class="ronda">$0</b></div><div>total<b class="total">$0</b></div></div></div>
-    <div class="jug" id="j1"><div class="nom"><span class="n"></span><span class="turno">turno</span></div>
+    <div class="jug" id="j1"><div class="nom"><span class="quien"><img class="av"><span class="n"></span></span><span class="turno">turno</span></div>
       <div class="cifras"><div>ronda<b class="ronda">$0</b></div><div>total<b class="total">$0</b></div></div></div>
   </div>
   <div class="tablero"><div class="categoria" id="cat"></div><div class="frase" id="frase"></div></div>
@@ -949,7 +977,7 @@ function empezarDestino(i,paso){
   modo="bot";miJug=0;rondasElegidas=(pasoActual===null?d.rondas:1);
   $("mundo").style.display="none";$("pantDurazno").style.display="none";$("juego").style.display="block";
   armarTeclado();iniciarPartida($("miNombre").value.trim()||"Vos",
-    pasoActual===null?d.r:"Máquina",d.cats);
+    pasoActual===null?d.r:"Máquina",d.cats,perfil.avatar||null,null);
 }
 
 let botT=null;
@@ -961,7 +989,71 @@ function verStock(){
 }
 setTimeout(verStock,0);
 
+/* ---- Perfil del jugador (nombre + avatar) ---- */
+const AVATARES=Array.from({length:8},(_,i)=>"avatar-"+String(i+1).padStart(2,"0"));
+function cargarPerfil(){
+  let nombre="",avatar="";
+  try{nombre=localStorage.getItem("gya_nombre")||"";avatar=localStorage.getItem("gya_avatar")||"";}catch(e){}
+  return{nombre,avatar};
+}
+let perfil=cargarPerfil();
+const perfilExiste=()=>!!(perfil.nombre&&perfil.avatar);
+function actualizarChipPerfil(){
+  const chip=$("perfilChip");if(!chip)return;
+  if(perfilExiste()){
+    chip.style.display="flex";
+    $("perfilAvatarImg").src="assets/avatars/"+perfil.avatar+".png";
+    $("perfilNombreTxt").textContent=perfil.nombre;
+  }else chip.style.display="none";
+}
+function guardarPerfil(nombre,avatar){
+  perfil={nombre,avatar};
+  try{
+    localStorage.setItem("gya_nombre",nombre);
+    localStorage.setItem("gya_avatar",avatar);
+    localStorage.setItem("larueda_nombre",nombre);
+  }catch(e){}
+  $("miNombre").value=nombre;
+  actualizarChipPerfil();
+}
+let avatarElegido=null,perfilCallback=null;
+function renderAvatarGrid(){
+  const cont=$("avatarGrid");cont.innerHTML="";
+  AVATARES.forEach((id,i)=>{
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="avatar-opcion"+(avatarElegido===id?" elegido":"");
+    b.innerHTML='<img src="assets/avatars/'+id+'.png" alt="Avatar '+(i+1)+'">';
+    b.onclick=()=>{avatarElegido=id;renderAvatarGrid();actualizarBotonPerfil();};
+    cont.appendChild(b);
+  });
+}
+function actualizarBotonPerfil(){
+  $("perfilContinuar").disabled=!($("perfilNombre").value.trim()&&avatarElegido);
+}
+function abrirPerfil(callback){
+  perfilCallback=callback||null;
+  $("perfilNombre").value=perfil.nombre||$("miNombre").value.trim()||"";
+  avatarElegido=perfil.avatar||null;
+  renderAvatarGrid();actualizarBotonPerfil();
+  $("setup").style.display="none";$("mundo").style.display="none";$("pantDurazno").style.display="none";
+  $("pantPerfil").style.display="block";
+}
+$("perfilNombre").addEventListener("input",actualizarBotonPerfil);
+$("perfilContinuar").onclick=()=>{
+  const n=$("perfilNombre").value.trim().slice(0,12);
+  if(!n||!avatarElegido)return;
+  guardarPerfil(n,avatarElegido);
+  $("pantPerfil").style.display="none";
+  if(perfilCallback){const cb=perfilCallback;perfilCallback=null;cb();}
+  else $("setup").style.display="block";
+};
+$("cambiarPerfil").onclick=()=>abrirPerfil(null);
+actualizarChipPerfil();
+if(perfilExiste())$("miNombre").value=perfil.nombre;
+
 $("bBot").onclick=()=>{
+  if(!perfilExiste()){abrirPerfil(()=>verMundo());return;}
   verMundo();
 };
 
@@ -1018,11 +1110,13 @@ function renderTVLobby(){
   const link=location.origin+location.pathname+"?tv="+sala;
   $("tvLink").textContent=link;
   const lista=$("tvLista");lista.innerHTML="";
-  familiaJugadores.forEach((j,i)=>{const d=document.createElement("div");d.className="tv-persona";d.textContent=(i+1)+". "+j.n;lista.appendChild(d);});
+  familiaJugadores.forEach((j,i)=>{const d=document.createElement("div");d.className="tv-persona";
+    d.innerHTML=(j.av?'<img class="av ver" src="assets/avatars/'+j.av+'.png" alt="">':"")+(i+1)+". "+j.n;
+    lista.appendChild(d);});
   $("tvEstado").textContent=tvPartidaIniciada?"Partida en curso":(familiaJugadores.length+" jugador"+(familiaJugadores.length===1?"":"es")+" conectado"+(familiaJugadores.length===1?"":"s")+" · mínimo 2, máximo 6");
   $("bTVComenzar").disabled=tvPartidaIniciada||familiaJugadores.length<2;
 }
-function emitirTVLobby(){if(modo==="tvhost")enviar({tipo:"tv_lobby",jugadores:familiaJugadores.map(j=>({id:j.id,n:j.n})),iniciada:tvPartidaIniciada});}
+function emitirTVLobby(){if(modo==="tvhost")enviar({tipo:"tv_lobby",jugadores:familiaJugadores.map(j=>({id:j.id,n:j.n,av:j.av||null})),iniciada:tvPartidaIniciada});}
 function crearSalaTV(){
   modo="tvhost";miJug=-1;familiaJugadores=[];tvPartidaIniciada=false;S=null;
   sala=Array.from({length:4},()=>"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random()*32)]).join("");
@@ -1043,15 +1137,15 @@ function unirseTV(cod){
   conectar(()=>{
     mq.subscribe(tema("tvestado"));
     mq.on("message",(t,pl)=>{if(t===tema("tvestado")){try{recibirTVGuest(JSON.parse(pl.toString()));}catch(e){}}});
-    const hola=()=>enviar({a:"tv_hola",n});hola();holaTimer=setInterval(hola,1800);
+    const hola=()=>enviar({a:"tv_hola",n,av:perfil.avatar||null});hola();holaTimer=setInterval(hola,1800);
     $("estado").textContent="Buscando Sala TV "+sala+"…";
   },()=>{$("estado").textContent="No se pudo conectar con la TV. Revisá el código o la conexión.";});
 }
 function recibirTVHost(d){
   if(d.a==="tv_hola"){
     let j=familiaJugadores.find(x=>x.id===d.pid);
-    if(!j&&!tvPartidaIniciada&&familiaJugadores.length<6){j={id:d.pid,n:(d.n||"Jugador").slice(0,12)};familiaJugadores.push(j);}
-    else if(j&&!tvPartidaIniciada)j.n=(d.n||j.n).slice(0,12);
+    if(!j&&!tvPartidaIniciada&&familiaJugadores.length<6){j={id:d.pid,n:(d.n||"Jugador").slice(0,12),av:d.av||null};familiaJugadores.push(j);}
+    else if(j&&!tvPartidaIniciada){j.n=(d.n||j.n).slice(0,12);j.av=d.av||j.av||null;}
     renderTVLobby();emitirTVLobby();if(S)publicar(V.aviso);return;
   }
   if(d.a==="reaccion"){volar(d.e);if(S)enviar({tipo:"reaccion",e:d.e});return;}
@@ -1083,7 +1177,7 @@ function recibirTVGuest(d){
   if(d.tipo==="reaccion")volar(d.e);
 }
 function iniciarPartidaJugadores(jugadores,cats){
-  const js=jugadores.map((j,i)=>({id:j.id||null,n:(j.n||("Jugador "+(i+1))).slice(0,12),tot:0,ronda:0,rg:0}));
+  const js=jugadores.map((j,i)=>({id:j.id||null,n:(j.n||("Jugador "+(i+1))).slice(0,12),av:j.av||null,tot:0,ronda:0,rg:0}));
   arranca=((arranca%js.length)+js.length)%js.length;
   S={jug:js,turno:arranca,rondas:rondasElegidas,ronda:0,cats:cats||null,mazo:nuevoMazo(cats),finYa:false,valor:0,fase:"girar",abiertas:new Set(),usadas:new Set(),frase:"",cat:"",normalesDesdeToss:0};
   nuevaRonda();
@@ -1156,7 +1250,7 @@ $("bLocal").onclick=()=>{
   modo="local";const n=$("miNombre").value.trim()||"Jugador 1";
   const otro=(prompt("Nombre del segundo jugador","Rival")||"Jugador 2").slice(0,12);
   $("setup").style.display="none";$("juego").style.display="block";
-  armarTeclado();iniciarPartida(n,otro);
+  armarTeclado();iniciarPartida(n,otro,undefined,perfil.avatar||null,null);
 };
 
 $("bCrear").onclick=()=>{
@@ -1199,7 +1293,7 @@ function unirse(cod){
   conectar(()=>{
     mq.subscribe(tema("estado"));
     mq.on("message",(t,pl)=>{if(t===tema("estado")){try{recibirGuest(JSON.parse(pl.toString()));}catch(e){}}});
-    const hola=()=>enviar({a:"hola",n:($("miNombre").value.trim()||"Jugador 2").slice(0,12)});
+    const hola=()=>enviar({a:"hola",n:($("miNombre").value.trim()||"Jugador 2").slice(0,12),av:perfil.avatar||null});
     hola();holaTimer=setInterval(hola,2000);
     $("estado").textContent="Buscando la sala "+sala+"…";
   },()=>{$("estado").textContent="No se pudo conectar. Probá con otra red (datos del celular).";});
@@ -1237,7 +1331,7 @@ function recibirHost(d){
   if(d.a==="hola"){
     if(S){publicar(V.aviso);return;}
     $("lobby").style.display="none";$("juego").style.display="block";armarTeclado();
-    iniciarPartida(($("miNombre").value.trim()||"Jugador 1").slice(0,12),d.n);return;}
+    iniciarPartida(($("miNombre").value.trim()||"Jugador 1").slice(0,12),d.n,undefined,perfil.avatar||null,d.av||null);return;}
   if(d.a==="reaccion"){volar(d.e);return;}
   if(!S)return;
   if(d.a==="revancha"){if(S.fase==="fin")revancha();return;}
@@ -1275,8 +1369,8 @@ function nuevoMazo(cats){
   if(!d.length)d=[...base];
   return d.sort(()=>Math.random()-.5);
 }
-function iniciarPartida(n1,n2,cats){
-  iniciarPartidaJugadores([{n:n1},{n:n2}],cats);
+function iniciarPartida(n1,n2,cats,av1,av2){
+  iniciarPartidaJugadores([{n:n1,av:av1},{n:n2,av:av2}],cats);
 }
 function nuevaRonda(){
   limpiarToss();
@@ -1522,7 +1616,7 @@ function arrancarReloj(){
 }
 function publicar(txt,fx){
   V={mask:mask(),cat:S.cat,usadas:[...S.usadas],
-     jug:S.jug.map(j=>({id:j.id||null,n:j.n,tot:j.tot,ronda:j.ronda,rg:j.rg||0})),turno:S.turno,fase:S.fase,
+     jug:S.jug.map(j=>({id:j.id||null,n:j.n,av:j.av||null,tot:j.tot,ronda:j.ronda,rg:j.rg||0})),turno:S.turno,fase:S.fase,
      hayVoc:[...VOCALES].some(v=>!S.usadas.has(v)&&S.frase.includes(v)),
      cons:consRestantes(),serie:serie.slice(),doble:!!S.doble,
      tossBloq:S.tossBloq?S.tossBloq.slice():Array(S.jug.length).fill(false),tossPausado:!!S.tossPausado,tossRespondedor:S.tossRespondedor,
@@ -1759,7 +1853,7 @@ function efecto(f){
 }
 function asegurarMarcador(){
   const m=$("marcador");if(!m||!V.jug)return;
-  while(m.children.length<V.jug.length){const i=m.children.length,d=document.createElement("div");d.className="jug";d.id="j"+i;d.innerHTML='<div class="nom"><span class="n"></span><span class="turno">turno</span></div><div class="cifras"><div>ronda<b class="ronda">$0</b></div><div>total<b class="total">$0</b></div></div>';m.appendChild(d);}
+  while(m.children.length<V.jug.length){const i=m.children.length,d=document.createElement("div");d.className="jug";d.id="j"+i;d.innerHTML='<div class="nom"><span class="quien"><img class="av"><span class="n"></span></span><span class="turno">turno</span></div><div class="cifras"><div>ronda<b class="ronda">$0</b></div><div>total<b class="total">$0</b></div></div>';m.appendChild(d);}
   while(m.children.length>V.jug.length)m.lastElementChild.remove();
 }
 function pintarTodo(){
@@ -1867,6 +1961,9 @@ function pintar(){
     e.classList.toggle("yo",modo!=="local"&&modo!=="tvhost"&&i===miJug);
     e.classList.toggle("maquina",modo==="bot"&&i===1);
     e.querySelector(".n").textContent=j.n;
+    const av=e.querySelector(".av");
+    if(j.av){av.src="assets/avatars/"+j.av+".png";av.classList.add("ver");}
+    else av.classList.remove("ver");
     e.querySelector(".turno").style.visibility=i===V.turno?"visible":"hidden";
     e.querySelector(".turno").textContent=(i===V.turno&&V.doble)?"turno · x2":"turno";
     setMonto(e.querySelector(".ronda"),j.ronda,i,0);
