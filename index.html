@@ -1528,10 +1528,10 @@ function dzActualizarBoton(){
     return;
   }
   const rival=dzHechos()>=4;
-  b.textContent=(rival?"DESAFIAR":"JUGAR")+" ❤️ 1";
   if(meta.vidas<=0){
-    b.disabled=true;b.onclick=null;
+    b.textContent="⏳ "+(textoProxima()||"Sin vidas");b.disabled=true;b.onclick=null;
   }else{
+    b.textContent=(rival?"DESAFIAR":"JUGAR")+" ❤️ 1";
     b.disabled=false;
     b.onclick=()=>empezarDestino(dzCiudadIdx,rival?undefined:dzHechos());
   }
