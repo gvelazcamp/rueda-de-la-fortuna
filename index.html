@@ -1198,7 +1198,7 @@ function equiparMarco(id){
 }
 function tnRenderFrames(){
   const cont=$("frameGrid");if(!cont)return;cont.innerHTML="";
-  const miAvatar=perfil.avatar?"assets/avatars/"+perfil.avatar+".png":"";
+  const miAvatar=perfil.avatar?"assets/avatars/"+perfil.avatar+".webp":"";
   const opciones=[{id:"",nombre:"Sin marco",desc:"Tu avatar tal cual, sin marco.",precio:0}].concat(FRAMES);
   opciones.forEach(f=>{
     const poseido=f.precio===0||framesComprados.has(f.id);
@@ -1431,7 +1431,7 @@ function dzActualizarHud(){
   const jug=$("dzJugador");
   if(perfilExiste()){
     jug.style.visibility="visible";
-    $("dzJugadorAvatar").src="assets/avatars/"+perfil.avatar+".png";
+    $("dzJugadorAvatar").src="assets/avatars/"+perfil.avatar+".webp";
     $("dzJugadorNombre").textContent=perfil.nombre;
     pintarMiMarco("dzJugadorFrameImg");
   }else jug.style.visibility="hidden";
@@ -1661,7 +1661,7 @@ function actualizarChipPerfil(){
   const chip=$("perfilChip");if(!chip)return;
   if(perfilExiste()){
     chip.style.display="flex";
-    $("perfilAvatarImg").src="assets/avatars/"+perfil.avatar+".png";
+    $("perfilAvatarImg").src="assets/avatars/"+perfil.avatar+".webp";
     $("perfilNombreTxt").textContent=perfil.nombre;
     pintarMiMarco("perfilFrameImg");
   }else chip.style.display="none";
@@ -1684,7 +1684,7 @@ function renderAvatarGrid(){
     const b=document.createElement("button");
     b.type="button";
     b.className="avatar-opcion"+(avatarElegido===id?" elegido":"");
-    b.innerHTML='<img src="assets/avatars/'+id+'.png" alt="Avatar '+(i+1)+'">';
+    b.innerHTML='<img src="assets/avatars/'+id+'.webp" alt="Avatar '+(i+1)+'">';
     b.onclick=()=>{avatarElegido=id;renderAvatarGrid();actualizarBotonPerfil();};
     cont.appendChild(b);
   });
@@ -1772,7 +1772,7 @@ function renderTVLobby(){
   $("tvLink").textContent=link;
   const lista=$("tvLista");lista.innerHTML="";
   familiaJugadores.forEach((j,i)=>{const d=document.createElement("div");d.className="tv-persona";
-    d.innerHTML=(j.av?'<span class="avatar-wrap"><img class="av ver" src="assets/avatars/'+j.av+'.png" alt="">'+
+    d.innerHTML=(j.av?'<span class="avatar-wrap"><img class="av ver" src="assets/avatars/'+j.av+'.webp" alt="">'+
       (j.frame?'<img class="avatar-frame ver" src="assets/frames/frame-'+j.frame+'.png" alt="">':"")+'</span>':"")+(i+1)+". "+j.n;
     lista.appendChild(d);});
   $("tvEstado").textContent=tvPartidaIniciada?"Partida en curso":(familiaJugadores.length+" jugador"+(familiaJugadores.length===1?"":"es")+" conectado"+(familiaJugadores.length===1?"":"s")+" · mínimo 2, máximo 6");
@@ -2648,7 +2648,7 @@ function pintar(){
     e.classList.toggle("maquina",modo==="bot"&&i===1);
     e.querySelector(".n").textContent=j.n;
     const av=e.querySelector(".av");
-    if(j.av){av.src="assets/avatars/"+j.av+".png";av.classList.add("ver");}
+    if(j.av){av.src="assets/avatars/"+j.av+".webp";av.classList.add("ver");}
     else av.classList.remove("ver");
     const fr=e.querySelector(".avatar-frame");
     if(j.frame){fr.src="assets/frames/frame-"+j.frame+".png";fr.classList.add("ver");}
