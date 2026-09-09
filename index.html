@@ -358,6 +358,15 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 #fTitulo{font-size:clamp(1.9rem,8vw,2.8rem);line-height:1.05;color:var(--oro);
  text-shadow:0 4px 0 #7A2E00;animation:entra .5s cubic-bezier(.2,1.4,.4,1)}
 #fCopa{font-size:2.6rem;line-height:1;margin-bottom:6px;animation:late 1.4s ease-in-out infinite}
+.f-sello{display:none;width:130px;margin:0 auto 10px;border-radius:14px;
+ filter:drop-shadow(0 0 22px #F5B301CC);animation:selloGanado .8s cubic-bezier(.34,1.56,.64,1)}
+.f-sello.ver{display:block}
+@keyframes selloGanado{
+  0%{transform:rotate(-35deg) scale(.2);opacity:0}
+  55%{transform:rotate(10deg) scale(1.15);opacity:1}
+  75%{transform:rotate(-4deg) scale(.97)}
+  100%{transform:rotate(0deg) scale(1)}
+}
 @keyframes entra{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes late{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
 .no{background:#00000044;color:#C9B8DE;border:1px solid #FFFFFF26}
@@ -606,7 +615,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
 </div></div>
 
 <div class="capa" id="modalFin"><div class="caja">
-  <div id="fCopa">🏆</div><h2 id="fTitulo">Se terminó</h2><p id="fTexto"></p>
+  <div id="fCopa">🏆</div><img id="fSello" class="f-sello" alt=""><h2 id="fTitulo">Se terminó</h2><p id="fTexto"></p>
   <div class="fila"><button class="no" id="fMapa" style="display:none">Volver al mapa</button><button class="no" id="fSalir" style="display:none">Salir</button><button class="ok" id="fBoton">Revancha</button></div>
 </div></div>
 
@@ -732,7 +741,7 @@ const MUNDO=[
  {id:"centenario",pasos:[[20, 22], [32, 30], [22, 42], [36, 52]],nx:60,ny:55,bg:"assets/worlds/estadio-centenario.webp",n:"Estadio Centenario",r:"La Campeona",rondas:5,cats:["Personajes","Dicho popular"]}];
 let ganados=(()=>{try{return new Set(JSON.parse(localStorage.getItem("larueda_mundo")||"[]"));}catch(e){return new Set();}})();
 const guardarMundo=()=>{try{localStorage.setItem("larueda_mundo",JSON.stringify([...ganados]));}catch(e){}};
-let destino=null,pasoActual=null;
+let destino=null,pasoActual=null,fSiguientePaso=null;
 let progreso=(()=>{try{return JSON.parse(localStorage.getItem("larueda_pasos")||"{}");}catch(e){return {};}})();
 const guardarPasos=()=>{try{localStorage.setItem("larueda_pasos",JSON.stringify(progreso));}catch(e){}};
 const hechos=id=>progreso[id]||0;
@@ -1731,9 +1740,11 @@ function finalizarPartidaPendiente(bonusGanado){
   S.finalPendiente=null;S.fase="fin";pararReloj();limpiarBonus();
   publicar("Partida terminada.");
   if(modo!=="local"&&modo!=="bot")enviar({tipo:"fin",txt:detalle+f.extra+bonusTxt,tit:f.tit});
+  fSiguientePaso=null;
   $("fMapa").style.display=(modo==="bot"&&destino!==null)?"block":"none";
   $("fSalir").style.display=(modo==="bot"||modo==="tvhost")?"none":"block";
-  mostrarFin(f.tit,detalle+f.extra+bonusTxt);
+  $("fMapa").textContent="Volver al mapa";
+  mostrarFin(f.tit,detalle+f.extra+bonusTxt,f.selloImg);
 }
 const mask=()=>[...S.frase].map((c,i)=>c===" "?" ":(S.fase==="tossup"&&S.tossPos?S.tossPos.has(i)?c:"_":S.abiertas.has(c)?c:"_")).join("");
 const consRestantes=()=>[...new Set(S.frase.replace(/ /g,""))].filter(c=>!VOCALES.includes(c)&&!S.abiertas.has(c)).length;
@@ -1861,31 +1872,42 @@ function finDelJuego(){
   let tit,extra="";
   if(modo==="bot"&&pasoActual!==null){
     const d=MUNDO[destino];
+    let selloImg;
+    fSiguientePaso=null;
     if(g===0){
       tit="¡Paso "+(pasoActual+1)+" superado!";
       if(hechos(d.id)<=pasoActual){progreso[d.id]=pasoActual+1;guardarPasos();
-        sumarMonedas(100);recuperarVida();}
+        sumarMonedas(100);recuperarVida();
+        if(destino===0){
+          selloImg=DZ_SELLOS[pasoActual].img;
+          if(pasoActual+1<d.pasos.length)fSiguientePaso=pasoActual+1;
+        }}
       extra=(progreso[d.id]>=d.pasos.length)?" Se destrabó el desafío contra "+d.r+". +100 🪙":
         " Te falta llegar hasta "+d.r+". +100 🪙";
     }else if(g<0)tit="¡Empate!";
     else{tit="No pudiste";extra=" Probá este paso de nuevo.";}
     S.fase="fin";pararReloj();publicar("Partida terminada.");
     $("fMapa").style.display="block";$("fSalir").style.display="none";
-    mostrarFin(tit,detalle+extra);return;
+    $("fMapa").textContent=fSiguientePaso!==null?"Siguiente →":"Volver al mapa";
+    mostrarFin(tit,detalle+extra,selloImg);return;
   }
   if(modo==="bot"){
     const d=destino!==null?MUNDO[destino]:null;
+    fSiguientePaso=null;
     if(g===0){
       tit=d?"¡"+d.n+" conquistado!":"¡Ganaste!";
+      let selloImg;
       if(d&&!ganados.has(d.id)){ganados.add(d.id);guardarMundo();
         sumarMonedas(500);recuperarVida();
+        if(destino===0)selloImg=DZ_SELLOS[4].img;
         extra=(MUNDO[destino+1]?" Se abrió "+MUNDO[destino+1].n+".":" ¡Terminaste el mapa!")+" +500 🪙";}
-      iniciarBonus(g,{g,tit,extra});return;
+      iniciarBonus(g,{g,tit,extra,selloImg});return;
     }
     if(g<0)tit="¡Empate!";
     else{tit="Te ganó "+b.n;extra=" Probá de nuevo cuando quieras.";}
     S.fase="fin";pararReloj();publicar("Partida terminada.");
     $("fMapa").style.display="block";$("fSalir").style.display="none";
+    $("fMapa").textContent="Volver al mapa";
     mostrarFin(tit,detalle+extra);return;
   }
 
@@ -1918,12 +1940,17 @@ function revancha(){
   $("modalFin").classList.remove("ver");
   nuevaRonda();
 }
-function mostrarFin(tit,txt){
+function mostrarFin(tit,txt,selloImg){
   $("capaResuelto").classList.remove("ver");
   $("capaResuelto").querySelectorAll(".papel").forEach(x=>x.remove());
   $("capaRueda").classList.remove("ver");
-  $("fCopa").textContent=tit.startsWith("¡Empate")?"🤝":tit.startsWith("¡Victoria")?"🏆":
-    (tit.startsWith("Te ganó")||tit.startsWith("No pudiste"))?"😤":tit.startsWith("¡Paso")?"✅":"🏅";
+  const fSello=$("fSello");
+  if(selloImg){
+    fSello.src=selloImg;fSello.classList.remove("ver");void fSello.offsetWidth;fSello.classList.add("ver");
+    $("fCopa").style.display="none";
+  }else{fSello.classList.remove("ver");$("fCopa").style.display="";
+    $("fCopa").textContent=tit.startsWith("¡Empate")?"🤝":tit.startsWith("¡Victoria")?"🏆":
+      (tit.startsWith("Te ganó")||tit.startsWith("No pudiste"))?"😤":tit.startsWith("¡Paso")?"✅":"🏅";}
   $("fTitulo").textContent=tit;$("fTexto").textContent=txt;
   $("modalFin").classList.add("ver");
   [0,180,360,620].forEach((ms,i)=>setTimeout(()=>bip([784,988,1175,1568][i],.28,"sine",.07),ms));
@@ -2161,6 +2188,9 @@ $("confirmar").onclick=()=>{
 };
 $("fSalir").onclick=()=>location.reload();
 $("fMapa").onclick=()=>{$("modalFin").classList.remove("ver");
+  if(fSiguientePaso!==null){const p=fSiguientePaso;fSiguientePaso=null;
+    if(meta.vidas>0){empezarDestino(0,p);return;}
+    abrirDurazno();return;}
   if(destino===0&&!ganados.has(DZ.id))abrirDurazno();else verMundo();};
 function volar(e){
   const d=document.createElement("div");d.className="emo";d.textContent=e;
