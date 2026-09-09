@@ -975,6 +975,7 @@ setInterval(()=>{
 /* ---- Ruleta de premios diaria ---- */
 const RW_PREMIOS=[
   {tipo:"monedas",valor:50,peso:20,color:"#37D6C0",label:"🪙 50"},
+  {tipo:"nada",valor:0,peso:15,color:"#4A3D5C",label:"😅 Nada"},
   {tipo:"monedas",valor:100,peso:16,color:"#E5197C",label:"🪙 100"},
   {tipo:"vida",valor:1,peso:14,color:"#F5B301",label:"❤️ 1"},
   {tipo:"monedas",valor:150,peso:12,color:"#37D6C0",label:"🪙 150"},
@@ -1027,17 +1028,20 @@ function rwElegirPremio(){
 }
 let rwGirando=false,rwAngulo=0;
 const RW_PRECIO_GIRO=200;
-function abrirRuleta(){
-  rwDibujar();
-  $("rwResultado").textContent="";
+function rwControles(){
   const puede=rwPuedeGirar();
   $("rwGirar").style.display=puede?"":"none";
   $("rwGirar").disabled=!puede||rwGirando;
-  $("rwEstado").textContent=puede?"Girá una vez por día y ganá premios.":"⏳ "+rwTextoEspera();
   const cg=$("rwComprarGiro");
   cg.style.display=puede?"none":"";
   cg.disabled=meta.monedas<RW_PRECIO_GIRO;
   cg.textContent=meta.monedas<RW_PRECIO_GIRO?"🪙 Te faltan monedas para el giro extra":"🎟️ Comprar giro extra — 🪙 "+RW_PRECIO_GIRO;
+}
+function abrirRuleta(){
+  rwDibujar();
+  $("rwResultado").textContent="";
+  $("rwEstado").textContent=rwPuedeGirar()?"Girá una vez por día y ganá premios.":"⏳ "+rwTextoEspera();
+  rwControles();
   $("capaRuleta").classList.add("ver");
 }
 $("bRuleta").onclick=abrirRuleta;
@@ -1066,12 +1070,15 @@ $("rwGirar").onclick=()=>{
     if(p<1){requestAnimationFrame(frame);return;}
     const premio=RW_PREMIOS[idx];
     meta.ultimaRuleta=Date.now();guardarMeta();
-    if(premio.tipo==="monedas")sumarMonedas(premio.valor);else recuperarVida();
+    if(premio.tipo==="monedas")sumarMonedas(premio.valor);
+    else if(premio.tipo==="vida")recuperarVida();
     const esJackpot=premio.valor===500&&premio.tipo==="monedas";
-    $("rwResultado").textContent=(esJackpot?"🎉 ¡JACKPOT! ":"¡Ganaste ")+premio.label+"!";
+    const esNada=premio.tipo==="nada";
+    $("rwResultado").textContent=esNada?"😅 ¡Sin premio esta vez! Seguí participando mañana, o comprá un giro extra.":
+      (esJackpot?"🎉 ¡JACKPOT! ":"¡Ganaste ")+premio.label+"!";
     $("rwEstado").textContent="⏳ "+rwTextoEspera();
     mundoActualizarHud();rwActualizarBadge();
-    rwGirando=false;bip(190,.16,"triangle",.07);
+    rwGirando=false;rwControles();bip(esNada?260:190,.16,"triangle",.07);
     logroDesbloquear("ruleta");
     if(premio.valor===500)logroDesbloquear("jackpot");
   });
