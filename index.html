@@ -928,7 +928,8 @@ function verMundo(){
   tira.appendChild(svg);
 
   MUNDO.forEach((d,i)=>{
-    const abierto0=i===0||ganados.has(MUNDO[i-1].id);
+    if(i===0)return; // los pasos de Durazno viven únicamente en su pantalla 3D, no se duplican acá
+    const abierto0=ganados.has(MUNDO[i-1].id);
     (d.pasos||[]).forEach((pp,k)=>{
       const hp=hechos(d.id);
       const pb=document.createElement("button");
@@ -936,7 +937,7 @@ function verMundo(){
       pb.style.left=pp[0]+"%";
       pb.style.top=((i*100+pp[1])/(N*100)*100)+"%";
       pb.textContent=k<hp?"✓":(k+1);
-      if(abierto0&&k<=hp&&!ganados.has(d.id)&&meta.vidas>0)pb.onclick=()=>(i===0?abrirDurazno():empezarDestino(i,k));
+      if(abierto0&&k<=hp&&!ganados.has(d.id)&&meta.vidas>0)pb.onclick=()=>empezarDestino(i,k);
       else pb.disabled=true;
       tira.appendChild(pb);
     });
@@ -944,15 +945,22 @@ function verMundo(){
 
   MUNDO.forEach((d,i)=>{
     const ganado=ganados.has(d.id);
-    const listo=hechos(d.id)>=(d.pasos?d.pasos.length:0);
-    const abierto=(i===0||ganados.has(MUNDO[i-1].id))&&listo;
     const b=document.createElement("button");
+    if(i===0){
+      b.className="nodo "+(ganado?"ganado":"abierto");
+      b.style.left=pts[i].x+"%";b.style.top=(pts[i].y/(N*100)*100)+"%";
+      b.innerHTML='<span class="bola">'+(ganado?"★":"1")+'</span><span class="rot">'+d.n+'</span>';
+      b.onclick=()=>abrirDurazno();
+      tira.appendChild(b);return;
+    }
+    const listo=hechos(d.id)>=(d.pasos?d.pasos.length:0);
+    const abierto=ganados.has(MUNDO[i-1].id)&&listo;
     b.className="nodo "+(ganado?"ganado":abierto?"abierto":"cerrado");
     b.style.left=pts[i].x+"%";
     b.style.top=(pts[i].y/(N*100)*100)+"%";
     b.innerHTML='<span class="bola">'+(ganado?"★":abierto?(i+1):"🔒")+'</span>'+
       '<span class="rot">'+d.n+'</span>';
-    if(abierto&&meta.vidas>0)b.onclick=()=>(i===0?abrirDurazno():empezarDestino(i));else b.disabled=true;
+    if(abierto&&meta.vidas>0)b.onclick=()=>empezarDestino(i);else b.disabled=true;
     tira.appendChild(b);
   });
 
