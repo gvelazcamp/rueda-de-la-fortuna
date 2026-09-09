@@ -111,6 +111,7 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 .dz-nodo.bloqueado{background:#0A0412F0;color:#E4D9F5;border-color:#FFFFFF4D;
  box-shadow:0 4px 14px #000000B0,inset 0 0 0 1px #00000066}
 .dz-nodo.rival{width:58px;height:58px;font-size:1.35rem}
+.dz-nodo.listo:disabled,.dz-nodo.ahora:disabled{opacity:.45;animation:none;box-shadow:none;cursor:not-allowed}
 .dz-viewport-wrap{position:relative}
 .dz-pasaporte-fab{position:absolute;right:14px;bottom:14px;z-index:20;width:80px;height:80px;
  border-radius:50%;padding:6px;background:radial-gradient(circle at 35% 30%,#2A1A3C,#120A1D);
@@ -990,7 +991,7 @@ function mundoActualizarHud(){
 }
 setInterval(()=>{
   regenerarVidas();
-  if($("pantDurazno").style.display==="block"){dzActualizarHud();dzActualizarBoton();}
+  if($("pantDurazno").style.display==="block"){dzActualizarHud();dzActualizarBoton();dzRenderNodos();}
   if($("mundo").style.display==="block")mundoActualizarHud();
   if($("setup").style.display!=="none")rwActualizarBadge();
 },1000);
@@ -1146,7 +1147,7 @@ document.querySelectorAll(".tn-comprar").forEach(b=>{
     }
     guardarMeta();
     tnActualizar();mundoActualizarHud();rwActualizarBadge();
-    if($("pantDurazno").style.display==="block"){dzActualizarHud();dzActualizarBoton();}
+    if($("pantDurazno").style.display==="block"){dzActualizarHud();dzActualizarBoton();dzRenderNodos();}
     bip(190,.16,"triangle",.07);
     logroDesbloquear("tienda");
   };
@@ -1492,7 +1493,7 @@ function dzRenderNodos(){
     b.className="dz-nodo "+estado+(i===4?" rival":"");
     b.style.left=n.x+"%";b.style.top=n.y+"%";
     b.textContent=label;
-    if(estado==="ahora"||estado==="listo")b.onclick=()=>{if(meta.vidas>0)empezarDestino(dzCiudadIdx,i<4?i:undefined);};
+    if((estado==="ahora"||estado==="listo")&&meta.vidas>0)b.onclick=()=>empezarDestino(dzCiudadIdx,i<4?i:undefined);
     else b.disabled=true;
     cont.appendChild(b);
   });
