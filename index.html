@@ -2468,7 +2468,8 @@ function finDelJuego(){
         sumarMonedas(100);recuperarVida();
         if(CIUDAD_RICA[d.id]){
           selloImg=CIUDAD_RICA[d.id].sellos[pasoActual].img;
-          if(pasoActual+1<d.pasos.length)fSiguientePaso=pasoActual+1;
+          // pasoActual+1<pasos.length: queda otro paso normal. Si no, ya se destrabó el rival: "Siguiente" lleva directo al desafío.
+          fSiguientePaso=pasoActual+1<d.pasos.length?pasoActual+1:d.pasos.length;
           if(d.id==="durazno"){
             if(pasoActual===0)logroDesbloquear("paso1");
             if(pasoActual===3)logroDesbloquear("paso4");
@@ -2480,7 +2481,8 @@ function finDelJuego(){
     else{tit="No pudiste";extra=" Probá este paso de nuevo.";}
     S.fase="fin";pararReloj();publicar("Partida terminada.");
     $("fMapa").style.display="block";$("fSalir").style.display="none";
-    $("fMapa").textContent=fSiguientePaso!==null?"Siguiente →":"Volver al mapa";
+    $("fMapa").textContent=fSiguientePaso===null?"Volver al mapa":
+      (d.pasos&&fSiguientePaso>=d.pasos.length?"¡Desafiar! →":"Siguiente →");
     mostrarFin(tit,detalle+extra,selloImg);return;
   }
   if(modo==="bot"){
@@ -2787,7 +2789,12 @@ $("confirmar").onclick=()=>{
 $("fSalir").onclick=()=>location.reload();
 $("fMapa").onclick=()=>{matchToken++;$("modalFin").classList.remove("ver");
   if(fSiguientePaso!==null){const p=fSiguientePaso;fSiguientePaso=null;
-    if(meta.vidas>0){empezarDestino(destino,p);return;}
+    const dd=MUNDO[destino];
+    if(meta.vidas>0){
+      if(dd&&p>=dd.pasos.length)empezarDestino(destino);
+      else empezarDestino(destino,p);
+      return;
+    }
     abrirCiudadRica(destino);return;}
   const dCur=destino!==null?MUNDO[destino]:null;
   if(dCur&&CIUDAD_RICA[dCur.id]&&!ganados.has(dCur.id))abrirCiudadRica(destino);else verMundo();};
