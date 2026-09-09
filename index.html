@@ -182,6 +182,19 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 .rw-resultado{min-height:1.6em;font-family:'Archivo Black',sans-serif;font-size:1.2rem;color:var(--oro);
  text-align:center;margin:2px 0 6px;text-shadow:0 3px 0 #7A2E00}
 #rwGirar:disabled{opacity:.5}
+
+/* Tienda */
+.tn-caja{max-width:420px}
+.tn-monedas{font-weight:700;color:var(--oro);font-size:1.1rem;margin-bottom:14px}
+.tn-item{display:flex;align-items:center;gap:12px;background:#00000033;border:1px solid #FFFFFF1F;
+ border-radius:14px;padding:12px 14px;margin-bottom:10px;text-align:left}
+.tn-icono{font-size:1.5rem;flex-shrink:0;width:44px;text-align:center}
+.tn-info{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tn-info b{font-size:.92rem}
+.tn-info span{font-size:.76rem;color:#B49FCE}
+.tn-comprar{background:var(--oro);color:var(--tinta);font-weight:800;border-radius:10px;padding:10px 14px;
+ flex-shrink:0;font-size:.85rem;white-space:nowrap}
+.tn-comprar:disabled{opacity:.4}
 h1.titulo{font-size:clamp(2.6rem,10vw,4.2rem);line-height:.92;color:var(--oro);
  text-shadow:0 6px 0 #7A2E00,0 0 40px rgba(245,179,1,.35)}
 .logo-inicio{width:min(64vw,280px);display:block;margin:0 auto;filter:drop-shadow(0 6px 18px #00000066)}
@@ -432,6 +445,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
   <button class="btn-grande sec" id="bLocal">Jugar los dos en este celular</button>
   <button class="btn-grande sec" id="bBot">Uruguay — jugar solo</button>
   <button class="btn-grande sec rw-boton" id="bRuleta">🎡 Ruleta de premios<span id="rwBotonEstado" class="rw-badge"></span></button>
+  <button class="btn-grande sec" id="bTienda">🛍️ Tienda</button>
   <button class="btn-grande sec" id="bTV">📺 Sala TV / Familia</button>
   <button class="btn-grande sec" id="bEntrarTV">📱 Entrar a Sala TV</button>
 
@@ -515,6 +529,27 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
   <div class="rw-resultado" id="rwResultado"></div>
   <button class="btn-grande" id="rwGirar">GIRAR</button>
   <button class="no" id="rwCerrar" style="width:100%;border-radius:14px;padding:13px;font-weight:700;margin-top:10px">Cerrar</button>
+</div></div>
+
+<div class="capa" id="capaTienda"><div class="caja tn-caja">
+  <h2>🛍️ Tienda</h2>
+  <p class="tn-monedas">🪙 <span id="tnMonedas">500</span></p>
+  <div class="tn-item">
+    <div class="tn-icono">❤️</div>
+    <div class="tn-info"><b>Vida instantánea</b><span>+1 vida al toque</span></div>
+    <button class="tn-comprar" data-tipo="vida" data-precio="150">🪙 150</button>
+  </div>
+  <div class="tn-item">
+    <div class="tn-icono">❤️×5</div>
+    <div class="tn-info"><b>Recarga completa</b><span>Llena tus 5 vidas</span></div>
+    <button class="tn-comprar" data-tipo="recarga" data-precio="500">🪙 500</button>
+  </div>
+  <div class="tn-item">
+    <div class="tn-icono">🎡</div>
+    <div class="tn-info"><b>Giro extra</b><span>Otra vuelta de la ruleta ahora</span></div>
+    <button class="tn-comprar" data-tipo="ruleta" data-precio="200">🪙 200</button>
+  </div>
+  <button class="no" id="tnCerrar" style="width:100%;border-radius:14px;padding:13px;font-weight:700;margin-top:10px">Cerrar</button>
 </div></div>
 
 <section id="lobby">
@@ -870,6 +905,37 @@ $("rwGirar").onclick=()=>{
   });
 };
 rwActualizarBadge();
+
+/* ---- Tienda ---- */
+function tnPuedeComprar(tipo){
+  if(tipo==="vida"||tipo==="recarga")return meta.vidas<VIDAS_MAX;
+  if(tipo==="ruleta")return!rwPuedeGirar();
+  return true;
+}
+function tnActualizar(){
+  regenerarVidas();
+  $("tnMonedas").textContent=meta.monedas;
+  document.querySelectorAll(".tn-comprar").forEach(b=>{
+    const tipo=b.dataset.tipo,precio=+b.dataset.precio;
+    b.disabled=meta.monedas<precio||!tnPuedeComprar(tipo);
+  });
+}
+$("bTienda").onclick=()=>{tnActualizar();$("capaTienda").classList.add("ver");};
+$("tnCerrar").onclick=()=>$("capaTienda").classList.remove("ver");
+document.querySelectorAll(".tn-comprar").forEach(b=>{
+  b.onclick=()=>{
+    const tipo=b.dataset.tipo,precio=+b.dataset.precio;
+    if(meta.monedas<precio||!tnPuedeComprar(tipo))return;
+    meta.monedas-=precio;
+    if(tipo==="vida")recuperarVida();
+    else if(tipo==="recarga"){meta.vidas=VIDAS_MAX;meta.proxima=0;}
+    else if(tipo==="ruleta")meta.ultimaRuleta=0;
+    guardarMeta();
+    tnActualizar();mundoActualizarHud();rwActualizarBadge();
+    if($("pantDurazno").style.display==="block"){dzActualizarHud();dzActualizarBoton();}
+    bip(190,.16,"triangle",.07);
+  };
+});
 
 /* ---- Durazno 3D ---- */
 const DZ=MUNDO[0];
