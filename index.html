@@ -195,6 +195,7 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 .rw-resultado{min-height:1.6em;font-family:'Archivo Black',sans-serif;font-size:1.2rem;color:var(--oro);
  text-align:center;margin:2px 0 6px;text-shadow:0 3px 0 #7A2E00}
 #rwGirar:disabled{opacity:.5}
+#rwComprarGiro:disabled{opacity:.5}
 
 /* Tienda */
 .tn-caja{max-width:440px;max-height:86vh;overflow-y:auto}
@@ -212,7 +213,8 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 .frame-btn:disabled{opacity:.4}
 .frame-btn.equipado{background:#1DBF5F;color:#fff;box-shadow:0 0 12px #1DBF5F88}
 .frame-btn.propio{background:#2A1A3C;color:var(--crema);border:1px solid #FFFFFF33}
-.tn-monedas{font-weight:700;color:var(--oro);font-size:1.1rem;margin-bottom:14px}
+.tn-monedas{font-weight:700;color:var(--oro);font-size:1.1rem;margin-bottom:14px;
+ display:inline-block;background:#00000033;padding:7px 16px;border-radius:999px;border:1px solid #FFD65C55}
 .tn-item{display:flex;align-items:center;gap:12px;background:#00000033;border:1px solid #FFFFFF1F;
  border-radius:14px;padding:12px 14px;margin-bottom:10px;text-align:left}
 .tn-icono{font-size:1.5rem;flex-shrink:0;width:44px;text-align:center}
@@ -221,7 +223,7 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 .tn-info span{font-size:.76rem;color:#B49FCE}
 .tn-comprar{background:var(--oro);color:var(--tinta);font-weight:800;border-radius:10px;padding:10px 14px;
  flex-shrink:0;font-size:.85rem;white-space:nowrap}
-.tn-comprar:disabled{opacity:.4}
+.tn-comprar:disabled{opacity:1;background:#4A3D5C;color:#C9B8DE;cursor:not-allowed;box-shadow:none}
 
 /* Logros */
 .lg-caja{max-width:440px;max-height:82vh;overflow-y:auto}
@@ -619,6 +621,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
   </div>
   <div class="rw-resultado" id="rwResultado"></div>
   <button class="btn-grande" id="rwGirar">GIRAR</button>
+  <button class="btn-grande sec" id="rwComprarGiro" style="display:none;margin-top:8px">🎟️ Comprar giro extra — 🪙 200</button>
   <button class="no" id="rwCerrar" style="width:100%;border-radius:14px;padding:13px;font-weight:700;margin-top:10px">Cerrar</button>
 </div></div>
 
@@ -978,7 +981,7 @@ const RW_PREMIOS=[
   {tipo:"monedas",valor:75,peso:16,color:"#E5197C",label:"🪙 75"},
   {tipo:"vida",valor:1,peso:10,color:"#F5B301",label:"❤️ 1"},
   {tipo:"monedas",valor:200,peso:8,color:"#37D6C0",label:"🪙 200"},
-  {tipo:"monedas",valor:500,peso:4,color:"#F5B301",label:"🪙 500 ¡JACKPOT!"}
+  {tipo:"monedas",valor:500,peso:4,color:"#EF4D6B",label:"🪙 500"}
 ];
 const RW_MS=24*60*60*1000;
 const rwPuedeGirar=()=>Date.now()-meta.ultimaRuleta>=RW_MS;
@@ -992,16 +995,26 @@ function rwActualizarBadge(){
   const b=$("rwBotonEstado");if(!b)return;
   b.textContent=rwPuedeGirar()?"¡Lista!":"";
 }
+function rwLimites(){
+  const total=RW_PREMIOS.reduce((s,p)=>s+p.peso,0);
+  let acc=0;
+  return RW_PREMIOS.map(p=>{
+    const ini=acc/total*360;acc+=p.peso;const fin=acc/total*360;
+    return{ini,fin};
+  });
+}
 function rwDibujar(){
-  const cvv=$("rwCanvas"),cxx=cvv.getContext("2d"),R=300,paso=360/RW_PREMIOS.length;
+  const cvv=$("rwCanvas"),cxx=cvv.getContext("2d"),R=300,lims=rwLimites();
   cxx.clearRect(0,0,600,600);
   RW_PREMIOS.forEach((p,i)=>{
-    const a0=i*paso*Math.PI/180,a1=(i+1)*paso*Math.PI/180;
+    const a0=lims[i].ini*Math.PI/180,a1=lims[i].fin*Math.PI/180,angDeg=lims[i].fin-lims[i].ini;
     cxx.beginPath();cxx.moveTo(R,R);cxx.arc(R,R,R,a0,a1);cxx.closePath();
     cxx.fillStyle=p.color;cxx.fill();
     cxx.strokeStyle="#160B24";cxx.lineWidth=3;cxx.stroke();
     cxx.save();cxx.translate(R,R);cxx.rotate((a0+a1)/2);
-    cxx.textAlign="right";cxx.fillStyle="#160B24";cxx.font="700 24px Outfit,sans-serif";
+    cxx.textAlign="right";cxx.fillStyle="#160B24";
+    const fs=Math.max(13,Math.min(24,angDeg*0.9));
+    cxx.font="700 "+fs.toFixed(0)+"px Outfit,sans-serif";
     cxx.fillText(p.label,R-22,8);
     cxx.restore();
   });
@@ -1013,22 +1026,34 @@ function rwElegirPremio(){
   return RW_PREMIOS.length-1;
 }
 let rwGirando=false,rwAngulo=0;
+const RW_PRECIO_GIRO=200;
 function abrirRuleta(){
   rwDibujar();
   $("rwResultado").textContent="";
   const puede=rwPuedeGirar();
+  $("rwGirar").style.display=puede?"":"none";
   $("rwGirar").disabled=!puede||rwGirando;
-  $("rwEstado").textContent=puede?"Girá una vez por día y ganá premios.":rwTextoEspera();
+  $("rwEstado").textContent=puede?"Girá una vez por día y ganá premios.":"⏳ "+rwTextoEspera();
+  const cg=$("rwComprarGiro");
+  cg.style.display=puede?"none":"";
+  cg.disabled=meta.monedas<RW_PRECIO_GIRO;
+  cg.textContent=meta.monedas<RW_PRECIO_GIRO?"🪙 Te faltan monedas para el giro extra":"🎟️ Comprar giro extra — 🪙 "+RW_PRECIO_GIRO;
   $("capaRuleta").classList.add("ver");
 }
 $("bRuleta").onclick=abrirRuleta;
 $("rwCerrar").onclick=()=>{$("capaRuleta").classList.remove("ver");rwActualizarBadge();};
+$("rwComprarGiro").onclick=()=>{
+  if(meta.monedas<RW_PRECIO_GIRO)return;
+  meta.monedas-=RW_PRECIO_GIRO;meta.ultimaRuleta=0;guardarMeta();
+  mundoActualizarHud();rwActualizarBadge();bip(190,.16,"triangle",.07);
+  abrirRuleta();
+};
 $("rwGirar").onclick=()=>{
   if(rwGirando||!rwPuedeGirar())return;
   rwGirando=true;$("rwGirar").disabled=true;$("rwResultado").textContent="";
-  const idx=rwElegirPremio(),paso=360/RW_PREMIOS.length;
-  const jitter=(Math.random()-.5)*paso*.7;
-  const localDeseado=(idx*paso+paso/2+jitter+360)%360;
+  const idx=rwElegirPremio(),lim=rwLimites()[idx],ancho=lim.fin-lim.ini;
+  const jitter=(Math.random()-.5)*ancho*.6;
+  const localDeseado=((lim.ini+lim.fin)/2+jitter+360)%360;
   let base=(270-localDeseado+360)%360;
   const vueltas=5+Math.floor(Math.random()*2);
   let destino=base+360*vueltas;
@@ -1042,8 +1067,9 @@ $("rwGirar").onclick=()=>{
     const premio=RW_PREMIOS[idx];
     meta.ultimaRuleta=Date.now();guardarMeta();
     if(premio.tipo==="monedas")sumarMonedas(premio.valor);else recuperarVida();
-    $("rwResultado").textContent="¡Ganaste "+premio.label+"!";
-    $("rwEstado").textContent=rwTextoEspera();
+    const esJackpot=premio.valor===500&&premio.tipo==="monedas";
+    $("rwResultado").textContent=(esJackpot?"🎉 ¡JACKPOT! ":"¡Ganaste ")+premio.label+"!";
+    $("rwEstado").textContent="⏳ "+rwTextoEspera();
     mundoActualizarHud();rwActualizarBadge();
     rwGirando=false;bip(190,.16,"triangle",.07);
     logroDesbloquear("ruleta");
@@ -1058,12 +1084,19 @@ function tnPuedeComprar(tipo){
   if(tipo==="ruleta")return!rwPuedeGirar();
   return true;
 }
+function tnRazonBloqueo(tipo){
+  if(tipo==="vida"||tipo==="recarga")return"❤️ Vidas llenas";
+  if(tipo==="ruleta")return"✅ Ya disponible";
+  return"";
+}
 function tnActualizar(){
   regenerarVidas();
   $("tnMonedas").textContent=meta.monedas;
   document.querySelectorAll(".tn-comprar").forEach(b=>{
-    const tipo=b.dataset.tipo,precio=+b.dataset.precio;
-    b.disabled=meta.monedas<precio||!tnPuedeComprar(tipo);
+    const tipo=b.dataset.tipo,precio=+b.dataset.precio,puede=tnPuedeComprar(tipo),alcanza=meta.monedas>=precio;
+    b.disabled=!alcanza||!puede;
+    if(!puede){b.textContent=tnRazonBloqueo(tipo);b.title="";}
+    else{b.textContent="🪙 "+precio;b.title=alcanza?"":"Te faltan "+(precio-meta.monedas)+" monedas";}
   });
   tnRenderFrames();
 }
