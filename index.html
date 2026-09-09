@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icono-192.png">
 <link rel="icon" href="icono-192.png">
-<title>La Rueda — juego de frases para dos</title>
+<title>Girá y Adiviná Rioplatense — juego de frases para dos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
@@ -1477,7 +1477,7 @@ $("bCrear").onclick=()=>{
   },()=>{$("estado").textContent="No se pudo conectar a internet para la sala. Probá con otra red (datos del celular) o usá «Jugar los dos en este celular».";});
 };
 
-const invitacion=()=>"Jugamos a La Rueda\n"+location.origin+location.pathname+"?sala="+sala+"\nCódigo: "+sala;
+const invitacion=()=>"Jugamos a Girá y Adiviná\n"+location.origin+location.pathname+"?sala="+sala+"\nCódigo: "+sala;
 $("bWpp").onclick=()=>window.open("https://wa.me/?text="+encodeURIComponent(invitacion()),"_blank");
 $("bCopiar").onclick=async()=>{
   const t=invitacion();
