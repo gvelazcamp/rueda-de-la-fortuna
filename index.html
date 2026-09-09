@@ -1330,7 +1330,7 @@ function sumarRondaColeccion(cual){
   if(cm.rondasProgreso>=3){
     cm.rondasProgreso=0;cm.sobres++;
     guardarColeccionMeta();colActualizarBloqueDurazno();
-    setTimeout(()=>colMostrarSobreConseguido(cual),650);
+    setTimeout(tk(()=>colMostrarSobreConseguido(cual)),650);
   }else{guardarColeccionMeta();colActualizarBloqueDurazno();}
 }
 let colSobreCualActual=null,colVolverAModal=false;
@@ -1716,6 +1716,11 @@ $("salirMundo").onclick=()=>{$("mundo").style.display="none";$("setup").style.di
 
 function empezarDestino(i,paso){
   if(!gastarVida())return;
+  // Evita que un cartel de sobre/colección que quedó pendiente de una partida anterior
+  // quede flotando encima de la partida nueva que arranca acá.
+  $("modalSobreConseguido").classList.remove("ver");
+  $("capaAbrirSobre").classList.remove("ver");
+  $("capaColeccion").classList.remove("ver");
   destino=i;pasoActual=(paso===undefined?null:paso);const d=MUNDO[i];
   if(d.bg){$("fondoMundo").style.backgroundImage="url('"+d.bg+"')";$("fondoMundo").classList.add("ver");}
   modo="bot";miJug=0;rondasElegidas=(pasoActual===null?d.rondas:1);
