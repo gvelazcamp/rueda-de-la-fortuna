@@ -165,6 +165,23 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
  font-size:.62rem;font-weight:800;text-align:center;padding:3px 0;letter-spacing:.03em}
 .dz-sello-card.actual{outline:3px solid var(--agua);box-shadow:0 0 16px #37D6C0AA}
 .dz-sello-card.completado{outline:2px solid #1DBF5F}
+
+/* Ruleta de premios */
+.rw-boton{position:relative}
+.rw-badge{display:inline-block;margin-left:8px;background:var(--agua);color:var(--tinta);font-size:.68rem;
+ font-weight:800;padding:2px 9px;border-radius:99px;vertical-align:2px}
+.rw-caja{max-width:400px}
+.rw-estado{color:#C9B8DE;margin-bottom:4px;font-size:.9rem}
+.rw-box{position:relative;display:grid;place-items:center;width:min(64vw,270px);margin:16px auto}
+.rw-aguja{position:absolute;top:-6px;left:50%;transform:translateX(-50%);z-index:3;width:0;height:0;
+ border-left:11px solid transparent;border-right:11px solid transparent;border-top:22px solid var(--oro);
+ filter:drop-shadow(0 2px 3px #000)}
+.rw-aro{width:100%;line-height:0;border-radius:50%;box-shadow:0 0 0 7px #2A1A3C,0 0 0 10px var(--oro),0 14px 32px #00000080}
+#rwCanvas{width:100%;height:auto;border-radius:50%;will-change:transform;backface-visibility:hidden;transform:translateZ(0)}
+.rw-centro{position:absolute;width:16%;aspect-ratio:1;border-radius:50%;background:var(--oro);border:4px solid #2A1A3C;z-index:2}
+.rw-resultado{min-height:1.6em;font-family:'Archivo Black',sans-serif;font-size:1.2rem;color:var(--oro);
+ text-align:center;margin:2px 0 6px;text-shadow:0 3px 0 #7A2E00}
+#rwGirar:disabled{opacity:.5}
 h1.titulo{font-size:clamp(2.6rem,10vw,4.2rem);line-height:.92;color:var(--oro);
  text-shadow:0 6px 0 #7A2E00,0 0 40px rgba(245,179,1,.35)}
 .logo-inicio{width:min(64vw,280px);display:block;margin:0 auto;filter:drop-shadow(0 6px 18px #00000066)}
@@ -405,6 +422,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
   <button class="btn-grande sec" id="bUnirse">Entrar con un código</button>
   <button class="btn-grande sec" id="bLocal">Jugar los dos en este celular</button>
   <button class="btn-grande sec" id="bBot">Uruguay — jugar solo</button>
+  <button class="btn-grande sec rw-boton" id="bRuleta">🎡 Ruleta de premios<span id="rwBotonEstado" class="rw-badge"></span></button>
   <button class="btn-grande sec" id="bTV">📺 Sala TV / Familia</button>
   <button class="btn-grande sec" id="bEntrarTV">📱 Entrar a Sala TV</button>
 
@@ -476,6 +494,19 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
     <div class="dz-sellos" id="dzSellos"></div>
   </div>
 </div>
+
+<div class="capa" id="capaRuleta"><div class="caja rw-caja">
+  <h2>🎡 Ruleta de premios</h2>
+  <p class="rw-estado" id="rwEstado">Girá una vez por día y ganá premios.</p>
+  <div class="rw-box">
+    <div class="rw-aguja"></div>
+    <div class="rw-aro"><canvas id="rwCanvas" width="600" height="600"></canvas></div>
+    <div class="rw-centro"></div>
+  </div>
+  <div class="rw-resultado" id="rwResultado"></div>
+  <button class="btn-grande" id="rwGirar">GIRAR</button>
+  <button class="no" id="rwCerrar" style="width:100%;border-radius:14px;padding:13px;font-weight:700;margin-top:10px">Cerrar</button>
+</div></div>
 
 <section id="lobby">
   <h1 class="titulo" style="font-size:2.2rem">SALA</h1>
@@ -714,6 +745,7 @@ function cargarMeta(){
   if(typeof m.vidas!=="number")m.vidas=VIDAS_MAX;
   if(typeof m.monedas!=="number")m.monedas=500;
   if(typeof m.proxima!=="number")m.proxima=0;
+  if(typeof m.ultimaRuleta!=="number")m.ultimaRuleta=0;
   return m;
 }
 let meta=cargarMeta();
@@ -746,7 +778,89 @@ setInterval(()=>{
   regenerarVidas();
   if($("pantDurazno").style.display==="block"){dzActualizarHud();dzActualizarBoton();}
   if($("mundo").style.display==="block")mundoActualizarHud();
+  if($("setup").style.display!=="none")rwActualizarBadge();
 },1000);
+
+/* ---- Ruleta de premios diaria ---- */
+const RW_PREMIOS=[
+  {tipo:"monedas",valor:50,peso:20,color:"#37D6C0",label:"🪙 50"},
+  {tipo:"monedas",valor:100,peso:16,color:"#E5197C",label:"🪙 100"},
+  {tipo:"vida",valor:1,peso:14,color:"#F5B301",label:"❤️ 1"},
+  {tipo:"monedas",valor:150,peso:12,color:"#37D6C0",label:"🪙 150"},
+  {tipo:"monedas",valor:75,peso:16,color:"#E5197C",label:"🪙 75"},
+  {tipo:"vida",valor:1,peso:10,color:"#F5B301",label:"❤️ 1"},
+  {tipo:"monedas",valor:200,peso:8,color:"#37D6C0",label:"🪙 200"},
+  {tipo:"monedas",valor:500,peso:4,color:"#F5B301",label:"🪙 500 ¡JACKPOT!"}
+];
+const RW_MS=24*60*60*1000;
+const rwPuedeGirar=()=>Date.now()-meta.ultimaRuleta>=RW_MS;
+function rwTextoEspera(){
+  const rest=RW_MS-(Date.now()-meta.ultimaRuleta);
+  if(rest<=0)return"";
+  const hh=Math.floor(rest/3600000),mm=Math.floor(rest%3600000/60000);
+  return"Próxima ruleta en "+hh+"h "+mm+"m";
+}
+function rwActualizarBadge(){
+  const b=$("rwBotonEstado");if(!b)return;
+  b.textContent=rwPuedeGirar()?"¡Lista!":"";
+}
+function rwDibujar(){
+  const cvv=$("rwCanvas"),cxx=cvv.getContext("2d"),R=300,paso=360/RW_PREMIOS.length;
+  cxx.clearRect(0,0,600,600);
+  RW_PREMIOS.forEach((p,i)=>{
+    const a0=i*paso*Math.PI/180,a1=(i+1)*paso*Math.PI/180;
+    cxx.beginPath();cxx.moveTo(R,R);cxx.arc(R,R,R,a0,a1);cxx.closePath();
+    cxx.fillStyle=p.color;cxx.fill();
+    cxx.strokeStyle="#160B24";cxx.lineWidth=3;cxx.stroke();
+    cxx.save();cxx.translate(R,R);cxx.rotate((a0+a1)/2);
+    cxx.textAlign="right";cxx.fillStyle="#160B24";cxx.font="700 24px Outfit,sans-serif";
+    cxx.fillText(p.label,R-22,8);
+    cxx.restore();
+  });
+}
+function rwElegirPremio(){
+  const total=RW_PREMIOS.reduce((s,p)=>s+p.peso,0);
+  let r=Math.random()*total;
+  for(let i=0;i<RW_PREMIOS.length;i++){r-=RW_PREMIOS[i].peso;if(r<=0)return i;}
+  return RW_PREMIOS.length-1;
+}
+let rwGirando=false,rwAngulo=0;
+function abrirRuleta(){
+  rwDibujar();
+  $("rwResultado").textContent="";
+  const puede=rwPuedeGirar();
+  $("rwGirar").disabled=!puede||rwGirando;
+  $("rwEstado").textContent=puede?"Girá una vez por día y ganá premios.":rwTextoEspera();
+  $("capaRuleta").classList.add("ver");
+}
+$("bRuleta").onclick=abrirRuleta;
+$("rwCerrar").onclick=()=>{$("capaRuleta").classList.remove("ver");rwActualizarBadge();};
+$("rwGirar").onclick=()=>{
+  if(rwGirando||!rwPuedeGirar())return;
+  rwGirando=true;$("rwGirar").disabled=true;$("rwResultado").textContent="";
+  const idx=rwElegirPremio(),paso=360/RW_PREMIOS.length;
+  const jitter=(Math.random()-.5)*paso*.7;
+  const localDeseado=(idx*paso+paso/2+jitter+360)%360;
+  let base=(270-localDeseado+360)%360;
+  const vueltas=5+Math.floor(Math.random()*2);
+  let destino=base+360*vueltas;
+  while(destino<=rwAngulo)destino+=360;
+  const cvv=$("rwCanvas"),ini=rwAngulo,dur=4200,t0=performance.now();
+  requestAnimationFrame(function frame(t){
+    const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3.2);
+    rwAngulo=ini+(destino-ini)*e;
+    cvv.style.transform="rotate("+rwAngulo.toFixed(2)+"deg)";
+    if(p<1){requestAnimationFrame(frame);return;}
+    const premio=RW_PREMIOS[idx];
+    meta.ultimaRuleta=Date.now();guardarMeta();
+    if(premio.tipo==="monedas")sumarMonedas(premio.valor);else recuperarVida();
+    $("rwResultado").textContent="¡Ganaste "+premio.label+"!";
+    $("rwEstado").textContent=rwTextoEspera();
+    mundoActualizarHud();rwActualizarBadge();
+    rwGirando=false;bip(190,.16,"triangle",.07);
+  });
+};
+rwActualizarBadge();
 
 /* ---- Durazno 3D ---- */
 const DZ=MUNDO[0];
