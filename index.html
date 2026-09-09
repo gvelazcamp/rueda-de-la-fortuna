@@ -184,7 +184,21 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 #rwGirar:disabled{opacity:.5}
 
 /* Tienda */
-.tn-caja{max-width:420px}
+.tn-caja{max-width:440px;max-height:86vh;overflow-y:auto}
+.tn-subtitulo{font-family:'Archivo Black',sans-serif;color:var(--oro);font-size:1rem;margin:18px 0 10px;text-align:left}
+.frame-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(max-width:380px){.frame-grid{grid-template-columns:1fr}}
+.frame-card{background:#00000033;border:1px solid #FFFFFF1F;border-radius:14px;padding:12px;
+ display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.frame-preview{width:64px;height:64px;margin-bottom:2px}
+.frame-preview .avatar-img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
+.frame-card b{font-size:.86rem}
+.frame-desc{font-size:.68rem;color:#B49FCE;min-height:2.5em}
+.frame-btn{width:100%;background:var(--oro);color:var(--tinta);font-weight:800;border-radius:10px;
+ padding:8px 6px;font-size:.76rem}
+.frame-btn:disabled{opacity:.4}
+.frame-btn.equipado{background:#1DBF5F;color:#fff;box-shadow:0 0 12px #1DBF5F88}
+.frame-btn.propio{background:#2A1A3C;color:var(--crema);border:1px solid #FFFFFF33}
 .tn-monedas{font-weight:700;color:var(--oro);font-size:1.1rem;margin-bottom:14px}
 .tn-item{display:flex;align-items:center;gap:12px;background:#00000033;border:1px solid #FFFFFF1F;
  border-radius:14px;padding:12px 14px;margin-bottom:10px;text-align:left}
@@ -225,6 +239,10 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 .campo span{font-size:.85rem;color:#B49FCE;min-width:74px;text-align:left}
 .campo input{flex:1;background:transparent;border:none;color:var(--crema);font-size:1.05rem;font-weight:700}
 .campo input:focus{outline:none}
+.avatar-wrap{position:relative;display:inline-block;line-height:0}
+.avatar-frame{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+ pointer-events:none;transform:scale(1.7);display:none}
+.avatar-frame.ver{display:block}
 .perfil-chip{display:none;align-items:center;justify-content:center;gap:9px;margin:0 0 16px;font-size:.85rem;color:#C9B8DE}
 .perfil-chip img{width:30px;height:30px;border-radius:50%;object-fit:cover;border:1px solid #FFFFFF33}
 .perfil-chip button{background:none;border:none;color:var(--agua);text-decoration:underline;font-weight:700;font-size:.82rem;padding:4px}
@@ -450,7 +468,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
   <img src="assets/logo.webp" alt="Girá y Adiviná Rioplatense" class="logo-inicio">
   <p class="sub">Girá, pedí una consonante y adiviná la frase antes que el otro.</p>
   <div class="perfil-chip" id="perfilChip">
-    <img id="perfilAvatarImg" src="" alt="">
+    <span class="avatar-wrap"><img id="perfilAvatarImg" src="" alt=""><img class="avatar-frame" id="perfilFrameImg" alt=""></span>
     <span id="perfilNombreTxt"></span>
     <button id="cambiarPerfil" type="button">Cambiar perfil</button>
   </div>
@@ -500,7 +518,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
 <section id="pantDurazno">
   <h1 class="titulo" style="font-size:2.4rem">DURAZNO</h1>
   <div class="dz-hud">
-    <div class="dz-jugador" id="dzJugador"><img id="dzJugadorAvatar" src="" alt=""><span id="dzJugadorNombre"></span></div>
+    <div class="dz-jugador" id="dzJugador"><span class="avatar-wrap"><img id="dzJugadorAvatar" src="" alt=""><img class="avatar-frame" id="dzJugadorFrameImg" alt=""></span><span id="dzJugadorNombre"></span></div>
     <div class="dz-vidasmonedas">
       <div class="dz-vidas"><span id="dzVidas">❤️ 5</span><small id="dzProxima"></small></div>
       <div class="dz-monedas" id="dzMonedas">🪙 500</div>
@@ -571,6 +589,8 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
     <div class="tn-info"><b>Giro extra</b><span>Otra vuelta de la ruleta ahora</span></div>
     <button class="tn-comprar" data-tipo="ruleta" data-precio="200">🪙 200</button>
   </div>
+  <h3 class="tn-subtitulo">🖼️ Marcos de avatar</h3>
+  <div class="frame-grid" id="frameGrid"></div>
   <button class="no" id="tnCerrar" style="width:100%;border-radius:14px;padding:13px;font-weight:700;margin-top:10px">Cerrar</button>
 </div></div>
 
@@ -640,9 +660,9 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
 <section id="juego">
   <div class="serie" id="serie"></div>
   <div class="marcador" id="marcador">
-    <div class="jug" id="j0"><div class="nom"><span class="quien"><img class="av"><span class="n"></span></span><span class="turno">turno</span></div>
+    <div class="jug" id="j0"><div class="nom"><span class="quien"><span class="avatar-wrap"><img class="av"><img class="avatar-frame"></span><span class="n"></span></span><span class="turno">turno</span></div>
       <div class="cifras"><div>ronda<b class="ronda">$0</b></div><div>total<b class="total">$0</b></div></div></div>
-    <div class="jug" id="j1"><div class="nom"><span class="quien"><img class="av"><span class="n"></span></span><span class="turno">turno</span></div>
+    <div class="jug" id="j1"><div class="nom"><span class="quien"><span class="avatar-wrap"><img class="av"><img class="avatar-frame"></span><span class="n"></span></span><span class="turno">turno</span></div>
       <div class="cifras"><div>ronda<b class="ronda">$0</b></div><div>total<b class="total">$0</b></div></div></div>
   </div>
   <div class="tablero"><div class="categoria" id="cat"></div><div class="frase" id="frase"></div></div>
@@ -955,6 +975,7 @@ function tnActualizar(){
     const tipo=b.dataset.tipo,precio=+b.dataset.precio;
     b.disabled=meta.monedas<precio||!tnPuedeComprar(tipo);
   });
+  tnRenderFrames();
 }
 $("bTienda").onclick=()=>{tnActualizar();$("capaTienda").classList.add("ver");};
 $("tnCerrar").onclick=()=>$("capaTienda").classList.remove("ver");
@@ -1025,6 +1046,71 @@ function lgAbrir(){
 $("bLogros").onclick=lgAbrir;
 $("lgCerrar").onclick=()=>$("capaLogros").classList.remove("ver");
 
+/* ---- Marcos de avatar ---- */
+const FRAMES=[
+  {id:"dorado",nombre:"Dorado",desc:"Elegancia que destaca tu perfil.",precio:500},
+  {id:"corazon",nombre:"Corazón",desc:"Mostrale cariño a tu perfil.",precio:600},
+  {id:"fuego",nombre:"Fuego",desc:"Encendé tu avatar.",precio:700},
+  {id:"neon",nombre:"Neón",desc:"Brillo urbano nocturno.",precio:800},
+  {id:"esmeralda",nombre:"Esmeralda",desc:"Verde precioso y elegante.",precio:900},
+  {id:"rubi",nombre:"Rubí",desc:"Rojo intenso de joya.",precio:1000},
+  {id:"electrico",nombre:"Eléctrico",desc:"Energía pura a tu alrededor.",precio:1100},
+  {id:"diamante",nombre:"Diamante",desc:"El brillo más exclusivo.",precio:1200},
+  {id:"real",nombre:"Real",desc:"Un marco digno de la corona.",precio:1500},
+  {id:"celestial",nombre:"Celestial",desc:"Estrellas que te acompañan.",precio:2000}
+];
+function cargarFramesComprados(){
+  try{return new Set(JSON.parse(localStorage.getItem("gya_frames_owned")||"[]"));}catch(e){return new Set();}
+}
+let framesComprados=cargarFramesComprados();
+const guardarFramesComprados=()=>{try{localStorage.setItem("gya_frames_owned",JSON.stringify([...framesComprados]));}catch(e){}};
+function cargarFrameEquipado(){
+  try{return localStorage.getItem("gya_frame_equipped")||"";}catch(e){return"";}
+}
+let frameEquipado=cargarFrameEquipado();
+const guardarFrameEquipado=()=>{try{localStorage.setItem("gya_frame_equipped",frameEquipado);}catch(e){}};
+function pintarMiMarco(id){
+  const el=$(id);if(!el)return;
+  if(frameEquipado){el.src="assets/frames/frame-"+frameEquipado+".png";el.classList.add("ver");}
+  else el.classList.remove("ver");
+}
+function equiparMarco(id){
+  frameEquipado=id;guardarFrameEquipado();
+  pintarMiMarco("perfilFrameImg");pintarMiMarco("dzJugadorFrameImg");
+  tnRenderFrames();
+}
+function tnRenderFrames(){
+  const cont=$("frameGrid");if(!cont)return;cont.innerHTML="";
+  const miAvatar=perfil.avatar?"assets/avatars/"+perfil.avatar+".png":"";
+  const opciones=[{id:"",nombre:"Sin marco",desc:"Tu avatar tal cual, sin marco.",precio:0}].concat(FRAMES);
+  opciones.forEach(f=>{
+    const poseido=f.precio===0||framesComprados.has(f.id);
+    const equipado=frameEquipado===f.id;
+    const card=document.createElement("div");card.className="frame-card";
+    card.innerHTML='<span class="avatar-wrap frame-preview">'+
+      (miAvatar?'<img class="avatar-img" src="'+miAvatar+'" alt="">':'')+
+      (f.id?'<img class="avatar-frame ver" src="assets/frames/frame-'+f.id+'.png" alt="">':'')+
+      '</span><b>'+f.nombre+'</b><span class="frame-desc">'+f.desc+'</span>'+
+      '<button class="frame-btn'+(equipado?' equipado':poseido?' propio':'')+'">'+
+      (equipado?"EQUIPADO ✓":poseido?"EQUIPAR":"COMPRAR 🪙 "+f.precio)+'</button>';
+    const btn=card.querySelector(".frame-btn");
+    if(equipado)btn.disabled=true;
+    else if(poseido)btn.onclick=()=>equiparMarco(f.id);
+    else{
+      btn.disabled=meta.monedas<f.precio;
+      btn.onclick=()=>{
+        if(meta.monedas<f.precio){alert("No tenés suficientes monedas.");return;}
+        meta.monedas-=f.precio;guardarMeta();
+        framesComprados.add(f.id);guardarFramesComprados();
+        mundoActualizarHud();
+        equiparMarco(f.id);
+        bip(190,.16,"triangle",.07);
+      };
+    }
+    cont.appendChild(card);
+  });
+}
+
 /* ---- Durazno 3D ---- */
 const DZ=MUNDO[0];
 const DZ_NODOS=[
@@ -1075,6 +1161,7 @@ function dzActualizarHud(){
     jug.style.visibility="visible";
     $("dzJugadorAvatar").src="assets/avatars/"+perfil.avatar+".png";
     $("dzJugadorNombre").textContent=perfil.nombre;
+    pintarMiMarco("dzJugadorFrameImg");
   }else jug.style.visibility="hidden";
 }
 function dzActualizarBoton(){
@@ -1276,7 +1363,7 @@ function empezarDestino(i,paso){
   modo="bot";miJug=0;rondasElegidas=(pasoActual===null?d.rondas:1);
   $("mundo").style.display="none";$("pantDurazno").style.display="none";$("juego").style.display="block";
   armarTeclado();iniciarPartida($("miNombre").value.trim()||"Vos",
-    pasoActual===null?d.r:"Máquina",d.cats,perfil.avatar||null,null);
+    pasoActual===null?d.r:"Máquina",d.cats,perfil.avatar||null,null,frameEquipado||null,null);
 }
 
 let botT=null;
@@ -1303,6 +1390,7 @@ function actualizarChipPerfil(){
     chip.style.display="flex";
     $("perfilAvatarImg").src="assets/avatars/"+perfil.avatar+".png";
     $("perfilNombreTxt").textContent=perfil.nombre;
+    pintarMiMarco("perfilFrameImg");
   }else chip.style.display="none";
 }
 function guardarPerfil(nombre,avatar){
@@ -1411,12 +1499,13 @@ function renderTVLobby(){
   $("tvLink").textContent=link;
   const lista=$("tvLista");lista.innerHTML="";
   familiaJugadores.forEach((j,i)=>{const d=document.createElement("div");d.className="tv-persona";
-    d.innerHTML=(j.av?'<img class="av ver" src="assets/avatars/'+j.av+'.png" alt="">':"")+(i+1)+". "+j.n;
+    d.innerHTML=(j.av?'<span class="avatar-wrap"><img class="av ver" src="assets/avatars/'+j.av+'.png" alt="">'+
+      (j.frame?'<img class="avatar-frame ver" src="assets/frames/frame-'+j.frame+'.png" alt="">':"")+'</span>':"")+(i+1)+". "+j.n;
     lista.appendChild(d);});
   $("tvEstado").textContent=tvPartidaIniciada?"Partida en curso":(familiaJugadores.length+" jugador"+(familiaJugadores.length===1?"":"es")+" conectado"+(familiaJugadores.length===1?"":"s")+" · mínimo 2, máximo 6");
   $("bTVComenzar").disabled=tvPartidaIniciada||familiaJugadores.length<2;
 }
-function emitirTVLobby(){if(modo==="tvhost")enviar({tipo:"tv_lobby",jugadores:familiaJugadores.map(j=>({id:j.id,n:j.n,av:j.av||null})),iniciada:tvPartidaIniciada});}
+function emitirTVLobby(){if(modo==="tvhost")enviar({tipo:"tv_lobby",jugadores:familiaJugadores.map(j=>({id:j.id,n:j.n,av:j.av||null,frame:j.frame||null})),iniciada:tvPartidaIniciada});}
 function crearSalaTV(){
   modo="tvhost";miJug=-1;familiaJugadores=[];tvPartidaIniciada=false;S=null;
   sala=Array.from({length:4},()=>"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random()*32)]).join("");
@@ -1437,15 +1526,15 @@ function unirseTV(cod){
   conectar(()=>{
     mq.subscribe(tema("tvestado"));
     mq.on("message",(t,pl)=>{if(t===tema("tvestado")){try{recibirTVGuest(JSON.parse(pl.toString()));}catch(e){}}});
-    const hola=()=>enviar({a:"tv_hola",n,av:perfil.avatar||null});hola();holaTimer=setInterval(hola,1800);
+    const hola=()=>enviar({a:"tv_hola",n,av:perfil.avatar||null,frame:frameEquipado||null});hola();holaTimer=setInterval(hola,1800);
     $("estado").textContent="Buscando Sala TV "+sala+"…";
   },()=>{$("estado").textContent="No se pudo conectar con la TV. Revisá el código o la conexión.";});
 }
 function recibirTVHost(d){
   if(d.a==="tv_hola"){
     let j=familiaJugadores.find(x=>x.id===d.pid);
-    if(!j&&!tvPartidaIniciada&&familiaJugadores.length<6){j={id:d.pid,n:(d.n||"Jugador").slice(0,12),av:d.av||null};familiaJugadores.push(j);}
-    else if(j&&!tvPartidaIniciada){j.n=(d.n||j.n).slice(0,12);j.av=d.av||j.av||null;}
+    if(!j&&!tvPartidaIniciada&&familiaJugadores.length<6){j={id:d.pid,n:(d.n||"Jugador").slice(0,12),av:d.av||null,frame:d.frame||null};familiaJugadores.push(j);}
+    else if(j&&!tvPartidaIniciada){j.n=(d.n||j.n).slice(0,12);j.av=d.av||j.av||null;j.frame=d.frame||j.frame||null;}
     renderTVLobby();emitirTVLobby();if(S)publicar(V.aviso);return;
   }
   if(d.a==="reaccion"){volar(d.e);if(S)enviar({tipo:"reaccion",e:d.e});return;}
@@ -1477,7 +1566,7 @@ function recibirTVGuest(d){
   if(d.tipo==="reaccion")volar(d.e);
 }
 function iniciarPartidaJugadores(jugadores,cats){
-  const js=jugadores.map((j,i)=>({id:j.id||null,n:(j.n||("Jugador "+(i+1))).slice(0,12),av:j.av||null,tot:0,ronda:0,rg:0}));
+  const js=jugadores.map((j,i)=>({id:j.id||null,n:(j.n||("Jugador "+(i+1))).slice(0,12),av:j.av||null,frame:j.frame||null,tot:0,ronda:0,rg:0}));
   arranca=((arranca%js.length)+js.length)%js.length;
   S={jug:js,turno:arranca,rondas:rondasElegidas,ronda:0,cats:cats||null,mazo:nuevoMazo(cats),finYa:false,valor:0,fase:"girar",abiertas:new Set(),usadas:new Set(),frase:"",cat:"",normalesDesdeToss:0};
   nuevaRonda();
@@ -1550,7 +1639,7 @@ $("bLocal").onclick=()=>{
   modo="local";const n=$("miNombre").value.trim()||"Jugador 1";
   const otro=(prompt("Nombre del segundo jugador","Rival")||"Jugador 2").slice(0,12);
   $("setup").style.display="none";$("juego").style.display="block";
-  armarTeclado();iniciarPartida(n,otro,undefined,perfil.avatar||null,null);
+  armarTeclado();iniciarPartida(n,otro,undefined,perfil.avatar||null,null,frameEquipado||null,null);
 };
 
 $("bCrear").onclick=()=>{
@@ -1593,7 +1682,7 @@ function unirse(cod){
   conectar(()=>{
     mq.subscribe(tema("estado"));
     mq.on("message",(t,pl)=>{if(t===tema("estado")){try{recibirGuest(JSON.parse(pl.toString()));}catch(e){}}});
-    const hola=()=>enviar({a:"hola",n:($("miNombre").value.trim()||"Jugador 2").slice(0,12),av:perfil.avatar||null});
+    const hola=()=>enviar({a:"hola",n:($("miNombre").value.trim()||"Jugador 2").slice(0,12),av:perfil.avatar||null,frame:frameEquipado||null});
     hola();holaTimer=setInterval(hola,2000);
     $("estado").textContent="Buscando la sala "+sala+"…";
   },()=>{$("estado").textContent="No se pudo conectar. Probá con otra red (datos del celular).";});
@@ -1631,7 +1720,7 @@ function recibirHost(d){
   if(d.a==="hola"){
     if(S){publicar(V.aviso);return;}
     $("lobby").style.display="none";$("juego").style.display="block";armarTeclado();
-    iniciarPartida(($("miNombre").value.trim()||"Jugador 1").slice(0,12),d.n,undefined,perfil.avatar||null,d.av||null);return;}
+    iniciarPartida(($("miNombre").value.trim()||"Jugador 1").slice(0,12),d.n,undefined,perfil.avatar||null,d.av||null,frameEquipado||null,d.frame||null);return;}
   if(d.a==="reaccion"){volar(d.e);return;}
   if(!S)return;
   if(d.a==="revancha"){if(S.fase==="fin")revancha();return;}
@@ -1669,8 +1758,8 @@ function nuevoMazo(cats){
   if(!d.length)d=[...base];
   return d.sort(()=>Math.random()-.5);
 }
-function iniciarPartida(n1,n2,cats,av1,av2){
-  iniciarPartidaJugadores([{n:n1,av:av1},{n:n2,av:av2}],cats);
+function iniciarPartida(n1,n2,cats,av1,av2,frame1,frame2){
+  iniciarPartidaJugadores([{n:n1,av:av1,frame:frame1},{n:n2,av:av2,frame:frame2}],cats);
 }
 function nuevaRonda(){
   limpiarToss();
@@ -1918,7 +2007,7 @@ function arrancarReloj(){
 }
 function publicar(txt,fx){
   V={mask:mask(),cat:S.cat,usadas:[...S.usadas],
-     jug:S.jug.map(j=>({id:j.id||null,n:j.n,av:j.av||null,tot:j.tot,ronda:j.ronda,rg:j.rg||0})),turno:S.turno,fase:S.fase,
+     jug:S.jug.map(j=>({id:j.id||null,n:j.n,av:j.av||null,frame:j.frame||null,tot:j.tot,ronda:j.ronda,rg:j.rg||0})),turno:S.turno,fase:S.fase,
      hayVoc:[...VOCALES].some(v=>!S.usadas.has(v)&&S.frase.includes(v)),
      cons:consRestantes(),serie:serie.slice(),doble:!!S.doble,
      tossBloq:S.tossBloq?S.tossBloq.slice():Array(S.jug.length).fill(false),tossPausado:!!S.tossPausado,tossRespondedor:S.tossRespondedor,
@@ -2173,7 +2262,7 @@ function efecto(f){
 }
 function asegurarMarcador(){
   const m=$("marcador");if(!m||!V.jug)return;
-  while(m.children.length<V.jug.length){const i=m.children.length,d=document.createElement("div");d.className="jug";d.id="j"+i;d.innerHTML='<div class="nom"><span class="quien"><img class="av"><span class="n"></span></span><span class="turno">turno</span></div><div class="cifras"><div>ronda<b class="ronda">$0</b></div><div>total<b class="total">$0</b></div></div>';m.appendChild(d);}
+  while(m.children.length<V.jug.length){const i=m.children.length,d=document.createElement("div");d.className="jug";d.id="j"+i;d.innerHTML='<div class="nom"><span class="quien"><span class="avatar-wrap"><img class="av"><img class="avatar-frame"></span><span class="n"></span></span><span class="turno">turno</span></div><div class="cifras"><div>ronda<b class="ronda">$0</b></div><div>total<b class="total">$0</b></div></div>';m.appendChild(d);}
   while(m.children.length>V.jug.length)m.lastElementChild.remove();
 }
 function pintarTodo(){
@@ -2284,6 +2373,9 @@ function pintar(){
     const av=e.querySelector(".av");
     if(j.av){av.src="assets/avatars/"+j.av+".png";av.classList.add("ver");}
     else av.classList.remove("ver");
+    const fr=e.querySelector(".avatar-frame");
+    if(j.frame){fr.src="assets/frames/frame-"+j.frame+".png";fr.classList.add("ver");}
+    else fr.classList.remove("ver");
     e.querySelector(".turno").style.visibility=i===V.turno?"visible":"hidden";
     e.querySelector(".turno").textContent=(i===V.turno&&V.doble)?"turno · x2":"turno";
     setMonto(e.querySelector(".ronda"),j.ronda,i,0);
