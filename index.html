@@ -982,12 +982,15 @@ function detenerMusica(){
 if("serviceWorker" in navigator){
   window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});
 }
-const esIOS=/iPhone|iPad|iPod/.test(navigator.userAgent)&&!window.MSStream;
-const yaInstalada=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+let esIOS=false,yaInstalada=false;
+try{esIOS=/iPhone|iPad|iPod/.test(navigator.userAgent)&&!window.MSStream;}catch(e){}
+try{yaInstalada=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;}catch(e){}
 let installPromptEvent=null;
-if(!yaInstalada)$("bInstalar").style.display="";
-window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installPromptEvent=e;});
-window.addEventListener("appinstalled",()=>{$("bInstalar").style.display="none";installPromptEvent=null;});
+// Si alguna de las comprobaciones de arriba tirase un error en algún navegador raro
+// (ej. el navegador interno de WhatsApp), igual queremos que el botón se vea.
+try{if(!yaInstalada)$("bInstalar").style.display="";}catch(e){}
+try{window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installPromptEvent=e;});}catch(e){}
+try{window.addEventListener("appinstalled",()=>{$("bInstalar").style.display="none";installPromptEvent=null;});}catch(e){}
 $("bInstalar").onclick=async()=>{
   if(installPromptEvent){
     installPromptEvent.prompt();
