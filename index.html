@@ -777,6 +777,11 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
     <div class="tn-info"><b>Sobre de Colonia</b><span>Un sobre para tu colección — 1 por día</span></div>
     <button class="tn-comprar" data-tipo="sobre_colonia" data-precio="1200">🪙 1200</button>
   </div>
+  <div class="tn-item">
+    <div class="tn-icono">🎁</div>
+    <div class="tn-info"><b>Sobre de Tacuarembó</b><span>Un sobre para tu colección — 1 por día</span></div>
+    <button class="tn-comprar" data-tipo="sobre_tacuarembo" data-precio="1200">🪙 1200</button>
+  </div>
   <h3 class="tn-subtitulo">🖼️ Marcos de avatar</h3>
   <div class="frame-grid" id="frameGrid"></div>
   <button class="no" id="tnCerrar" style="width:100%;border-radius:14px;padding:13px;font-weight:700;margin-top:10px">Cerrar</button>
@@ -1187,7 +1192,7 @@ const MUNDO=[
  {id:"piriapolis",pasos:[[22, 20], [35, 28], [26, 40], [40, 52]],nx:56,ny:58,bg:"assets/worlds/piriapolis.webp",n:"Piriápolis",r:"El Guardavidas",rondas:3,cats:["Clima y verano","Viaje"],rica:true},
  {id:"punta",pasos:[[20, 22], [32, 30], [24, 42], [38, 52]],nx:50,ny:62,bg:"assets/worlds/punta-del-este.webp",n:"Punta del Este",r:"La Turista",rondas:4,cats:["Cosa","Cosas de la casa"],rica:true},
  {id:"salto",pasos:[[22, 20], [34, 28], [24, 40], [38, 50]],nx:52,ny:46,bg:"assets/worlds/salto.webp",n:"Salto y las termas",r:"El Parrillero",rondas:4,cats:["Comida","Animales"],rica:true},
- {id:"tacuarembo",pasos:[[28, 18], [20, 28], [30, 40], [22, 52]],nx:55,ny:58,bg:"assets/worlds/tacuarembo.webp",n:"Tacuarembó",r:"El Gaucho",rondas:4,cats:["Accion","Deporte"]},
+ {id:"tacuarembo",pasos:[[28, 18], [20, 28], [30, 40], [22, 52]],nx:55,ny:58,bg:"assets/worlds/tacuarembo.webp",n:"Tacuarembó",r:"El Gaucho",rondas:4,cats:["Accion","Deporte"],rica:true},
  {id:"polonio",pasos:[[46, 16], [38, 28], [30, 40], [36, 52]],nx:45,ny:62,bg:"assets/worlds/cabo-polonio.webp",n:"Cabo Polonio",r:"El Farolero",rondas:5,cats:["Musica y fiesta","Escuela e infancia"]},
  {id:"colonia",pasos:[[20, 20], [32, 28], [24, 38], [38, 48]],nx:56,ny:44,bg:"assets/worlds/colonia.webp",n:"Colonia",r:"El Cinéfilo",rondas:5,cats:["Pelicula","Programa de TV"],rica:true},
  {id:"centenario",pasos:[[20, 22], [32, 30], [22, 42], [36, 52]],nx:60,ny:55,bg:"assets/worlds/estadio-centenario.webp",n:"Estadio Centenario",r:"La Campeona",rondas:5,cats:["Personajes","Dicho popular"]}];
@@ -1664,6 +1669,20 @@ const COLECCIONES={
       {id:"vino",nombre:"Vino y Queso",img:"assets/collectibles/colonia/coleccion-colonia-vino.webp"},
       {id:"auto-antiguo",nombre:"Auto Antiguo",img:"assets/collectibles/colonia/coleccion-colonia-auto-antiguo.webp"}
     ]
+  },
+  tacuarembo:{
+    nombre:"Tacuarembó",
+    sobreCerrado:"assets/collectibles/tacuarembo/sobre-tacuarembo.webp",
+    sobreAbierto:"assets/collectibles/tacuarembo/sobre-tacuarembo-abierto.webp",
+    frameExclusivo:"frame-tacuarembo", // preparado a futuro: NO activar hasta subir assets/frames/frame-tacuarembo.png
+    items:[
+      {id:"mate",nombre:"Mate de Tacuarembó",img:"assets/collectibles/tacuarembo/coleccion-tacuarembo-mate.webp"},
+      {id:"guitarra",nombre:"Guitarra Criolla",img:"assets/collectibles/tacuarembo/coleccion-tacuarembo-guitarra.webp"},
+      {id:"tren",nombre:"Locomotora Antigua",img:"assets/collectibles/tacuarembo/coleccion-tacuarembo-tren.webp"},
+      {id:"atuendo",nombre:"Atuendo Gaucho",img:"assets/collectibles/tacuarembo/coleccion-tacuarembo-atuendo.webp"},
+      {id:"fogon",nombre:"El Fogón",img:"assets/collectibles/tacuarembo/coleccion-tacuarembo-fogon.webp"},
+      {id:"gramofono",nombre:"El Gramófono",img:"assets/collectibles/tacuarembo/coleccion-tacuarembo-gramofono.webp"}
+    ]
   }
 };
 function cargarColeccionMeta(){
@@ -1952,6 +1971,22 @@ const CIUDAD_RICA={
       {img:"assets/passport/colonia-sello-3.webp",nombre:"El Portón"},
       {img:"assets/passport/colonia-sello-4.webp",nombre:"La Basílica"},
       {img:"assets/passport/colonia-sello-rival.webp",nombre:"El Cinéfilo"}
+    ]
+  },
+  tacuarembo:{
+    nodos:[
+      {tipo:"paso",x:24,y:18},
+      {tipo:"paso",x:42,y:30},
+      {tipo:"paso",x:28,y:48},
+      {tipo:"paso",x:46,y:66},
+      {tipo:"rival",x:32,y:88}
+    ],
+    sellos:[
+      {img:"assets/passport/tacuarembo-sello-1.webp",nombre:"Laguna de las Lavanderas"},
+      {img:"assets/passport/tacuarembo-sello-2.webp",nombre:"Plaza 19 de Abril"},
+      {img:"assets/passport/tacuarembo-sello-3.webp",nombre:"Carlos Gardel"},
+      {img:"assets/passport/tacuarembo-sello-4.webp",nombre:"Las Cuchillas"},
+      {img:"assets/passport/tacuarembo-sello-rival.webp",nombre:"El Gaucho"}
     ]
   }
 };
