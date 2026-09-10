@@ -488,8 +488,7 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 .lodo-zona{display:none;flex-direction:column;align-items:center;gap:6px;padding:14px 10px;
  background:#241239;border:1px dashed #A9793F88;border-radius:12px;margin:8px 0;touch-action:none;user-select:none}
 .lodo-zona p{margin:0;font-weight:700;color:var(--crema);font-size:.8rem}
-.lodo-mancha{width:64px;height:64px;border-radius:50%;
- background:radial-gradient(circle at 35% 35%,#8a5a2f,#4a3018 70%);box-shadow:inset 0 0 12px #0008;transition:opacity .15s}
+.lodo-mancha{width:150px;height:150px;border-radius:50%;box-shadow:inset 0 0 12px #0008;touch-action:none}
 .lodo-barra{width:100%;max-width:220px;height:10px;border-radius:6px;background:#150C20;overflow:hidden}
 .lodo-barra-fill{width:0%;height:100%;background:linear-gradient(90deg,#A9793F,var(--oro));transition:width .1s}
 .teclado{display:grid;grid-template-columns:repeat(9,1fr);gap:5px}
@@ -973,7 +972,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
     <button class="poder-btn" data-poder="comodin"><img src="assets/powers/power-comodin.webp" alt=""><span class="poder-nombre">Comodín</span><span class="poder-precio">🪙1200</span></button>
   </div>
   <div class="lodo-zona" id="tvcLodoZona" style="display:none">
-    <div class="lodo-mancha" id="tvcLodoMancha"></div>
+    <canvas class="lodo-mancha" id="tvcLodoMancha" width="220" height="220"></canvas>
     <p>🧹 Deslizá para limpiar el lodo</p>
     <div class="lodo-barra"><div class="lodo-barra-fill" id="tvcLodoBarra"></div></div>
   </div>
@@ -1017,7 +1016,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
         <button class="poder-btn" data-poder="comodin"><img src="assets/powers/power-comodin.webp" alt=""><span class="poder-nombre">Comodín</span><span class="poder-precio">🪙1200</span></button>
       </div>
       <div class="lodo-zona" id="lodoZona" style="display:none">
-        <div class="lodo-mancha" id="lodoMancha"></div>
+        <canvas class="lodo-mancha" id="lodoMancha" width="220" height="220"></canvas>
         <p>🧹 Deslizá para limpiar el lodo</p>
         <div class="lodo-barra"><div class="lodo-barra-fill" id="lodoBarra"></div></div>
       </div>
@@ -3410,18 +3409,42 @@ document.querySelectorAll("#poderesFila .poder-btn").forEach(b=>{b.onclick=()=>p
 document.querySelectorAll("#tvcPoderes .poder-btn").forEach(b=>{b.onclick=()=>pedirConfirmacionPoderTV(b.dataset.poder);});
 (function(){
   function armarLimpieza(zonaId,manchaId,barraId,alTerminar){
-    const zona=$(zonaId);let limpiando=false,ultX=0,ultY=0,progreso=0;
-    const reset=()=>{progreso=0;$(barraId).style.width="0%";$(manchaId).style.opacity="1";};
+    const zona=$(zonaId),canvas=$(manchaId),ctx=canvas.getContext("2d");
+    let limpiando=false,ultX=0,ultY=0,progreso=0;
+    const pintarLodo=()=>{
+      const w=canvas.width,h=canvas.height,cx=w/2,cy=h/2,r=w/2;
+      ctx.globalCompositeOperation="source-over";
+      ctx.clearRect(0,0,w,h);
+      ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.clip();
+      const g=ctx.createRadialGradient(cx-r*.3,cy-r*.3,r*.1,cx,cy,r);
+      g.addColorStop(0,"#8a5a2f");g.addColorStop(1,"#3a260f");
+      ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+      ctx.fillStyle="#00000033";
+      for(let i=0;i<7;i++){
+        const ang=(i/7)*Math.PI*2+.6,rad=r*.5;
+        ctx.beginPath();ctx.arc(cx+Math.cos(ang)*rad,cy+Math.sin(ang)*rad,r*.22,0,Math.PI*2);ctx.fill();
+      }
+      ctx.restore();
+    };
+    const reset=()=>{progreso=0;$(barraId).style.width="0%";pintarLodo();};
+    const limpiarEn=(x,y)=>{
+      const rect=canvas.getBoundingClientRect();
+      const px=(x-rect.left)/rect.width*canvas.width,py=(y-rect.top)/rect.height*canvas.height;
+      ctx.globalCompositeOperation="destination-out";
+      ctx.beginPath();ctx.arc(px,py,canvas.width*.16,0,Math.PI*2);ctx.fill();
+    };
     const mover=(x,y)=>{
       if(!limpiando)return;
       progreso=Math.min(100,progreso+Math.hypot(x-ultX,y-ultY)/6);ultX=x;ultY=y;
-      $(barraId).style.width=progreso+"%";$(manchaId).style.opacity=String(1-progreso/100);
+      $(barraId).style.width=progreso+"%";
+      limpiarEn(x,y);
       if(progreso>=100){limpiando=false;alTerminar();}
     };
-    zona.addEventListener("pointerdown",e=>{limpiando=true;ultX=e.clientX;ultY=e.clientY;try{zona.setPointerCapture(e.pointerId);}catch(err){}});
+    zona.addEventListener("pointerdown",e=>{limpiando=true;ultX=e.clientX;ultY=e.clientY;limpiarEn(e.clientX,e.clientY);try{zona.setPointerCapture(e.pointerId);}catch(err){}});
     zona.addEventListener("pointermove",e=>mover(e.clientX,e.clientY));
     zona.addEventListener("pointerup",()=>limpiando=false);
     zona.addEventListener("pointercancel",()=>limpiando=false);
+    reset();
     return reset;
   }
   window.__resetLodoZona=armarLimpieza("lodoZona","lodoMancha","lodoBarra",()=>{
