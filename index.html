@@ -3409,53 +3409,22 @@ $("tvcConfirmPoderSi").onclick=()=>{
 document.querySelectorAll("#poderesFila .poder-btn").forEach(b=>{b.onclick=()=>pedirConfirmacionPoder(b.dataset.poder);});
 document.querySelectorAll("#tvcPoderes .poder-btn").forEach(b=>{b.onclick=()=>pedirConfirmacionPoderTV(b.dataset.poder);});
 (function(){
+  const imgLodo=new Image();
+  const lodoPendientes=[];
+  imgLodo.onload=()=>{lodoPendientes.forEach(fn=>fn());};
+  imgLodo.src="assets/powers/lodo-mancha.webp";
   function armarLimpieza(zonaId,manchaId,barraId,alTerminar){
     const zona=$(zonaId),canvas=$(manchaId),ctx=canvas.getContext("2d");
     let limpiando=false,ultX=0,ultY=0,progreso=0,radioBorrado=60;
-    const colorMancha=(cx,cy,r)=>{
-      const g=ctx.createRadialGradient(cx-r*.3,cy-r*.3,r*.05,cx,cy,r);
-      g.addColorStop(0,"#7a4d28");g.addColorStop(.6,"#4a3018");g.addColorStop(1,"#2a1b0c");
-      return g;
-    };
-    const gota=(bx,by,ang,largo,ancho)=>{
-      const dx=Math.cos(ang),dy=Math.sin(ang);
-      const nx=-dy,ny=dx;
-      const px=bx+dx*largo,py=by+dy*largo;
-      ctx.beginPath();
-      ctx.moveTo(bx+nx*ancho,by+ny*ancho);
-      ctx.quadraticCurveTo(bx+dx*largo*.5+nx*ancho*.6,by+dy*largo*.5+ny*ancho*.6,px,py);
-      ctx.quadraticCurveTo(px+nx*ancho*.9,py+ny*ancho*.9,px,py+ancho*.9);
-      ctx.quadraticCurveTo(bx+dx*largo*.5-nx*ancho*.6,by+dy*largo*.5-ny*ancho*.6,bx-nx*ancho,by-ny*ancho);
-      ctx.closePath();ctx.fill();
-      ctx.beginPath();ctx.arc(px,py+ancho*.4,ancho*1.1,0,Math.PI*2);ctx.fill();
-    };
     const manchon=(cx,cy,r)=>{
-      ctx.fillStyle=colorMancha(cx,cy,r);
-      const puntas=8+Math.floor(Math.random()*4);
-      const angs=[],rads=[];
-      for(let i=0;i<puntas;i++){
-        angs.push((i/puntas)*Math.PI*2+(Math.random()-.5)*.3);
-        const esPunta=Math.random()<.3;
-        rads.push(esPunta?r*(1.15+Math.random()*.55):r*(.82+Math.random()*.28));
-      }
-      ctx.beginPath();
-      for(let i=0;i<puntas;i++){
-        const px=cx+Math.cos(angs[i])*rads[i],py=cy+Math.sin(angs[i])*rads[i];
-        if(i===0)ctx.moveTo(px,py);
-        else{
-          const j=i-1,midAng=(angs[i]+angs[j])/2,midR=Math.min(rads[i],rads[j])*.82;
-          ctx.quadraticCurveTo(cx+Math.cos(midAng)*midR,cy+Math.sin(midAng)*midR,px,py);
-        }
-      }
-      const j=puntas-1,midAng=(angs[0]+angs[j])/2,midR=Math.min(rads[0],rads[j])*.82;
-      ctx.quadraticCurveTo(cx+Math.cos(midAng)*midR,cy+Math.sin(midAng)*midR,cx+Math.cos(angs[0])*rads[0],cy+Math.sin(angs[0])*rads[0]);
-      ctx.closePath();ctx.fill();
-      const nGotas=1+Math.floor(Math.random()*3);
-      for(let g=0;g<nGotas;g++){
-        const i=Math.floor(Math.random()*puntas);
-        const ang=angs[i]*.4+(Math.PI/2)*.6+(Math.random()-.5)*.6;
-        gota(cx+Math.cos(angs[i])*rads[i]*.9,cy+Math.sin(angs[i])*rads[i]*.9,ang,r*(.5+Math.random()*.7),r*.11);
-      }
+      ctx.fillStyle="#4a3018";
+      ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
+    };
+    const manchonImg=(cx,cy,size,ang)=>{
+      ctx.save();
+      ctx.translate(cx,cy);ctx.rotate(ang);
+      ctx.drawImage(imgLodo,-size/2,-size/2,size,size);
+      ctx.restore();
     };
     const pintarLodo=()=>{
       const w=Math.ceil(window.innerWidth||1),h=Math.ceil(window.innerHeight||1);
@@ -3464,10 +3433,18 @@ document.querySelectorAll("#tvcPoderes .poder-btn").forEach(b=>{b.onclick=()=>pe
       radioBorrado=diag*.11;
       ctx.globalCompositeOperation="source-over";
       ctx.clearRect(0,0,w,h);
-      const nGrandes=5+Math.floor(Math.random()*3);
-      for(let i=0;i<nGrandes;i++)manchon(Math.random()*w,Math.random()*h,diag*(.22+Math.random()*.13));
-      for(let i=0;i<10;i++)manchon(Math.random()*w,Math.random()*h,diag*(.07+Math.random()*.06));
+      if(imgLodo.complete&&imgLodo.naturalWidth){
+        const nGrandes=6+Math.floor(Math.random()*3);
+        for(let i=0;i<nGrandes;i++)manchonImg(Math.random()*w,Math.random()*h,diag*(.32+Math.random()*.2),Math.random()*Math.PI*2);
+        const nChicas=6+Math.floor(Math.random()*4);
+        for(let i=0;i<nChicas;i++)manchonImg(Math.random()*w,Math.random()*h,diag*(.13+Math.random()*.1),Math.random()*Math.PI*2);
+      }else{
+        const nGrandes=5+Math.floor(Math.random()*3);
+        for(let i=0;i<nGrandes;i++)manchon(Math.random()*w,Math.random()*h,diag*(.22+Math.random()*.13));
+        for(let i=0;i<10;i++)manchon(Math.random()*w,Math.random()*h,diag*(.07+Math.random()*.06));
+      }
     };
+    lodoPendientes.push(()=>{if(zona.style.display!=="none")pintarLodo();});
     const reset=()=>{progreso=0;$(barraId).style.width="0%";pintarLodo();};
     const limpiarEn=(x,y)=>{
       ctx.globalCompositeOperation="destination-out";
