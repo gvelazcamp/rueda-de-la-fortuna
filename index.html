@@ -1357,6 +1357,14 @@ const LOGROS=[
   {id:"paso1",nombre:"Primeros pasos",desc:"Superá el Paso 1 de Durazno",icono:"🥾",premio:50},
   {id:"paso4",nombre:"Casi campeón",desc:"Superá los 4 pasos de Durazno",icono:"🏁",premio:75},
   {id:"durazno100",nombre:"Conquistador de Durazno",desc:"Derrotá a El Tío del Asado",icono:"👑",premio:150},
+  {id:"montevideo100",nombre:"Conquistador de Montevideo",desc:"Derrotá a La Vecina Curiosa",icono:"🏙️",premio:150},
+  {id:"piriapolis100",nombre:"Conquistador de Piriápolis",desc:"Derrotá a El Guardavidas",icono:"🏖️",premio:100},
+  {id:"punta100",nombre:"Conquistador de Punta del Este",desc:"Derrotá a La Turista",icono:"🏝️",premio:100},
+  {id:"salto100",nombre:"Conquistador de Salto",desc:"Derrotá a El Parrillero",icono:"♨️",premio:110},
+  {id:"tacuarembo100",nombre:"Conquistador de Tacuarembó",desc:"Derrotá a El Gaucho",icono:"🤠",premio:110},
+  {id:"polonio100",nombre:"Conquistador de Cabo Polonio",desc:"Derrotá a El Farolero",icono:"🏮",premio:130},
+  {id:"colonia100",nombre:"Conquistador de Colonia",desc:"Derrotá a El Cinéfilo",icono:"🎬",premio:130},
+  {id:"centenario100",nombre:"Campeona del Uruguay",desc:"Derrotá a La Campeona y terminá el mapa",icono:"🏆",premio:200},
   {id:"ruleta",nombre:"Con suerte",desc:"Girá la ruleta de premios",icono:"🎡",premio:30},
   {id:"jackpot",nombre:"¡Pozo grande!",desc:"Ganá el premio mayor de la ruleta",icono:"💰",premio:100},
   {id:"tienda",nombre:"Comprador",desc:"Comprá algo en la tienda",icono:"🛍️",premio:30},
@@ -2812,7 +2820,8 @@ function finDelJuego(){
       let selloImg;
       if(d&&!ganados.has(d.id)){ganados.add(d.id);guardarMundo();
         sumarMonedas(500);recuperarVida();
-        if(CIUDAD_RICA[d.id]){selloImg=CIUDAD_RICA[d.id].sellos[4].img;if(d.id==="durazno")logroDesbloquear("durazno100");}
+        if(CIUDAD_RICA[d.id])selloImg=CIUDAD_RICA[d.id].sellos[4].img;
+        logroDesbloquear(d.id+"100");
         extra=(MUNDO[destino+1]?" Se abrió "+MUNDO[destino+1].n+".":" ¡Terminaste el mapa!")+" +500 🪙";}
       iniciarBonus(g,{g,tit,extra,selloImg});return;
     }
