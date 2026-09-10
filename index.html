@@ -941,48 +941,39 @@ function bip(f,d,tipo="sine",g=.06){try{ac=ac||new (window.AudioContext||window.
 
 function tac(){bip(1250,.035,"square",.05);bip(320,.06,"triangle",.035);}
 
-/* ---- Música ambiente (pad suave generado por Web Audio, sin archivos externos) ---- */
+/* ---- Música de fondo real (mp3 en loop, volumen bajo) ---- */
+// Una pista por contexto. Por ahora solo está la de partida; cuando lleguen
+// la de menú y la de bonus/final, se agregan acá con la misma mecánica.
+const PISTAS_MUSICA={
+  partida:"assets/audio/musica-partida.mp3"
+};
+const VOLUMEN_MUSICA=.28;
 let musicaOn=(()=>{try{return localStorage.getItem("gya_musica")!=="off";}catch(e){return true;}})();
 const guardarMusica=()=>{try{localStorage.setItem("gya_musica",musicaOn?"on":"off");}catch(e){}};
-let musicaNodos=null;
-function iniciarMusica(){
-  if(musicaNodos||!musicaOn)return;
-  try{
-    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
-    // Los nodos hay que crearlos y arrancarlos EN EL MISMO GESTO del usuario
-    // (no adentro de un .then()), si no Safari/iOS no destraba el audio.
-    if(ac.state==="suspended")ac.resume().catch(()=>{});
-    const master=ac.createGain();
-    master.gain.setValueAtTime(0,ac.currentTime);
-    master.gain.linearRampToValueAtTime(.16,ac.currentTime+2);
-    master.connect(ac.destination);
-    // Una octava más arriba y con triangle (no sine puro): en el parlante
-    // chico de un celular se escucha mucho más claro que un pad grave.
-    const notas=[261.63,329.63,392.00];
-    const oscs=notas.map((f,i)=>{
-      const o=ac.createOscillator(),g=ac.createGain();
-      o.type="triangle";o.frequency.value=f;g.gain.value=1/notas.length;
-      const lfoOsc=ac.createOscillator(),lfoGain=ac.createGain();
-      lfoOsc.type="sine";lfoOsc.frequency.value=.045+i*.011;lfoGain.gain.value=.18;
-      lfoOsc.connect(lfoGain);lfoGain.connect(g.gain);
-      o.connect(g);g.connect(master);
-      o.start();lfoOsc.start();
-      return{o,lfoOsc};
-    });
-    musicaNodos={master,oscs};
-  }catch(e){}
+let audioMusica=null;
+function contextoMusicaActual(){
+  if($("juego").style.display==="block")return"partida";
+  return null;
+}
+function sincronizarMusica(){
+  if(!musicaOn)return;
+  const contexto=contextoMusicaActual();
+  const src=contexto&&PISTAS_MUSICA[contexto];
+  if(!src){detenerMusica();return;}
+  if(!audioMusica){
+    audioMusica=new Audio();
+    audioMusica.loop=true;
+    audioMusica.volume=VOLUMEN_MUSICA;
+    audioMusica.preload="auto";
+  }
+  if(audioMusica.dataset.pista!==contexto){
+    audioMusica.src=src;
+    audioMusica.dataset.pista=contexto;
+  }
+  if(audioMusica.paused)audioMusica.play().catch(()=>{});
 }
 function detenerMusica(){
-  if(!musicaNodos)return;
-  const{master,oscs}=musicaNodos;musicaNodos=null;
-  try{
-    master.gain.setValueAtTime(master.gain.value,ac.currentTime);
-    master.gain.linearRampToValueAtTime(0,ac.currentTime+.8);
-    setTimeout(()=>{
-      oscs.forEach(n=>{try{n.o.stop();n.lfoOsc.stop();}catch(e){}});
-      try{master.disconnect();}catch(e){}
-    },900);
-  }catch(e){}
+  if(audioMusica&&!audioMusica.paused)audioMusica.pause();
 }
 /* ---- Instalar como app (PWA) ---- */
 if("serviceWorker" in navigator){
@@ -1014,24 +1005,15 @@ function actualizarBotonMusica(){
 }
 $("btnMusica").onclick=()=>{
   musicaOn=!musicaOn;guardarMusica();
-  if(musicaOn)iniciarMusica();else detenerMusica();
+  if(musicaOn)sincronizarMusica();else detenerMusica();
   actualizarBotonMusica();
 };
-// La música de fondo (generada por código) sonaba como un beep, no como música real.
-// Queda todo el mecanismo listo (iniciarMusica/detenerMusica/musicaOn) para cuando
-// tengamos un archivo de audio de verdad; por ahora el botón queda oculto y no arranca sola.
-const MUSICA_LISTA=false;
-if(MUSICA_LISTA){
-  actualizarBotonMusica();
-  const intentarArrancarMusica=()=>{if(musicaOn)iniciarMusica();};
-  ["pointerdown","touchend","click","keydown"].forEach(ev=>
-    document.addEventListener(ev,intentarArrancarMusica,{once:true,passive:true}));
-  document.addEventListener("visibilitychange",()=>{
-    if(document.visibilityState==="visible"&&musicaOn&&ac&&ac.state==="suspended")ac.resume().catch(()=>{});
-  });
-}else{
-  $("btnMusica").style.display="none";
-}
+actualizarBotonMusica();
+["pointerdown","touchend","click","keydown"].forEach(ev=>
+  document.addEventListener(ev,()=>sincronizarMusica(),{once:true,passive:true}));
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="visible")sincronizarMusica();
+});
 const cv=$("rueda"),cx=cv.getContext("2d");
 (function dibujar(){const R=300,paso=Math.PI*2/SEG.length;
  SEG.forEach((s,i)=>{const a0=i*paso;
@@ -1190,6 +1172,7 @@ setInterval(()=>{
   if($("mundo").style.display==="block")mundoActualizarHud();
   if($("setup").style.display!=="none"){rwActualizarBadge();mundoActualizarHud();}
   if($("capaTienda").classList.contains("ver"))tnActualizar();
+  if(musicaOn)sincronizarMusica();else detenerMusica();
 },1000);
 
 /* ---- Ruleta de premios diaria ---- */
