@@ -949,17 +949,19 @@ function iniciarMusica(){
   if(musicaNodos||!musicaOn)return;
   try{
     ac=ac||new (window.AudioContext||window.webkitAudioContext)();
-    if(ac.state==="suspended")ac.resume();
+    // Los nodos hay que crearlos y arrancarlos EN EL MISMO GESTO del usuario
+    // (no adentro de un .then()), si no Safari/iOS no destraba el audio.
+    if(ac.state==="suspended")ac.resume().catch(()=>{});
     const master=ac.createGain();
     master.gain.setValueAtTime(0,ac.currentTime);
-    master.gain.linearRampToValueAtTime(.045,ac.currentTime+2.5);
+    master.gain.linearRampToValueAtTime(.16,ac.currentTime+2);
     master.connect(ac.destination);
-    const notas=[130.81,164.81,196.00];
+    // Una octava más arriba y con triangle (no sine puro): en el parlante
+    // chico de un celular se escucha mucho más claro que un pad grave.
+    const notas=[261.63,329.63,392.00];
     const oscs=notas.map((f,i)=>{
       const o=ac.createOscillator(),g=ac.createGain();
-      o.type="sine";o.frequency.value=f;g.gain.value=1/notas.length;
-      // Un LFO modula el volumen de cada nota directamente en el grafo de audio
-      // (sin setInterval): así el vaivén es preciso y no se corta ni "traba".
+      o.type="triangle";o.frequency.value=f;g.gain.value=1/notas.length;
       const lfoOsc=ac.createOscillator(),lfoGain=ac.createGain();
       lfoOsc.type="sine";lfoOsc.frequency.value=.045+i*.011;lfoGain.gain.value=.18;
       lfoOsc.connect(lfoGain);lfoGain.connect(g.gain);
@@ -1016,7 +1018,12 @@ $("btnMusica").onclick=()=>{
   actualizarBotonMusica();
 };
 actualizarBotonMusica();
-document.addEventListener("pointerdown",()=>{if(musicaOn)iniciarMusica();},{once:true});
+function intentarArrancarMusica(){if(musicaOn)iniciarMusica();}
+["pointerdown","touchend","click","keydown"].forEach(ev=>
+  document.addEventListener(ev,intentarArrancarMusica,{once:true,passive:true}));
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="visible"&&musicaOn&&ac&&ac.state==="suspended")ac.resume().catch(()=>{});
+});
 const cv=$("rueda"),cx=cv.getContext("2d");
 (function dibujar(){const R=300,paso=Math.PI*2/SEG.length;
  SEG.forEach((s,i)=>{const a0=i*paso;
