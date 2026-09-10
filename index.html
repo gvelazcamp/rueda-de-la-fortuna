@@ -836,7 +836,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
       <div id="tossBuzz"><button id="tossJ0">Jugador 1 resuelve</button><button id="tossJ1">Jugador 2 resuelve</button></div>
       <div id="bonusInfo"><b>⭐ RONDA BONUS</b><span id="bonusTexto">R S T L N E aparecen primero. Elegí 3 consonantes y 1 vocal.</span></div>
       <div class="acciones">
-        <button class="girar" id="bGirar">Girar la rueda</button>
+        <button class="girar" id="bGirar">Girar</button>
         <button id="bVocal">Comprar vocal $250</button>
         <button class="resolver" id="bResolver">Resolver</button>
       </div>
@@ -2267,7 +2267,7 @@ function nuevaRonda(){
   S.normalesDesdeToss=(S.normalesDesdeToss||0)+1;
   S.cat=(destino!==null&&modo==="bot"?MUNDO[destino].n+" · ":"")+"Ronda "+S.ronda+" de "+S.rondas+" · "+f.c;
   S.fase="girar";
-  publicar("Le toca a <b>"+S.jug[S.turno].n+"</b>. Girá la rueda para pedir una consonante.");
+  publicar("Le toca a <b>"+S.jug[S.turno].n+"</b>. Girá para pedir una consonante.");
 }
 function nuevaRonda2(){S.ronda++;
   if($("capaResuelto").classList.contains("ver")){setTimeout(tk(nuevaRonda2),600);S.ronda--;return;}
