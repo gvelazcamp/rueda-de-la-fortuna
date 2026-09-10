@@ -1017,13 +1017,21 @@ $("btnMusica").onclick=()=>{
   if(musicaOn)iniciarMusica();else detenerMusica();
   actualizarBotonMusica();
 };
-actualizarBotonMusica();
-function intentarArrancarMusica(){if(musicaOn)iniciarMusica();}
-["pointerdown","touchend","click","keydown"].forEach(ev=>
-  document.addEventListener(ev,intentarArrancarMusica,{once:true,passive:true}));
-document.addEventListener("visibilitychange",()=>{
-  if(document.visibilityState==="visible"&&musicaOn&&ac&&ac.state==="suspended")ac.resume().catch(()=>{});
-});
+// La música de fondo (generada por código) sonaba como un beep, no como música real.
+// Queda todo el mecanismo listo (iniciarMusica/detenerMusica/musicaOn) para cuando
+// tengamos un archivo de audio de verdad; por ahora el botón queda oculto y no arranca sola.
+const MUSICA_LISTA=false;
+if(MUSICA_LISTA){
+  actualizarBotonMusica();
+  const intentarArrancarMusica=()=>{if(musicaOn)iniciarMusica();};
+  ["pointerdown","touchend","click","keydown"].forEach(ev=>
+    document.addEventListener(ev,intentarArrancarMusica,{once:true,passive:true}));
+  document.addEventListener("visibilitychange",()=>{
+    if(document.visibilityState==="visible"&&musicaOn&&ac&&ac.state==="suspended")ac.resume().catch(()=>{});
+  });
+}else{
+  $("btnMusica").style.display="none";
+}
 const cv=$("rueda"),cx=cv.getContext("2d");
 (function dibujar(){const R=300,paso=Math.PI*2/SEG.length;
  SEG.forEach((s,i)=>{const a0=i*paso;
