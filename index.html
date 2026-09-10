@@ -1661,9 +1661,13 @@ function rkAbrir(){
 }
 $("bRanking").onclick=rkAbrir;
 $("rkCerrar").onclick=()=>$("capaRanking").classList.remove("ver");
-$("rkCrear").onclick=()=>{
+$("rkCrear").onclick=async()=>{
   const apodo=$("rkApodo").value.trim().slice(0,14);
   if(!apodo){$("rkApodo").focus();return;}
+  const anterior=cargarRkPerfil();
+  if(supa&&anterior&&anterior.apodo&&anterior.apodo!==apodo){
+    try{await supa.from("gya_ranking").update({apodo}).eq("grupo",RK_GRUPO).eq("apodo",anterior.apodo);}catch(e){}
+  }
   guardarRkPerfil({apodo});
   rkMostrarTabla();
 };
