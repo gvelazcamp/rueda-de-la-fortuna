@@ -830,17 +830,15 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
 <div class="capa" id="capaRanking"><div class="caja rk-caja">
   <h2>🥇 Ranking de amigos</h2>
   <div id="rkSetup">
-    <p class="sub" style="margin:6px 0 14px">Elegí un apodo y compartí un código de grupo con tus amigos — todos los que usen el mismo código se ven entre sí.</p>
+    <p class="sub" style="margin:6px 0 14px">Elegí un apodo para aparecer en el ranking junto a todos los que jueguen.</p>
     <div class="campo"><span>Tu apodo</span><input id="rkApodo" placeholder="ej: Fede" maxlength="14" autocomplete="off"></div>
-    <div class="campo"><span>Código grupo</span><input id="rkGrupo" placeholder="ej: LOSPIBES" maxlength="16" autocomplete="off" style="text-transform:uppercase"></div>
     <button class="btn-grande" id="rkCrear" style="margin-top:6px">Entrar al ranking</button>
-    <button class="no" id="rkGenerarCodigo" style="width:100%;border-radius:14px;padding:11px;font-weight:700;margin-top:8px">Generar un código nuevo</button>
   </div>
   <div id="rkTabla" style="display:none">
     <p class="sub" id="rkGrupoTxt" style="margin:2px 0 12px"></p>
     <div class="rk-acciones">
-      <button class="no" id="rkCompartir">📤 Compartir código</button>
-      <button class="no" id="rkSalir">✏️ Cambiar apodo/grupo</button>
+      <button class="no" id="rkCompartir">📤 Invitar amigos</button>
+      <button class="no" id="rkSalir">✏️ Cambiar apodo</button>
     </div>
     <div class="rk-lista" id="rkLista"></div>
     <p class="estado" id="rkEstado" style="margin-top:8px"></p>
@@ -1573,20 +1571,17 @@ $("recCerrar").onclick=()=>$("capaRecords").classList.remove("ver");
 const SUPA_URL="https://ytmpjhdjecocoitptvjn.supabase.co";
 const SUPA_KEY="sb_publishable_SKcPeTKzmoZ2GDpBNq31_Q_PbMzxMux";
 const supa=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SUPA_URL,SUPA_KEY):null;
+const RK_GRUPO="global";
 function cargarRkPerfil(){
   try{return JSON.parse(localStorage.getItem("gya_ranking_perfil"));}catch(e){return null;}
 }
 function guardarRkPerfil(p){try{localStorage.setItem("gya_ranking_perfil",JSON.stringify(p));}catch(e){}}
-function rkCodigoAleatorio(){
-  const letras="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  return Array.from({length:5},()=>letras[Math.floor(Math.random()*letras.length)]).join("");
-}
 async function empujarRanking(){
   const rkPerfil=cargarRkPerfil();
   if(!rkPerfil||!supa)return;
   try{
     await supa.from("gya_ranking").upsert({
-      grupo:rkPerfil.grupo,apodo:rkPerfil.apodo,
+      grupo:RK_GRUPO,apodo:rkPerfil.apodo,
       monedas_totales:meta.monedasGanadasTotal||0,
       ciudades_ganadas:ganados.size,
       mejor_racha:meta.mejorRachaVictorias||0,
@@ -1602,7 +1597,7 @@ async function rkCargarTabla(){
   const cont=$("rkLista");cont.innerHTML="";
   let data,error;
   try{
-    const r=await supa.from("gya_ranking").select("*").eq("grupo",rkPerfil.grupo).order("monedas_totales",{ascending:false});
+    const r=await supa.from("gya_ranking").select("*").eq("grupo",RK_GRUPO).order("monedas_totales",{ascending:false});
     data=r.data;error=r.error;
   }catch(e){error=e;}
   if(error){$("rkEstado").textContent="No se pudo cargar. Revisá tu conexión.";return;}
@@ -1615,13 +1610,13 @@ async function rkCargarTabla(){
       '<div class="rk-monedas">🪙 '+f.monedas_totales+'</div>';
     cont.appendChild(d);
   });
-  $("rkEstado").textContent=(data&&data.length)?"":"Todavía no hay nadie más en este grupo — compartí el código.";
+  $("rkEstado").textContent=(data&&data.length)?"":"Todavía no hay nadie más — invitá amigos.";
 }
 function rkMostrarTabla(){
   const rkPerfil=cargarRkPerfil();
   $("rkSetup").style.display="none";
   $("rkTabla").style.display="block";
-  $("rkGrupoTxt").textContent="Grupo "+rkPerfil.grupo+" · Vos: "+rkPerfil.apodo;
+  $("rkGrupoTxt").textContent="Vos: "+rkPerfil.apodo;
   empujarRanking().then(rkCargarTabla);
 }
 function rkMostrarSetup(){
@@ -1629,32 +1624,27 @@ function rkMostrarSetup(){
   $("rkSetup").style.display="block";
   const rkPerfil=cargarRkPerfil();
   $("rkApodo").value=(rkPerfil&&rkPerfil.apodo)||perfil.nombre||"";
-  $("rkGrupo").value=(rkPerfil&&rkPerfil.grupo)||"";
 }
 function rkAbrir(){
   if(!supa){alert("El ranking no está disponible ahora mismo.");return;}
   const rkPerfil=cargarRkPerfil();
   $("capaRanking").classList.add("ver");
-  if(rkPerfil&&rkPerfil.apodo&&rkPerfil.grupo)rkMostrarTabla();else rkMostrarSetup();
+  if(rkPerfil&&rkPerfil.apodo)rkMostrarTabla();else rkMostrarSetup();
 }
 $("bRanking").onclick=rkAbrir;
 $("rkCerrar").onclick=()=>$("capaRanking").classList.remove("ver");
-$("rkGenerarCodigo").onclick=()=>{$("rkGrupo").value=rkCodigoAleatorio();};
 $("rkCrear").onclick=()=>{
   const apodo=$("rkApodo").value.trim().slice(0,14);
-  const grupo=$("rkGrupo").value.trim().toUpperCase().slice(0,16);
   if(!apodo){$("rkApodo").focus();return;}
-  if(!grupo){$("rkGrupo").focus();return;}
-  guardarRkPerfil({apodo,grupo});
+  guardarRkPerfil({apodo});
   rkMostrarTabla();
 };
 $("rkSalir").onclick=rkMostrarSetup;
 $("rkCompartir").onclick=async()=>{
-  const rkPerfil=cargarRkPerfil();if(!rkPerfil)return;
-  const t="Sumate a mi ranking de Girá y Adiviná — usá el código "+rkPerfil.grupo+" cuando entrés a «Ranking de amigos».\n"+location.origin+location.pathname;
+  const t="Sumate a mi ranking de Girá y Adiviná — entrá a «Ranking de amigos» y ponete un apodo.\n"+location.origin+location.pathname;
   try{await navigator.clipboard.writeText(t);$("rkCompartir").textContent="✅ Copiado";}
   catch(e){}
-  setTimeout(()=>{$("rkCompartir").textContent="📤 Compartir código";},1800);
+  setTimeout(()=>{$("rkCompartir").textContent="📤 Invitar amigos";},1800);
 };
 
 /* ---- Marcos de avatar ---- */
