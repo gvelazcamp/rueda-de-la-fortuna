@@ -594,6 +594,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
     <button class="btn-grande sec" id="bBot"><span class="btn-ico">🇺🇾</span><span class="btn-txt">Uruguay — jugar solo</span></button>
     <button class="btn-grande sec rw-boton" id="bRuleta"><span class="btn-ico">🎡</span><span class="btn-txt">Ruleta de premios</span><span id="rwBotonEstado" class="rw-badge"></span></button>
     <button class="btn-grande sec" id="bTienda"><span class="btn-ico">🛍️</span><span class="btn-txt">Tienda</span></button>
+    <button class="btn-grande sec" id="bInstalar" style="display:none"><span class="btn-ico">📲</span><span class="btn-txt">Instalar app en el celular</span></button>
     <button class="btn-grande sec" id="bLogros"><span class="btn-ico">🏅</span><span class="btn-txt">Logros</span></button>
     <button class="btn-grande sec" id="bRecords"><span class="btn-ico">🏆</span><span class="btn-txt">Mis récords</span></button>
     <button class="btn-grande sec" id="bTV"><span class="btn-ico">📺</span><span class="btn-txt">Sala TV / Familia</span></button>
@@ -741,6 +742,13 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
   <h2>🏆 Mis récords</h2>
   <div class="rec-lista" id="recLista"></div>
   <button class="no" id="recCerrar" style="width:100%;border-radius:14px;padding:13px;font-weight:700;margin-top:10px">Cerrar</button>
+</div></div>
+
+<div class="capa" id="capaInstalarIOS"><div class="caja" style="text-align:left">
+  <h2 style="text-align:center">📲 Instalar en el celular</h2>
+  <p id="instalarIOSPaso1">Si abriste este link desde WhatsApp, primero tocá <b>···</b> (o el ícono de compartir) arriba de la pantalla y elegí <b>"Abrir en Safari"</b>.</p>
+  <p>Ya en Safari, tocá el ícono de <b>Compartir</b> ⬆️ (abajo o arriba de la pantalla) y elegí <b>"Agregar a la pantalla de inicio"</b>.</p>
+  <button class="no" id="cerrarInstalarIOS" style="width:100%;border-radius:14px;padding:13px;font-weight:700;margin-top:10px">Entendido</button>
 </div></div>
 
 <div class="capa" id="modalSobreConseguido"><div class="caja">
@@ -974,6 +982,29 @@ function detenerMusica(){
     },900);
   }catch(e){}
 }
+/* ---- Instalar como app (PWA) ---- */
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});
+}
+const esIOS=/iPhone|iPad|iPod/.test(navigator.userAgent)&&!window.MSStream;
+const yaInstalada=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+let installPromptEvent=null;
+if(!yaInstalada)$("bInstalar").style.display="";
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installPromptEvent=e;});
+window.addEventListener("appinstalled",()=>{$("bInstalar").style.display="none";installPromptEvent=null;});
+$("bInstalar").onclick=async()=>{
+  if(installPromptEvent){
+    installPromptEvent.prompt();
+    await installPromptEvent.userChoice;
+    installPromptEvent=null;
+  }else if(esIOS){
+    $("capaInstalarIOS").classList.add("ver");
+  }else{
+    mostrarToast("📲","Buscá \"Instalar app\" o \"Agregar a inicio\" en el menú de tu navegador.");
+  }
+};
+$("cerrarInstalarIOS").onclick=()=>$("capaInstalarIOS").classList.remove("ver");
+
 function actualizarBotonMusica(){
   const b=$("btnMusica");if(!b)return;
   b.textContent=musicaOn?"🔊":"🔇";
