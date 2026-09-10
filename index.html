@@ -942,10 +942,11 @@ function bip(f,d,tipo="sine",g=.06){try{ac=ac||new (window.AudioContext||window.
 function tac(){bip(1250,.035,"square",.05);bip(320,.06,"triangle",.035);}
 
 /* ---- Música de fondo real (mp3 en loop, volumen bajo) ---- */
-// Una pista por contexto. Por ahora solo está la de partida; cuando lleguen
-// la de menú y la de bonus/final, se agregan acá con la misma mecánica.
+// Una pista por contexto. Cuando llegue la de bonus/final se agrega acá
+// con la misma mecánica.
 const PISTAS_MUSICA={
-  partida:"assets/audio/musica-partida.mp3"
+  partida:"assets/audio/musica-partida.mp3",
+  menu:"assets/audio/musica-menu.mp3"
 };
 const VOLUMEN_MUSICA=.28;
 let musicaOn=(()=>{try{return localStorage.getItem("gya_musica")!=="off";}catch(e){return true;}})();
@@ -953,6 +954,7 @@ const guardarMusica=()=>{try{localStorage.setItem("gya_musica",musicaOn?"on":"of
 let audioMusica=null;
 function contextoMusicaActual(){
   if($("juego").style.display==="block")return"partida";
+  if($("setup").style.display!=="none"||$("mundo").style.display==="block"||$("pantDurazno").style.display==="block")return"menu";
   return null;
 }
 function sincronizarMusica(){
