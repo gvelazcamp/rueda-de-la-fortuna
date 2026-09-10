@@ -256,6 +256,8 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 .rk-info b{font-size:.9rem}
 .rk-info span{font-size:.72rem;color:#B49FCE}
 .rk-monedas{font-weight:800;color:var(--oro);font-size:.85rem;flex-shrink:0;white-space:nowrap}
+.rk-borrar{background:transparent;border:none;color:#B49FCE88;font-size:1.3rem;font-weight:800;line-height:1;padding:2px 4px;flex-shrink:0;border-radius:6px}
+.rk-borrar:hover{color:#F09595;background:#F0959522}
 .lg-check{font-size:1.3rem;color:#1DBF5F;flex-shrink:0}
 .logro-toast{position:fixed;top:-120px;left:50%;transform:translateX(-50%);z-index:200;
  display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#F5B301,#FFE39B);
@@ -601,6 +603,30 @@ body.tvhost #juego .poderes,body.tvhost #juego .lodo-zona,body.tvhost #juego .co
 body.tvhost #juego .tablero{padding:26px 18px}
 body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66px);font-size:clamp(1.1rem,2.6vw,1.8rem)}
 @media(max-width:600px){#tvLista{grid-template-columns:1fr 1fr}.tv-codigo{font-size:3rem}}
+@media(max-width:480px){
+  body{padding:10px 10px 14px}
+  .serie{margin-bottom:5px;font-size:.78rem;min-height:14px}
+  .marcador{gap:8px;margin-bottom:8px}
+  .jug{padding:8px 10px;border-radius:12px}
+  .jug .nom{font-size:.86rem}
+  .jug .turno{font-size:.62rem;padding:1px 6px}
+  .jug .cifras{gap:10px;margin-top:2px;font-size:.66rem}
+  .jug .cifras b{font-size:.98rem}
+  .tablero{padding:10px 8px;border-radius:14px}
+  .categoria{margin-bottom:6px;font-size:.7rem}
+  .frase{gap:8px}
+  .zona{margin-top:8px}
+  .panel{gap:7px}
+  .aviso{min-height:0;padding:7px 10px;font-size:.82rem;line-height:1.2}
+  .reloj{height:19px}
+  .acciones{gap:5px}
+  .acciones button{padding:8px 5px;font-size:.76rem;border-radius:9px}
+  .poderes{margin:4px 0}
+  .teclado{gap:3px}
+  .teclado button{border-radius:7px;font-size:.9rem}
+  .reacciones{gap:5px}
+  .reacciones button{width:34px;height:34px;font-size:1.05rem}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -1576,6 +1602,7 @@ function cargarRkPerfil(){
   try{return JSON.parse(localStorage.getItem("gya_ranking_perfil"));}catch(e){return null;}
 }
 function guardarRkPerfil(p){try{localStorage.setItem("gya_ranking_perfil",JSON.stringify(p));}catch(e){}}
+function rkEsc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 async function empujarRanking(){
   const rkPerfil=cargarRkPerfil();
   if(!rkPerfil||!supa)return;
@@ -1605,9 +1632,10 @@ async function rkCargarTabla(){
     const d=document.createElement("div");
     d.className="rk-fila"+(f.apodo===rkPerfil.apodo?" yo":"");
     d.innerHTML='<div class="rk-puesto">'+(i+1)+'</div>'+
-      '<div class="rk-info"><b>'+f.apodo+(f.apodo===rkPerfil.apodo?" (vos)":"")+'</b>'+
+      '<div class="rk-info"><b>'+rkEsc(f.apodo)+(f.apodo===rkPerfil.apodo?" (vos)":"")+'</b>'+
       '<span>🗺️ '+f.ciudades_ganadas+'/9 · 🏆 racha '+f.mejor_racha+' · 🏅 '+f.logros+'</span></div>'+
-      '<div class="rk-monedas">🪙 '+f.monedas_totales+'</div>';
+      '<div class="rk-monedas">🪙 '+f.monedas_totales+'</div>'+
+      '<button class="rk-borrar" data-apodo="'+rkEsc(f.apodo)+'" title="Eliminar del ranking">×</button>';
     cont.appendChild(d);
   });
   $("rkEstado").textContent=(data&&data.length)?"":"Todavía no hay nadie más — invitá amigos.";
@@ -1640,6 +1668,13 @@ $("rkCrear").onclick=()=>{
   rkMostrarTabla();
 };
 $("rkSalir").onclick=rkMostrarSetup;
+$("rkLista").onclick=async(e)=>{
+  const b=e.target.closest(".rk-borrar");if(!b)return;
+  const apodo=b.dataset.apodo;
+  if(!confirm('¿Eliminar a "'+apodo+'" del ranking?'))return;
+  try{await supa.from("gya_ranking").delete().eq("grupo",RK_GRUPO).eq("apodo",apodo);}catch(e){}
+  rkCargarTabla();
+};
 $("rkCompartir").onclick=async()=>{
   const t="Sumate a mi ranking de Girá y Adiviná — entrá a «Ranking de amigos» y ponete un apodo.\n"+location.origin+location.pathname;
   try{await navigator.clipboard.writeText(t);$("rkCompartir").textContent="✅ Copiado";}
