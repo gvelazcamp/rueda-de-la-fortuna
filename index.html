@@ -232,7 +232,7 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 /* Logros */
 .lg-caja{max-width:440px;max-height:82vh;overflow-y:auto}
 .lg-resumen{color:#C9B8DE;margin-bottom:12px;font-weight:700}
-.lg-lista{text-align:left}
+.lg-lista,.rec-lista{text-align:left}
 .lg-item{display:flex;align-items:center;gap:12px;background:#00000033;border:1px solid #FFFFFF1F;
  border-radius:14px;padding:12px 14px;margin-bottom:10px}
 .lg-item.bloqueado{opacity:.45}
@@ -339,6 +339,9 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 .stat-pill b{font-weight:800;margin-left:2px}
 .stat-monedas{color:var(--oro)}
 .stat-vidas{color:#FF6E96}
+.stat-racha{color:#FF9640}
+#btnMusica{font-size:.9rem;background:#FFFFFF14;width:26px;height:26px;border-radius:50%;
+ display:inline-grid;place-items:center;padding:0;flex:0 0 auto;color:var(--crema)}
 .setup-menu{display:flex;flex-direction:column;margin-top:6px}
 .setup-menu .btn-grande{display:flex;align-items:center;gap:12px;text-align:left}
 .setup-menu .btn-txt{flex:1}
@@ -439,11 +442,13 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
  min-height:62px;display:flex;align-items:center;font-size:.98rem;line-height:1.35}
 .aviso b{color:var(--oro)}
 .acciones{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.acciones.con-pista{grid-template-columns:repeat(2,1fr)}
 .acciones button{background:#2A1A3C;color:var(--crema);border-radius:12px;padding:12px 6px;font-weight:700;
  font-size:.88rem;border:1px solid #FFFFFF1A}
 .acciones button:disabled{opacity:1;background:#150C20;color:#7C6A94;border-color:#FFFFFF14;cursor:not-allowed}
 .acciones button.girar{background:var(--magenta);border-color:var(--magenta)}
 .acciones button.resolver{background:var(--agua);color:var(--tinta);border-color:var(--agua)}
+.acciones button.pista{border-color:#F5B30166;color:var(--oro)}
 .teclado{display:grid;grid-template-columns:repeat(9,1fr);gap:5px}
 @media(max-width:420px){.teclado{grid-template-columns:repeat(7,1fr)}}
 .teclado button{aspect-ratio:1;border-radius:9px;background:#2A1A3C;color:var(--crema);font-weight:700;
@@ -476,7 +481,7 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 #bonusInfo b{display:block;font-family:'Archivo Black',sans-serif;color:#F5B301;font-size:1.02rem;margin-bottom:4px}
 #bonusInfo span{display:block;color:#E7D9F5;font-size:.9rem;line-height:1.35}
 .acciones.toss{grid-template-columns:1fr}
-.acciones.toss #bGirar,.acciones.toss #bVocal{display:none}
+.acciones.toss #bGirar,.acciones.toss #bVocal,.acciones.toss #bPista{display:none}
 .reacciones{display:flex;gap:8px;justify-content:center}
 .reacciones button{width:46px;height:46px;border-radius:50%;background:#2A1A3CEE;border:1px solid #FFFFFF26;font-size:1.35rem}
 .reacciones button:active{transform:scale(.9)}
@@ -569,8 +574,10 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
       <button id="cambiarPerfil" type="button" title="Cambiar perfil">✎</button>
     </div>
     <div class="setup-stats">
+      <span class="stat-pill stat-racha" id="setupRacha" title="Racha de días jugados">🔥 <b>0</b></span>
       <span class="stat-pill stat-monedas" id="setupMonedas">🪙 <b>0</b></span>
       <span class="stat-pill stat-vidas" id="setupVidas">❤️ <b>0</b></span>
+      <button id="btnMusica" type="button" title="Silenciar música">🔊</button>
     </div>
   </div>
   <div class="campo"><span>Tu nombre</span><input id="miNombre" placeholder="escribí tu nombre" maxlength="12" autocomplete="off"></div>
@@ -588,6 +595,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
     <button class="btn-grande sec rw-boton" id="bRuleta"><span class="btn-ico">🎡</span><span class="btn-txt">Ruleta de premios</span><span id="rwBotonEstado" class="rw-badge"></span></button>
     <button class="btn-grande sec" id="bTienda"><span class="btn-ico">🛍️</span><span class="btn-txt">Tienda</span></button>
     <button class="btn-grande sec" id="bLogros"><span class="btn-ico">🏅</span><span class="btn-txt">Logros</span></button>
+    <button class="btn-grande sec" id="bRecords"><span class="btn-ico">🏆</span><span class="btn-txt">Mis récords</span></button>
     <button class="btn-grande sec" id="bTV"><span class="btn-ico">📺</span><span class="btn-txt">Sala TV / Familia</span></button>
     <button class="btn-grande sec" id="bEntrarTV"><span class="btn-ico">📱</span><span class="btn-txt">Entrar a Sala TV</span></button>
   </div>
@@ -729,6 +737,12 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
   <button class="no" id="lgCerrar" style="width:100%;border-radius:14px;padding:13px;font-weight:700;margin-top:10px">Cerrar</button>
 </div></div>
 
+<div class="capa" id="capaRecords"><div class="caja">
+  <h2>🏆 Mis récords</h2>
+  <div class="rec-lista" id="recLista"></div>
+  <button class="no" id="recCerrar" style="width:100%;border-radius:14px;padding:13px;font-weight:700;margin-top:10px">Cerrar</button>
+</div></div>
+
 <div class="capa" id="modalSobreConseguido"><div class="caja">
   <img class="sobre-conseguido-img" id="sobreConseguidoImg" src="assets/collectibles/durazno/sobre-durazno.webp" alt="">
   <h2 id="sobreConseguidoTit">🎁 ¡SOBRE DE DURAZNO CONSEGUIDO!</h2>
@@ -839,6 +853,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
         <button class="girar" id="bGirar">Girar</button>
         <button id="bVocal">Comprar vocal $250</button>
         <button class="resolver" id="bResolver">Resolver</button>
+        <button class="pista" id="bPista" style="display:none">💡 Pista</button>
       </div>
       <div class="teclado" id="teclado"></div>
       <div class="reacciones" id="reacciones">
@@ -869,6 +884,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
 <div class="capa" id="modalFin"><div class="caja">
   <div id="fCopa">🏆</div><img id="fSello" class="f-sello" alt=""><h2 id="fTitulo">Se terminó</h2><p id="fTexto"></p>
   <div class="fila"><button class="no" id="fMapa" style="display:none">Volver al mapa</button><button class="no" id="fSalir" style="display:none">Salir</button><button class="ok" id="fBoton">Revancha</button></div>
+  <button class="no" id="fCompartir" style="width:100%;border-radius:12px;padding:13px;font-weight:700;margin-top:10px">📤 Compartir resultado</button>
 </div></div>
 
 <script>
@@ -916,6 +932,58 @@ function bip(f,d,tipo="sine",g=.06){try{ac=ac||new (window.AudioContext||window.
  o.connect(v);v.connect(ac.destination);o.start();o.stop(ac.currentTime+d);}catch(e){}}
 
 function tac(){bip(1250,.035,"square",.05);bip(320,.06,"triangle",.035);}
+
+/* ---- Música ambiente (pad suave generado por Web Audio, sin archivos externos) ---- */
+let musicaOn=(()=>{try{return localStorage.getItem("gya_musica")!=="off";}catch(e){return true;}})();
+const guardarMusica=()=>{try{localStorage.setItem("gya_musica",musicaOn?"on":"off");}catch(e){}};
+let musicaNodos=null;
+function iniciarMusica(){
+  if(musicaNodos||!musicaOn)return;
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    if(ac.state==="suspended")ac.resume();
+    const master=ac.createGain();master.gain.value=.05;master.connect(ac.destination);
+    const notas=[130.81,164.81,196.00,246.94];
+    const oscs=notas.map(f=>{
+      const o=ac.createOscillator(),g=ac.createGain();
+      o.type="sine";o.frequency.value=f;g.gain.value=0;
+      o.connect(g);g.connect(master);o.start();
+      return{o,g};
+    });
+    let paso=0;
+    const lfo=setInterval(()=>{
+      oscs.forEach((n,i)=>{
+        const activo=(paso+i)%4<2;
+        n.g.gain.cancelScheduledValues(ac.currentTime);
+        n.g.gain.linearRampToValueAtTime(activo?.9:0,ac.currentTime+3);
+      });
+      paso++;
+    },4000);
+    musicaNodos={master,oscs,lfo};
+  }catch(e){}
+}
+function detenerMusica(){
+  if(!musicaNodos)return;
+  const{master,oscs,lfo}=musicaNodos;musicaNodos=null;
+  try{
+    clearInterval(lfo);
+    oscs.forEach(n=>{n.g.gain.cancelScheduledValues(ac.currentTime);n.g.gain.linearRampToValueAtTime(0,ac.currentTime+.8);
+      setTimeout(()=>{try{n.o.stop();}catch(e){}},900);});
+    setTimeout(()=>{try{master.disconnect();}catch(e){}},1000);
+  }catch(e){}
+}
+function actualizarBotonMusica(){
+  const b=$("btnMusica");if(!b)return;
+  b.textContent=musicaOn?"🔊":"🔇";
+  b.title=musicaOn?"Silenciar música":"Activar música";
+}
+$("btnMusica").onclick=()=>{
+  musicaOn=!musicaOn;guardarMusica();
+  if(musicaOn)iniciarMusica();else detenerMusica();
+  actualizarBotonMusica();
+};
+actualizarBotonMusica();
+document.addEventListener("pointerdown",()=>{if(musicaOn)iniciarMusica();},{once:true});
 const cv=$("rueda"),cx=cv.getContext("2d");
 (function dibujar(){const R=300,paso=Math.PI*2/SEG.length;
  SEG.forEach((s,i)=>{const a0=i*paso;
@@ -1017,6 +1085,11 @@ function cargarMeta(){
   if(typeof m.monedas!=="number")m.monedas=500;
   if(typeof m.proxima!=="number")m.proxima=0;
   if(typeof m.ultimaRuleta!=="number")m.ultimaRuleta=0;
+  if(typeof m.monedasGanadasTotal!=="number")m.monedasGanadasTotal=m.monedas;
+  if(typeof m.diaRacha!=="number")m.diaRacha=0;
+  if(typeof m.ultimoDiaJugado!=="string")m.ultimoDiaJugado="";
+  if(typeof m.mejorRachaDias!=="number")m.mejorRachaDias=0;
+  if(typeof m.mejorRachaVictorias!=="number")m.mejorRachaVictorias=0;
   return m;
 }
 let meta=cargarMeta();
@@ -1033,7 +1106,8 @@ function gastarVida(){regenerarVidas();if(meta.vidas<=0)return false;
   meta.vidas--;if(!meta.proxima)meta.proxima=Date.now()+VIDA_MS;guardarMeta();return true;}
 function recuperarVida(){meta.vidas=Math.min(VIDAS_MAX,meta.vidas+1);
   if(meta.vidas>=VIDAS_MAX)meta.proxima=0;guardarMeta();}
-function sumarMonedas(n){meta.monedas+=n;guardarMeta();if(meta.monedas>=1000)logroDesbloquear("monedas1000");}
+function sumarMonedas(n){meta.monedas+=n;if(n>0)meta.monedasGanadasTotal=(meta.monedasGanadasTotal||0)+n;
+  guardarMeta();if(meta.monedas>=1000)logroDesbloquear("monedas1000");}
 function textoProxima(){
   if(meta.vidas>=VIDAS_MAX||!meta.proxima)return"";
   const rest=Math.max(0,meta.proxima-Date.now());
@@ -1046,6 +1120,21 @@ function mundoActualizarHud(){
   if($("mhMonedas"))$("mhMonedas").textContent="🪙 "+meta.monedas;
   if($("setupVidas"))$("setupVidas").innerHTML="❤️ <b>"+meta.vidas+"</b>";
   if($("setupMonedas"))$("setupMonedas").innerHTML="🪙 <b>"+meta.monedas+"</b>";
+  if($("setupRacha"))$("setupRacha").innerHTML="🔥 <b>"+meta.diaRacha+"</b>";
+}
+function fechaHoy(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function diasEntreFechas(a,b){return Math.round((new Date(b+"T00:00:00")-new Date(a+"T00:00:00"))/86400000);}
+function chequearRachaDiaria(){
+  const hoy=fechaHoy();
+  if(meta.ultimoDiaJugado===hoy)return;
+  const esConsecutivo=meta.ultimoDiaJugado&&diasEntreFechas(meta.ultimoDiaJugado,hoy)===1;
+  meta.diaRacha=esConsecutivo?meta.diaRacha+1:1;
+  meta.ultimoDiaJugado=hoy;
+  meta.mejorRachaDias=Math.max(meta.mejorRachaDias,meta.diaRacha);
+  const premio=Math.min(50+(meta.diaRacha-1)*25,250);
+  sumarMonedas(premio);
+  mundoActualizarHud();
+  setTimeout(()=>mostrarToast("🔥","Racha de "+meta.diaRacha+" día"+(meta.diaRacha===1?"":"s")+" seguido"+(meta.diaRacha===1?"":"s")+" — +"+premio+" 🪙"),700);
 }
 setInterval(()=>{
   regenerarVidas();
@@ -1271,6 +1360,28 @@ function lgAbrir(){
 }
 $("bLogros").onclick=lgAbrir;
 $("lgCerrar").onclick=()=>$("capaLogros").classList.remove("ver");
+function recAbrir(){
+  const cont=$("recLista");cont.innerHTML="";
+  const filas=[
+    {icono:"🔥",nombre:"Racha de días jugados",desc:"Mejor racha: "+meta.mejorRachaDias+" día"+(meta.mejorRachaDias===1?"":"s")+" — hoy llevás "+meta.diaRacha},
+    {icono:"🏆",nombre:"Racha de victorias seguidas",desc:meta.mejorRachaVictorias?("Mejor racha: "+meta.mejorRachaVictorias+" victoria"+(meta.mejorRachaVictorias===1?"":"s")+" al hilo"):"Todavía no jugaste contra otra persona"},
+    {icono:"🪙",nombre:"Monedas ganadas en total",desc:(meta.monedasGanadasTotal||0)+" 🪙 conseguidas desde que empezaste"},
+    {icono:"🗺️",nombre:"Uruguay conquistado",desc:ganados.size+" / "+MUNDO.length+" destinos ganados"},
+    {icono:"🎒",nombre:"Colección Durazno",desc:colEncontrados("durazno")+" / "+COLECCIONES.durazno.items.length+" coleccionables"},
+    {icono:"🎒",nombre:"Colección Montevideo",desc:colEncontrados("montevideo")+" / "+COLECCIONES.montevideo.items.length+" coleccionables"},
+    {icono:"🏅",nombre:"Logros desbloqueados",desc:logrosGanados.size+" / "+LOGROS.length}
+  ];
+  filas.forEach(l=>{
+    const d=document.createElement("div");
+    d.className="lg-item";
+    d.innerHTML='<div class="lg-icono">'+l.icono+'</div>'+
+      '<div class="lg-info"><b>'+l.nombre+'</b><span>'+l.desc+'</span></div>';
+    cont.appendChild(d);
+  });
+  $("capaRecords").classList.add("ver");
+}
+$("bRecords").onclick=recAbrir;
+$("recCerrar").onclick=()=>$("capaRecords").classList.remove("ver");
 
 /* ---- Marcos de avatar ---- */
 const FRAMES=[
@@ -1927,6 +2038,7 @@ $("perfilContinuar").onclick=()=>{
 $("cambiarPerfil").onclick=()=>abrirPerfil(null);
 actualizarChipPerfil();
 mundoActualizarHud();
+chequearRachaDiaria();
 if(perfilExiste())$("miNombre").value=perfil.nombre;
 
 $("bBot").onclick=()=>{
@@ -2264,7 +2376,7 @@ function nuevaRonda(){
     const fToss=S.mazo.pop();
     vistas.add(fToss.t);guardarVistas();
     S.frase=fToss.t;S.catRaw=fToss.c;
-    S.abiertas=new Set();S.usadas=new Set();S.jug.forEach(j=>j.ronda=0);S.valor=0;S.doble=false;
+    S.abiertas=new Set();S.usadas=new Set();S.jug.forEach(j=>j.ronda=0);S.valor=0;S.doble=false;S.pistaUsada=false;
     iniciarTossUp(fToss);
     return;
   }
@@ -2556,6 +2668,28 @@ function hostVocal(){
   S.jug[S.turno].ronda-=250;S.fase="vocal";
   publicar("Vocal comprada por $250. "+S.jug[S.turno].n+" elige cuál.");
 }
+const PISTA_PRECIO=150;
+function hostPista(){
+  if(modo!=="bot"||animando||S.pistaUsada)return;
+  if(S.fase!=="girar"&&S.fase!=="consonante"&&S.fase!=="vocal")return;
+  if(meta.monedas<PISTA_PRECIO)return;
+  const ocultas=[...new Set(S.frase.replace(/ /g,""))].filter(c=>!S.abiertas.has(c));
+  if(!ocultas.length)return;
+  meta.monedas-=PISTA_PRECIO;guardarMeta();mundoActualizarHud();
+  S.pistaUsada=true;
+  const l=ocultas[Math.floor(Math.random()*ocultas.length)];
+  S.usadas.add(l);S.abiertas.add(l);
+  bip(1318,.14,"sine",.06);
+  if([...S.frase].filter(c=>c!==" ").every(c=>S.abiertas.has(c))){
+    const j=S.jug[S.turno];j.tot+=j.ronda;j.rg++;
+    publicar("💡 Pista: se reveló la «"+l+"». ¡Frase completa! <b>"+j.n+"</b> se lleva $"+j.ronda+".","resuelto");
+    if(S.turno===miJug&&destino!==null)sumarRondaColeccion(MUNDO[destino].id);
+    setTimeout(tk(nuevaRonda),5200);
+  }else{
+    publicar("💡 Pista: se reveló la «"+l+"».");
+  }
+}
+$("bPista").onclick=hostPista;
 function hostLetra(l){
   if(S&&S.fase==="bonus_elegir"){hostLetraBonus(l);return;}
   if(animando||S.usadas.has(l))return;
@@ -2667,6 +2801,7 @@ function finDelJuego(){
   tit="¡Victoria, "+S.jug[g].n+"!";
   serie[g]=(serie[g]||0)+1;
   if(ultGanador===g)racha++;else{ultGanador=g;racha=1;}
+  if(racha>meta.mejorRachaVictorias){meta.mejorRachaVictorias=racha;guardarMeta();}
   extra=" Partidas del día: "+S.jug.map((j,i)=>j.n+" "+(serie[i]||0)).join(" — ")+
     (racha>=2?" · "+S.jug[g].n+" lleva "+racha+" al hilo.":".");
   iniciarBonus(g,{g,tit,extra});
@@ -2904,6 +3039,16 @@ function pintar(){
   $("bVocal").disabled=!mio||V.fase!=="girar"||!V.hayVoc||V.jug[V.turno].ronda<250;
   $("bResolver").disabled=esToss?!miToss:(bonusResolver?!miBonus:(bonusElegir||V.fase==="bonus_fin"?true:!mio));
   $("bResolver").style.display=(esToss&&modo==="local")?"none":"block";
+  document.querySelector(".acciones").classList.toggle("con-pista",modo==="bot");
+  if(modo==="bot"){
+    $("bPista").style.display="";
+    const fasesOk=S.fase==="girar"||S.fase==="consonante"||S.fase==="vocal";
+    const quedanOcultas=!!S.frase&&[...new Set(S.frase.replace(/ /g,""))].some(c=>!S.abiertas.has(c));
+    $("bPista").disabled=!mio||!fasesOk||!!S.pistaUsada||meta.monedas<PISTA_PRECIO||!quedanOcultas;
+    $("bPista").textContent=S.pistaUsada?"💡 Pista usada":"💡 Pista 🪙"+PISTA_PRECIO;
+  }else{
+    $("bPista").style.display="none";
+  }
   [...$("teclado").children].forEach(b=>{const l=b.dataset.l,voc=VOCALES.includes(l);
     if(bonusElegir){
       const cupoLleno=voc?!!V.bonusVocal:(V.bonusCons||[]).length>=3;
@@ -2952,6 +3097,15 @@ $("confirmar").onclick=()=>{
   tossRespondedor=null;
 };
 $("fSalir").onclick=()=>location.reload();
+$("fCompartir").onclick=async()=>{
+  const texto=($("fTitulo").textContent+". "+$("fTexto").textContent).replace(/\s+/g," ").trim()+
+    " — Jugá vos también en Girá y Adiviná Rioplatense: "+location.href;
+  if(navigator.share){try{await navigator.share({text:texto});}catch(e){}}
+  else{
+    try{await navigator.clipboard.writeText(texto);mostrarToast("📤","Copiado. ¡Pegalo donde quieras!");}
+    catch(e){window.open("https://wa.me/?text="+encodeURIComponent(texto),"_blank");}
+  }
+};
 $("fMapa").onclick=()=>{matchToken++;botPausado=0;$("modalFin").classList.remove("ver");
   const continuar=()=>{
     if(fSiguientePaso!==null){const p=fSiguientePaso;fSiguientePaso=null;
