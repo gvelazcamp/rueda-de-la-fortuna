@@ -654,7 +654,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
     <span>🎒 Colección <b id="dzResumenColeccion">0/6</b></span>
   </div>
   <div class="dz-sobre-bloque" id="dzSobreBloque">
-    <span>🎁 Próximo sobre</span>
+    <span id="dzSobreLabel">🎁 Próximo sobre</span>
     <div class="dz-barra dz-barra-sobre"><i id="dzSobreBarra"></i></div>
     <span id="dzSobreTxt">0 / 3 rondas</span>
   </div>
@@ -710,12 +710,12 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
   <div class="tn-item">
     <div class="tn-icono">🎁</div>
     <div class="tn-info"><b>Sobre de Durazno</b><span>Un sobre para tu colección</span></div>
-    <button class="tn-comprar" data-tipo="sobre_durazno" data-precio="400">🪙 400</button>
+    <button class="tn-comprar" data-tipo="sobre_durazno" data-precio="600">🪙 600</button>
   </div>
   <div class="tn-item">
     <div class="tn-icono">🎁</div>
     <div class="tn-info"><b>Sobre de Montevideo</b><span>Un sobre para tu colección</span></div>
-    <button class="tn-comprar" data-tipo="sobre_montevideo" data-precio="400">🪙 400</button>
+    <button class="tn-comprar" data-tipo="sobre_montevideo" data-precio="600">🪙 600</button>
   </div>
   <h3 class="tn-subtitulo">🖼️ Marcos de avatar</h3>
   <div class="frame-grid" id="frameGrid"></div>
@@ -1392,7 +1392,8 @@ function mostrarToast(icono,texto){
 function colActualizarBloqueDurazno(){
   const cm=coleccionMeta[dzCiudad().id];if(!cm)return;
   const el=$("dzSobreTxt");if(!el)return;
-  el.textContent=cm.rondasProgreso+" / 3 rondas";
+  $("dzSobreLabel").textContent=cm.completada?"🎁 Sobre extra":"🎁 Próximo sobre";
+  el.textContent=cm.completada?"premio sorpresa":cm.rondasProgreso+" / 3 rondas";
   $("dzSobreBarra").style.width=Math.round(cm.rondasProgreso/3*100)+"%";
 }
 function sumarRondaColeccion(cual){
@@ -1444,6 +1445,12 @@ function colVerificarCompletada(cual){
     setTimeout(()=>mostrarToast("🏆","¡Colección "+c.nombre+" completada! +1500 🪙 +1 ❤️"),300);
   }else guardarColeccionMeta();
 }
+function colPremioExtra(){
+  const puedeVida=meta.vidas<VIDAS_MAX;
+  const opciones=puedeVida?["monedas","monedas","monedas","vida"]:["monedas"];
+  if(opciones[Math.floor(Math.random()*opciones.length)]==="vida")return{tipo:"vida"};
+  return{tipo:"monedas",valor:150+Math.floor(Math.random()*4)*50};
+}
 let colAbriendo=false;
 function colAbrirSobre(cual){
   const cm=coleccionMeta[cual];
@@ -1459,6 +1466,26 @@ function colAbrirSobre(cual){
   setTimeout(()=>{
     $("sobreAnimImg").src=COLECCIONES[cual].sobreAbierto;
     setTimeout(()=>{
+      if(cm.completada){
+        const premio=colPremioExtra();
+        $("sobreAnimFase").style.display="none";
+        $("sobrePremioFase").style.display="block";
+        $("sobrePremioImg").src=COLECCIONES[cual].sobreAbierto;
+        if(premio.tipo==="vida"){
+          recuperarVida();
+          $("sobrePremioTit").textContent="❤️ ¡VIDA EXTRA!";
+          $("sobrePremioTxt").textContent="Colección completa — sobre extra: +1 vida de regalo.";
+        }else{
+          sumarMonedas(premio.valor);
+          $("sobrePremioTit").textContent="🪙 ¡MONEDAS EXTRA!";
+          $("sobrePremioTxt").textContent="Colección completa — sobre extra: +"+premio.valor+" 🪙 de regalo.";
+        }
+        mundoActualizarHud();
+        if($("pantDurazno").style.display==="block")dzActualizarHud();
+        bip(700,.2,"sine",.08);
+        colAbriendo=false;
+        return;
+      }
       const premioId=colElegirPremio(cual);
       const item=COLECCIONES[cual].items.find(i=>i.id===premioId);
       const yaLoTenia=cm.coleccionables.includes(premioId);
