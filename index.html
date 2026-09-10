@@ -772,6 +772,11 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
     <div class="tn-info"><b>Sobre de Salto</b><span>Un sobre para tu colección — 1 por día</span></div>
     <button class="tn-comprar" data-tipo="sobre_salto" data-precio="1200">🪙 1200</button>
   </div>
+  <div class="tn-item">
+    <div class="tn-icono">🎁</div>
+    <div class="tn-info"><b>Sobre de Colonia</b><span>Un sobre para tu colección — 1 por día</span></div>
+    <button class="tn-comprar" data-tipo="sobre_colonia" data-precio="1200">🪙 1200</button>
+  </div>
   <h3 class="tn-subtitulo">🖼️ Marcos de avatar</h3>
   <div class="frame-grid" id="frameGrid"></div>
   <button class="no" id="tnCerrar" style="width:100%;border-radius:14px;padding:13px;font-weight:700;margin-top:10px">Cerrar</button>
@@ -1184,7 +1189,7 @@ const MUNDO=[
  {id:"salto",pasos:[[22, 20], [34, 28], [24, 40], [38, 50]],nx:52,ny:46,bg:"assets/worlds/salto.webp",n:"Salto y las termas",r:"El Parrillero",rondas:4,cats:["Comida","Animales"],rica:true},
  {id:"tacuarembo",pasos:[[28, 18], [20, 28], [30, 40], [22, 52]],nx:55,ny:58,bg:"assets/worlds/tacuarembo.webp",n:"Tacuarembó",r:"El Gaucho",rondas:4,cats:["Accion","Deporte"]},
  {id:"polonio",pasos:[[46, 16], [38, 28], [30, 40], [36, 52]],nx:45,ny:62,bg:"assets/worlds/cabo-polonio.webp",n:"Cabo Polonio",r:"El Farolero",rondas:5,cats:["Musica y fiesta","Escuela e infancia"]},
- {id:"colonia",pasos:[[20, 20], [32, 28], [24, 38], [38, 48]],nx:56,ny:44,bg:"assets/worlds/colonia.webp",n:"Colonia",r:"El Cinéfilo",rondas:5,cats:["Pelicula","Programa de TV"]},
+ {id:"colonia",pasos:[[20, 20], [32, 28], [24, 38], [38, 48]],nx:56,ny:44,bg:"assets/worlds/colonia.webp",n:"Colonia",r:"El Cinéfilo",rondas:5,cats:["Pelicula","Programa de TV"],rica:true},
  {id:"centenario",pasos:[[20, 22], [32, 30], [22, 42], [36, 52]],nx:60,ny:55,bg:"assets/worlds/estadio-centenario.webp",n:"Estadio Centenario",r:"La Campeona",rondas:5,cats:["Personajes","Dicho popular"]}];
 let ganados=(()=>{try{return new Set(JSON.parse(localStorage.getItem("larueda_mundo")||"[]"));}catch(e){return new Set();}})();
 const guardarMundo=()=>{try{localStorage.setItem("larueda_mundo",JSON.stringify([...ganados]));}catch(e){}};
@@ -1645,6 +1650,20 @@ const COLECCIONES={
       {id:"plaza",nombre:"Plaza Artigas",img:"assets/collectibles/salto/coleccion-salto-plaza.webp"},
       {id:"acuamania",nombre:"Parque Acuático",img:"assets/collectibles/salto/coleccion-salto-acuamania.webp"}
     ]
+  },
+  colonia:{
+    nombre:"Colonia",
+    sobreCerrado:"assets/collectibles/colonia/sobre-colonia.webp",
+    sobreAbierto:"assets/collectibles/colonia/sobre-colonia-abierto.webp",
+    frameExclusivo:"frame-colonia", // preparado a futuro: NO activar hasta subir assets/frames/frame-colonia.png
+    items:[
+      {id:"garita",nombre:"La Garita",img:"assets/collectibles/colonia/coleccion-colonia-garita.webp"},
+      {id:"mate",nombre:"Mate de Colonia",img:"assets/collectibles/colonia/coleccion-colonia-mate.webp"},
+      {id:"bicicleta",nombre:"Bicicleta con Flores",img:"assets/collectibles/colonia/coleccion-colonia-bicicleta.webp"},
+      {id:"muelle",nombre:"El Muelle",img:"assets/collectibles/colonia/coleccion-colonia-muelle.webp"},
+      {id:"vino",nombre:"Vino y Queso",img:"assets/collectibles/colonia/coleccion-colonia-vino.webp"},
+      {id:"auto-antiguo",nombre:"Auto Antiguo",img:"assets/collectibles/colonia/coleccion-colonia-auto-antiguo.webp"}
+    ]
   }
 };
 function cargarColeccionMeta(){
@@ -1917,6 +1936,22 @@ const CIUDAD_RICA={
       {img:"assets/passport/salto-sello-3.webp",nombre:"La Catedral"},
       {img:"assets/passport/salto-sello-4.webp",nombre:"Salto Grande"},
       {img:"assets/passport/salto-sello-rival.webp",nombre:"El Parrillero"}
+    ]
+  },
+  colonia:{
+    nodos:[
+      {tipo:"paso",x:24,y:18},
+      {tipo:"paso",x:42,y:30},
+      {tipo:"paso",x:28,y:48},
+      {tipo:"paso",x:46,y:66},
+      {tipo:"rival",x:32,y:88}
+    ],
+    sellos:[
+      {img:"assets/passport/colonia-sello-1.webp",nombre:"El Faro"},
+      {img:"assets/passport/colonia-sello-2.webp",nombre:"Calle de los Suspiros"},
+      {img:"assets/passport/colonia-sello-3.webp",nombre:"El Portón"},
+      {img:"assets/passport/colonia-sello-4.webp",nombre:"La Basílica"},
+      {img:"assets/passport/colonia-sello-rival.webp",nombre:"El Cinéfilo"}
     ]
   }
 };
