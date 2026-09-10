@@ -485,11 +485,12 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 .confirm-poder-btns button{padding:7px 16px;border-radius:9px;border:1px solid #FFFFFF2A;font-weight:800;font-size:.8rem}
 .confirm-poder-btns .no{background:transparent;color:var(--crema)}
 .confirm-poder-btns .ok{background:var(--oro);color:var(--tinta);border-color:var(--oro)}
-.lodo-zona{display:none;flex-direction:column;align-items:center;gap:6px;padding:14px 10px;
- background:#241239;border:1px dashed #A9793F88;border-radius:12px;margin:8px 0;touch-action:none;user-select:none}
-.lodo-zona p{margin:0;font-weight:700;color:var(--crema);font-size:.8rem}
-.lodo-mancha{width:150px;height:150px;border-radius:50%;box-shadow:inset 0 0 12px #0008;touch-action:none}
-.lodo-barra{width:100%;max-width:220px;height:10px;border-radius:6px;background:#150C20;overflow:hidden}
+.lodo-zona{display:none;position:fixed;inset:0;z-index:70;flex-direction:column;align-items:center;
+ justify-content:flex-end;gap:14px;padding:0 16px 44px;touch-action:none;user-select:none}
+.lodo-zona p{position:relative;z-index:1;margin:0;font-weight:700;color:var(--crema);font-size:1rem;
+ text-shadow:0 2px 6px #000;background:#000000AA;padding:9px 18px;border-radius:99px}
+.lodo-mancha{position:absolute;inset:0;width:100%;height:100%;z-index:0;touch-action:none}
+.lodo-barra{position:relative;z-index:1;width:100%;max-width:280px;height:12px;border-radius:6px;background:#00000066;overflow:hidden}
 .lodo-barra-fill{width:0%;height:100%;background:linear-gradient(90deg,#A9793F,var(--oro));transition:width .1s}
 .teclado{display:grid;grid-template-columns:repeat(9,1fr);gap:5px}
 .teclado button.congelada{background:linear-gradient(160deg,#cdeeff,#8fd0ee);color:#0b3550;border-color:#eafcff;position:relative}
@@ -972,7 +973,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
     <button class="poder-btn" data-poder="comodin"><img src="assets/powers/power-comodin.webp" alt=""><span class="poder-nombre">Comodín</span><span class="poder-precio">🪙1200</span></button>
   </div>
   <div class="lodo-zona" id="tvcLodoZona" style="display:none">
-    <canvas class="lodo-mancha" id="tvcLodoMancha" width="220" height="220"></canvas>
+    <canvas class="lodo-mancha" id="tvcLodoMancha"></canvas>
     <p>🧹 Deslizá para limpiar el lodo</p>
     <div class="lodo-barra"><div class="lodo-barra-fill" id="tvcLodoBarra"></div></div>
   </div>
@@ -1016,7 +1017,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
         <button class="poder-btn" data-poder="comodin"><img src="assets/powers/power-comodin.webp" alt=""><span class="poder-nombre">Comodín</span><span class="poder-precio">🪙1200</span></button>
       </div>
       <div class="lodo-zona" id="lodoZona" style="display:none">
-        <canvas class="lodo-mancha" id="lodoMancha" width="220" height="220"></canvas>
+        <canvas class="lodo-mancha" id="lodoMancha"></canvas>
         <p>🧹 Deslizá para limpiar el lodo</p>
         <div class="lodo-barra"><div class="lodo-barra-fill" id="lodoBarra"></div></div>
       </div>
@@ -3410,28 +3411,35 @@ document.querySelectorAll("#tvcPoderes .poder-btn").forEach(b=>{b.onclick=()=>pe
 (function(){
   function armarLimpieza(zonaId,manchaId,barraId,alTerminar){
     const zona=$(zonaId),canvas=$(manchaId),ctx=canvas.getContext("2d");
-    let limpiando=false,ultX=0,ultY=0,progreso=0;
+    let limpiando=false,ultX=0,ultY=0,progreso=0,radioBorrado=60;
+    const manchon=(cx,cy,r)=>{
+      const g=ctx.createRadialGradient(cx-r*.3,cy-r*.3,r*.05,cx,cy,r);
+      g.addColorStop(0,"#8a5a2f");g.addColorStop(.7,"#5a3a1c");g.addColorStop(1,"#3a260f");
+      ctx.fillStyle=g;
+      const lobulos=6+Math.floor(Math.random()*3);
+      ctx.beginPath();
+      for(let i=0;i<lobulos;i++){
+        const ang=(i/lobulos)*Math.PI*2,rr=r*(.72+Math.random()*.45);
+        const px=cx+Math.cos(ang)*rr,py=cy+Math.sin(ang)*rr;
+        if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+      }
+      ctx.closePath();ctx.fill();
+    };
     const pintarLodo=()=>{
-      const w=canvas.width,h=canvas.height,cx=w/2,cy=h/2,r=w/2;
+      const w=Math.ceil(window.innerWidth||1),h=Math.ceil(window.innerHeight||1);
+      canvas.width=w;canvas.height=h;
+      const diag=Math.hypot(w,h);
+      radioBorrado=diag*.11;
       ctx.globalCompositeOperation="source-over";
       ctx.clearRect(0,0,w,h);
-      ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.clip();
-      const g=ctx.createRadialGradient(cx-r*.3,cy-r*.3,r*.1,cx,cy,r);
-      g.addColorStop(0,"#8a5a2f");g.addColorStop(1,"#3a260f");
-      ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
-      ctx.fillStyle="#00000033";
-      for(let i=0;i<7;i++){
-        const ang=(i/7)*Math.PI*2+.6,rad=r*.5;
-        ctx.beginPath();ctx.arc(cx+Math.cos(ang)*rad,cy+Math.sin(ang)*rad,r*.22,0,Math.PI*2);ctx.fill();
-      }
-      ctx.restore();
+      const nGrandes=5+Math.floor(Math.random()*3);
+      for(let i=0;i<nGrandes;i++)manchon(Math.random()*w,Math.random()*h,diag*(.24+Math.random()*.14));
+      for(let i=0;i<12;i++)manchon(Math.random()*w,Math.random()*h,diag*(.07+Math.random()*.06));
     };
     const reset=()=>{progreso=0;$(barraId).style.width="0%";pintarLodo();};
     const limpiarEn=(x,y)=>{
-      const rect=canvas.getBoundingClientRect();
-      const px=(x-rect.left)/rect.width*canvas.width,py=(y-rect.top)/rect.height*canvas.height;
       ctx.globalCompositeOperation="destination-out";
-      ctx.beginPath();ctx.arc(px,py,canvas.width*.16,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(x,y,radioBorrado,0,Math.PI*2);ctx.fill();
     };
     const mover=(x,y)=>{
       if(!limpiando)return;
