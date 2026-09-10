@@ -15,6 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <style>
 :root{--noche:#160B24;--noche2:#241239;--oro:#F5B301;--magenta:#E5197C;--agua:#37D6C0;--crema:#F6EFE2;--tinta:#1A1024}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -240,6 +241,21 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 .lg-info{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
 .lg-info b{font-size:.92rem}
 .lg-info span{font-size:.76rem;color:#B49FCE}
+.rk-caja{max-width:440px;max-height:86vh;overflow-y:auto}
+.rk-acciones{display:flex;gap:8px;margin-bottom:12px}
+.rk-acciones button{flex:1;border-radius:10px;padding:9px 4px;font-weight:700;font-size:.76rem}
+.rk-lista{text-align:left}
+.rk-fila{display:flex;align-items:center;gap:10px;background:#00000033;border:1px solid #FFFFFF1F;
+ border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.rk-fila.yo{border-color:var(--oro);background:#F5B30122}
+.rk-puesto{font-size:1rem;font-weight:800;width:26px;text-align:center;flex-shrink:0;color:#B49FCE}
+.rk-fila:nth-child(1) .rk-puesto{color:#F5B301}
+.rk-fila:nth-child(2) .rk-puesto{color:#C9C9C9}
+.rk-fila:nth-child(3) .rk-puesto{color:#CD7F32}
+.rk-info{flex:1;display:flex;flex-direction:column;gap:1px;min-width:0}
+.rk-info b{font-size:.9rem}
+.rk-info span{font-size:.72rem;color:#B49FCE}
+.rk-monedas{font-weight:800;color:var(--oro);font-size:.85rem;flex-shrink:0;white-space:nowrap}
 .lg-check{font-size:1.3rem;color:#1DBF5F;flex-shrink:0}
 .logro-toast{position:fixed;top:-120px;left:50%;transform:translateX(-50%);z-index:200;
  display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#F5B301,#FFE39B);
@@ -628,6 +644,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
     <button class="btn-grande sec" id="bInstalar" style="display:none"><span class="btn-ico">📲</span><span class="btn-txt">Instalar app en el celular</span></button>
     <button class="btn-grande sec" id="bLogros"><span class="btn-ico">🏅</span><span class="btn-txt">Logros</span></button>
     <button class="btn-grande sec" id="bRecords"><span class="btn-ico">🏆</span><span class="btn-txt">Mis récords</span></button>
+    <button class="btn-grande sec" id="bRanking"><span class="btn-ico">🥇</span><span class="btn-txt">Ranking de amigos</span></button>
     <button class="btn-grande sec" id="bTV"><span class="btn-ico">📺</span><span class="btn-txt">Sala TV / Familia</span></button>
     <button class="btn-grande sec" id="bEntrarTV"><span class="btn-ico">📱</span><span class="btn-txt">Entrar a Sala TV</span></button>
   </div>
@@ -808,6 +825,27 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
   <h2>🏆 Mis récords</h2>
   <div class="rec-lista" id="recLista"></div>
   <button class="no" id="recCerrar" style="width:100%;border-radius:14px;padding:13px;font-weight:700;margin-top:10px">Cerrar</button>
+</div></div>
+
+<div class="capa" id="capaRanking"><div class="caja rk-caja">
+  <h2>🥇 Ranking de amigos</h2>
+  <div id="rkSetup">
+    <p class="sub" style="margin:6px 0 14px">Elegí un apodo y compartí un código de grupo con tus amigos — todos los que usen el mismo código se ven entre sí.</p>
+    <div class="campo"><span>Tu apodo</span><input id="rkApodo" placeholder="ej: Fede" maxlength="14" autocomplete="off"></div>
+    <div class="campo"><span>Código grupo</span><input id="rkGrupo" placeholder="ej: LOSPIBES" maxlength="16" autocomplete="off" style="text-transform:uppercase"></div>
+    <button class="btn-grande" id="rkCrear" style="margin-top:6px">Entrar al ranking</button>
+    <button class="no" id="rkGenerarCodigo" style="width:100%;border-radius:14px;padding:11px;font-weight:700;margin-top:8px">Generar un código nuevo</button>
+  </div>
+  <div id="rkTabla" style="display:none">
+    <p class="sub" id="rkGrupoTxt" style="margin:2px 0 12px"></p>
+    <div class="rk-acciones">
+      <button class="no" id="rkCompartir">📤 Compartir código</button>
+      <button class="no" id="rkSalir">✏️ Cambiar apodo/grupo</button>
+    </div>
+    <div class="rk-lista" id="rkLista"></div>
+    <p class="estado" id="rkEstado" style="margin-top:8px"></p>
+  </div>
+  <button class="no" id="rkCerrar" style="width:100%;border-radius:14px;padding:13px;font-weight:700;margin-top:10px">Cerrar</button>
 </div></div>
 
 <div class="capa" id="capaInstalarIOS"><div class="caja" style="text-align:left">
@@ -1489,6 +1527,7 @@ function logroDesbloquear(id){
   sumarMonedas(l.premio);mundoActualizarHud();
   if($("pantDurazno").style.display==="block")dzActualizarHud();
   logroToast(l);
+  empujarRanking();
 }
 function lgAbrir(){
   const cont=$("lgLista");cont.innerHTML="";
@@ -1513,8 +1552,9 @@ function recAbrir(){
     {icono:"🏆",nombre:"Racha de victorias seguidas",desc:meta.mejorRachaVictorias?("Mejor racha: "+meta.mejorRachaVictorias+" victoria"+(meta.mejorRachaVictorias===1?"":"s")+" al hilo"):"Todavía no jugaste contra otra persona"},
     {icono:"🪙",nombre:"Monedas ganadas en total",desc:(meta.monedasGanadasTotal||0)+" 🪙 conseguidas desde que empezaste"},
     {icono:"🗺️",nombre:"Uruguay conquistado",desc:ganados.size+" / "+MUNDO.length+" destinos ganados"},
-    {icono:"🎒",nombre:"Colección Durazno",desc:colEncontrados("durazno")+" / "+COLECCIONES.durazno.items.length+" coleccionables"},
-    {icono:"🎒",nombre:"Colección Montevideo",desc:colEncontrados("montevideo")+" / "+COLECCIONES.montevideo.items.length+" coleccionables"},
+    ...Object.entries(COLECCIONES).map(([id,c])=>(
+      {icono:"🎒",nombre:"Colección "+c.nombre,desc:colEncontrados(id)+" / "+c.items.length+" coleccionables"}
+    )),
     {icono:"🏅",nombre:"Logros desbloqueados",desc:logrosGanados.size+" / "+LOGROS.length}
   ];
   filas.forEach(l=>{
@@ -1528,6 +1568,94 @@ function recAbrir(){
 }
 $("bRecords").onclick=recAbrir;
 $("recCerrar").onclick=()=>$("capaRecords").classList.remove("ver");
+
+/* ---- Ranking de amigos (Supabase) ---- */
+const SUPA_URL="https://ytmpjhdjecocoitptvjn.supabase.co";
+const SUPA_KEY="sb_publishable_SKcPeTKzmoZ2GDpBNq31_Q_PbMzxMux";
+const supa=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SUPA_URL,SUPA_KEY):null;
+function cargarRkPerfil(){
+  try{return JSON.parse(localStorage.getItem("gya_ranking_perfil"));}catch(e){return null;}
+}
+function guardarRkPerfil(p){try{localStorage.setItem("gya_ranking_perfil",JSON.stringify(p));}catch(e){}}
+function rkCodigoAleatorio(){
+  const letras="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  return Array.from({length:5},()=>letras[Math.floor(Math.random()*letras.length)]).join("");
+}
+async function empujarRanking(){
+  const rkPerfil=cargarRkPerfil();
+  if(!rkPerfil||!supa)return;
+  try{
+    await supa.from("gya_ranking").upsert({
+      grupo:rkPerfil.grupo,apodo:rkPerfil.apodo,
+      monedas_totales:meta.monedasGanadasTotal||0,
+      ciudades_ganadas:ganados.size,
+      mejor_racha:meta.mejorRachaVictorias||0,
+      logros:logrosGanados.size,
+      actualizado_en:new Date().toISOString()
+    },{onConflict:"grupo,apodo"});
+  }catch(e){}
+}
+async function rkCargarTabla(){
+  const rkPerfil=cargarRkPerfil();
+  if(!rkPerfil||!supa)return;
+  $("rkEstado").textContent="Cargando…";
+  const cont=$("rkLista");cont.innerHTML="";
+  let data,error;
+  try{
+    const r=await supa.from("gya_ranking").select("*").eq("grupo",rkPerfil.grupo).order("monedas_totales",{ascending:false});
+    data=r.data;error=r.error;
+  }catch(e){error=e;}
+  if(error){$("rkEstado").textContent="No se pudo cargar. Revisá tu conexión.";return;}
+  (data||[]).forEach((f,i)=>{
+    const d=document.createElement("div");
+    d.className="rk-fila"+(f.apodo===rkPerfil.apodo?" yo":"");
+    d.innerHTML='<div class="rk-puesto">'+(i+1)+'</div>'+
+      '<div class="rk-info"><b>'+f.apodo+(f.apodo===rkPerfil.apodo?" (vos)":"")+'</b>'+
+      '<span>🗺️ '+f.ciudades_ganadas+'/9 · 🏆 racha '+f.mejor_racha+' · 🏅 '+f.logros+'</span></div>'+
+      '<div class="rk-monedas">🪙 '+f.monedas_totales+'</div>';
+    cont.appendChild(d);
+  });
+  $("rkEstado").textContent=(data&&data.length)?"":"Todavía no hay nadie más en este grupo — compartí el código.";
+}
+function rkMostrarTabla(){
+  const rkPerfil=cargarRkPerfil();
+  $("rkSetup").style.display="none";
+  $("rkTabla").style.display="block";
+  $("rkGrupoTxt").textContent="Grupo "+rkPerfil.grupo+" · Vos: "+rkPerfil.apodo;
+  empujarRanking().then(rkCargarTabla);
+}
+function rkMostrarSetup(){
+  $("rkTabla").style.display="none";
+  $("rkSetup").style.display="block";
+  const rkPerfil=cargarRkPerfil();
+  $("rkApodo").value=(rkPerfil&&rkPerfil.apodo)||perfil.nombre||"";
+  $("rkGrupo").value=(rkPerfil&&rkPerfil.grupo)||"";
+}
+function rkAbrir(){
+  if(!supa){alert("El ranking no está disponible ahora mismo.");return;}
+  const rkPerfil=cargarRkPerfil();
+  $("capaRanking").classList.add("ver");
+  if(rkPerfil&&rkPerfil.apodo&&rkPerfil.grupo)rkMostrarTabla();else rkMostrarSetup();
+}
+$("bRanking").onclick=rkAbrir;
+$("rkCerrar").onclick=()=>$("capaRanking").classList.remove("ver");
+$("rkGenerarCodigo").onclick=()=>{$("rkGrupo").value=rkCodigoAleatorio();};
+$("rkCrear").onclick=()=>{
+  const apodo=$("rkApodo").value.trim().slice(0,14);
+  const grupo=$("rkGrupo").value.trim().toUpperCase().slice(0,16);
+  if(!apodo){$("rkApodo").focus();return;}
+  if(!grupo){$("rkGrupo").focus();return;}
+  guardarRkPerfil({apodo,grupo});
+  rkMostrarTabla();
+};
+$("rkSalir").onclick=rkMostrarSetup;
+$("rkCompartir").onclick=async()=>{
+  const rkPerfil=cargarRkPerfil();if(!rkPerfil)return;
+  const t="Sumate a mi ranking de Girá y Adiviná — usá el código "+rkPerfil.grupo+" cuando entrés a «Ranking de amigos».\n"+location.origin+location.pathname;
+  try{await navigator.clipboard.writeText(t);$("rkCompartir").textContent="✅ Copiado";}
+  catch(e){}
+  setTimeout(()=>{$("rkCompartir").textContent="📤 Compartir código";},1800);
+};
 
 /* ---- Marcos de avatar ---- */
 const FRAMES=[
@@ -3414,6 +3542,7 @@ function finDelJuego(){
   serie[g]=(serie[g]||0)+1;
   if(ultGanador===g)racha++;else{ultGanador=g;racha=1;}
   if(racha>meta.mejorRachaVictorias){meta.mejorRachaVictorias=racha;guardarMeta();}
+  empujarRanking();
   extra=" Partidas del día: "+S.jug.map((j,i)=>j.n+" "+(serie[i]||0)).join(" — ")+
     (racha>=2?" · "+S.jug[g].n+" lleva "+racha+" al hilo.":".");
   iniciarBonus(g,{g,tit,extra});
