@@ -757,6 +757,11 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
     <div class="tn-info"><b>Sobre de Montevideo</b><span>Un sobre para tu colección — 1 por día</span></div>
     <button class="tn-comprar" data-tipo="sobre_montevideo" data-precio="1200">🪙 1200</button>
   </div>
+  <div class="tn-item">
+    <div class="tn-icono">🎁</div>
+    <div class="tn-info"><b>Sobre de Piriápolis</b><span>Un sobre para tu colección — 1 por día</span></div>
+    <button class="tn-comprar" data-tipo="sobre_piriapolis" data-precio="1200">🪙 1200</button>
+  </div>
   <h3 class="tn-subtitulo">🖼️ Marcos de avatar</h3>
   <div class="frame-grid" id="frameGrid"></div>
   <button class="no" id="tnCerrar" style="width:100%;border-radius:14px;padding:13px;font-weight:700;margin-top:10px">Cerrar</button>
@@ -1164,7 +1169,7 @@ $("rondas").addEventListener("click",e=>{const b=e.target.closest("button");if(!
 const MUNDO=[
  {id:"durazno",pasos:[[24, 16], [36, 23], [20, 36], [33, 50]],nx:50,ny:60,bg:"assets/worlds/durazno.webp",n:"Durazno",r:"El Tío del Asado",rondas:3,cats:["Dicho popular","Persona"],rica:true},
  {id:"montevideo",pasos:[[20, 22], [34, 31], [46, 41], [30, 55]],nx:58,ny:60,bg:"assets/worlds/montevideo.webp",n:"Montevideo",r:"La Vecina Curiosa",rondas:3,cats:["Lugar","Casa y trabajo"],rica:true},
- {id:"piriapolis",pasos:[[22, 20], [35, 28], [26, 40], [40, 52]],nx:56,ny:58,bg:"assets/worlds/piriapolis.webp",n:"Piriápolis",r:"El Guardavidas",rondas:3,cats:["Clima y verano","Viaje"]},
+ {id:"piriapolis",pasos:[[22, 20], [35, 28], [26, 40], [40, 52]],nx:56,ny:58,bg:"assets/worlds/piriapolis.webp",n:"Piriápolis",r:"El Guardavidas",rondas:3,cats:["Clima y verano","Viaje"],rica:true},
  {id:"punta",pasos:[[20, 22], [32, 30], [24, 42], [38, 52]],nx:50,ny:62,bg:"assets/worlds/punta-del-este.webp",n:"Punta del Este",r:"La Turista",rondas:4,cats:["Cosa","Cosas de la casa"]},
  {id:"salto",pasos:[[22, 20], [34, 28], [24, 40], [38, 50]],nx:52,ny:46,bg:"assets/worlds/salto.webp",n:"Salto y las termas",r:"El Parrillero",rondas:4,cats:["Comida","Animales"]},
  {id:"tacuarembo",pasos:[[28, 18], [20, 28], [30, 40], [22, 52]],nx:55,ny:58,bg:"assets/worlds/tacuarembo.webp",n:"Tacuarembó",r:"El Gaucho",rondas:4,cats:["Accion","Deporte"]},
@@ -1588,6 +1593,20 @@ const COLECCIONES={
       {id:"mercado-puerto",nombre:"Mercado del Puerto",img:"assets/collectibles/montevideo/coleccion-montevideo-mercado-puerto.webp"},
       {id:"omnibus",nombre:"Ómnibus",img:"assets/collectibles/montevideo/coleccion-montevideo-omnibus.webp"}
     ]
+  },
+  piriapolis:{
+    nombre:"Piriápolis",
+    sobreCerrado:"assets/collectibles/piriapolis/sobre-piriapolis.webp",
+    sobreAbierto:"assets/collectibles/piriapolis/sobre-piriapolis-abierto.webp",
+    frameExclusivo:"frame-piriapolis", // preparado a futuro: NO activar hasta subir assets/frames/frame-piriapolis.png
+    items:[
+      {id:"rambla",nombre:"La Rambla",img:"assets/collectibles/piriapolis/coleccion-piriapolis-rambla.webp"},
+      {id:"cerro",nombre:"Cerro San Antonio",img:"assets/collectibles/piriapolis/coleccion-piriapolis-cerro.webp"},
+      {id:"castillo",nombre:"Castillo de Piria",img:"assets/collectibles/piriapolis/coleccion-piriapolis-castillo.webp"},
+      {id:"fuente",nombre:"Fuente de Venus",img:"assets/collectibles/piriapolis/coleccion-piriapolis-fuente.webp"},
+      {id:"hotel",nombre:"Hotel Argentino",img:"assets/collectibles/piriapolis/coleccion-piriapolis-hotel.webp"},
+      {id:"puerto",nombre:"Puerto",img:"assets/collectibles/piriapolis/coleccion-piriapolis-puerto.webp"}
+    ]
   }
 };
 function cargarColeccionMeta(){
@@ -1780,7 +1799,7 @@ $("sobrePremioCerrar").onclick=()=>{
   else continuarTrasSobre();
 };
 
-/* ---- Ciudades "ricas" (mapa 3D + pasaporte + sellos) — Durazno y Montevideo comparten esta pantalla ---- */
+/* ---- Ciudades "ricas" (mapa 3D + pasaporte + sellos) — Durazno, Montevideo y Piriápolis comparten esta pantalla ---- */
 const CIUDAD_RICA={
   durazno:{
     nodos:[
@@ -1812,6 +1831,22 @@ const CIUDAD_RICA={
       {img:"assets/passport/montevideo-sello-3.webp",nombre:"Estadio Centenario"},
       {img:"assets/passport/montevideo-sello-4.webp",nombre:"Mercado del Puerto"},
       {img:"assets/passport/montevideo-sello-rival.webp",nombre:"La Vecina Curiosa"}
+    ]
+  },
+  piriapolis:{
+    nodos:[
+      {tipo:"paso",x:24,y:20},
+      {tipo:"paso",x:42,y:32},
+      {tipo:"paso",x:28,y:50},
+      {tipo:"paso",x:46,y:68},
+      {tipo:"rival",x:32,y:88}
+    ],
+    sellos:[
+      {img:"assets/passport/piriapolis-sello-1.webp",nombre:"La Rambla"},
+      {img:"assets/passport/piriapolis-sello-2.webp",nombre:"Cerro San Antonio"},
+      {img:"assets/passport/piriapolis-sello-3.webp",nombre:"Castillo de Piria"},
+      {img:"assets/passport/piriapolis-sello-4.webp",nombre:"El Puerto"},
+      {img:"assets/passport/piriapolis-sello-rival.webp",nombre:"El Guardavidas"}
     ]
   }
 };
