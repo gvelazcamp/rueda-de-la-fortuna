@@ -2258,6 +2258,7 @@ function recibirTVHost(d){
   if(S.fase==="bonus_elegir"&&S.bonusGanador===idx&&d.a==="letra"){hostLetraBonus(d.l);return;}
   if(S.fase==="bonus_resolver"&&S.bonusGanador===idx&&d.a==="resolver"){hostResolverBonus(d.txt);return;}
   if(S.fase==="lodo"&&S.turno===idx&&d.a==="lodo_limpio"){hostLodoLimpio(idx);return;}
+  if(d.a==="abrir_resolver"){avisarResolverAbierto(idx);return;}
   if(S.turno!==idx||animando)return;
   if(d.a==="girar")hostGirar();
   else if(d.a==="vocal")hostVocal();
@@ -2369,7 +2370,11 @@ $("bTVCopiar").onclick=async()=>{const t=location.origin+location.pathname+"?tv=
 $("bTVSalir").onclick=()=>location.href=location.origin+location.pathname;
 $("tvcGirar").onclick=()=>enviar({a:"girar"});
 $("tvcVocal").onclick=()=>enviar({a:"vocal"});
-$("tvcResolver").onclick=()=>{if(V.fase==="tossup"){enviar({a:"toss_pausa"});return;}tvAbrirRespuesta();};
+$("tvcResolver").onclick=()=>{
+  if(V.fase==="tossup"){enviar({a:"toss_pausa"});return;}
+  if(V.fase!=="bonus_resolver"){enviar({a:"abrir_resolver"});$("tvcMiniTiempo").textContent="⏱️ Tenés 25 segundos frescos para escribir.";}
+  tvAbrirRespuesta();
+};
 $("tvcCancelarResp").onclick=()=>{if(V.fase==="tossup"&&V.tossPausado&&V.tossRespondedor===tvMiIndex)enviar({a:"toss_cancelar"});$("tvcRespuestaWrap").classList.remove("ver");};
 $("tvcEnviarResp").onclick=()=>{const t=$("tvcRespuesta").value.trim();if(!t)return;enviar({a:"resolver",txt:t});$("tvcRespuestaWrap").classList.remove("ver");};
 $("tvcRespuesta").addEventListener("keydown",e=>{if(e.key==="Enter")$("tvcEnviarResp").click();});
@@ -2470,6 +2475,7 @@ function recibirHost(d){
   if(S.fase==="bonus_elegir"&&S.turno===1&&d.a==="letra"){hostLetraBonus(d.l);return;}
   if(S.fase==="bonus_resolver"&&S.turno===1&&d.a==="resolver"){hostResolverBonus(d.txt);return;}
   if(S.fase==="lodo"&&S.turno===1&&d.a==="lodo_limpio"){hostLodoLimpio(1);return;}
+  if(d.a==="abrir_resolver"){avisarResolverAbierto(1);return;}
   if(S.turno!==1||animando)return;
   if(d.a==="girar")hostGirar();
   else if(d.a==="vocal")hostVocal();
@@ -2894,6 +2900,15 @@ function hostLodoLimpio(jugIdx){
   if(!S||S.turno!==jugIdx||S.fase!=="lodo")return;
   S.jug[jugIdx].lodo=false;S.fase="girar";
   publicar("💧 "+S.jug[jugIdx].n+" limpió el lodo. ¡Dale que el reloj no paró!",null,true);
+}
+/* Al abrir "Resolver" en una ronda normal se le da al jugador un reloj fresco de 25s
+   para escribir la frase, igual que con cualquier otra acción (girar/consonante/vocal).
+   Antes de este fix el reloj seguía corriendo con lo que quedaba de la acción anterior,
+   y si tocaban Resolver con poco tiempo no llegaban a escribir la respuesta. */
+function avisarResolverAbierto(jugIdx){
+  if(!S||S.turno!==jugIdx||animando)return;
+  if(S.fase!=="girar"&&S.fase!=="consonante"&&S.fase!=="vocal")return;
+  publicar(V.aviso||"");
 }
 /* Los invitados (guest online y tvguest) no tienen copia de S: llevan una sombra local
    de sus propios límites (por turno / por ronda) para deshabilitar botones sin filtrarle
@@ -3459,11 +3474,14 @@ function abrirResolver(jugador){
     if(V.tossPausado||(V.tossBloq&&V.tossBloq[j])){tossRespondedor=null;return;}
     if(modo==="guest")enviar({a:"toss_pausa"});
     else if(!pausarToss(j)){tossRespondedor=null;return;}
+  }else if(!esBonus){
+    if(modo==="guest")enviar({a:"abrir_resolver"});
+    else if(S)avisarResolverAbierto(S.turno);
   }
   $("modalResolver").querySelector("h2").textContent=esToss?"⚡ Resolver la Prueba":esBonus?"⭐ Resolver Ronda Bonus":"Decí la frase";
   $("modalResolver").querySelector("p").textContent=esToss?
     ((tossRespondedor!==null&&V.jug[tossRespondedor])?V.jug[tossRespondedor].n+", el tablero está congelado. Tenés 5 segundos para escribir la frase completa.":"Tenés 5 segundos para escribir la frase completa."):
-    (esBonus?"Tenés 10 segundos. Podés intentar más de una vez mientras quede tiempo.":"Si acertás te llevás la plata de la ronda. Si errás, pasa el turno.");
+    (esBonus?"Tenés 10 segundos. Podés intentar más de una vez mientras quede tiempo.":"Si acertás te llevás la plata de la ronda. Si errás, pasa el turno. Tenés 25 segundos frescos para escribir.");
   $("modalResolver").classList.add("ver");$("respuesta").value="";$("respuesta").focus();
 }
 $("bResolver").onclick=()=>{
