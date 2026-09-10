@@ -960,6 +960,7 @@ function contextoMusicaActual(){
 }
 function sincronizarMusica(){
   if(!musicaOn)return;
+  if(document.visibilityState==="hidden"){detenerMusica();return;}
   const contexto=contextoMusicaActual();
   const src=contexto&&PISTAS_MUSICA[contexto];
   if(!src){detenerMusica();return;}
@@ -1018,7 +1019,7 @@ actualizarBotonMusica();
 ["pointerdown","touchend","click","keydown"].forEach(ev=>
   document.addEventListener(ev,()=>sincronizarMusica(),{once:true,passive:true}));
 document.addEventListener("visibilitychange",()=>{
-  if(document.visibilityState==="visible")sincronizarMusica();
+  if(document.visibilityState==="visible")sincronizarMusica();else detenerMusica();
 });
 const cv=$("rueda"),cx=cv.getContext("2d");
 (function dibujar(){const R=300,paso=Math.PI*2/SEG.length;
