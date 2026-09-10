@@ -782,6 +782,11 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
     <div class="tn-info"><b>Sobre de Tacuarembó</b><span>Un sobre para tu colección — 1 por día</span></div>
     <button class="tn-comprar" data-tipo="sobre_tacuarembo" data-precio="1200">🪙 1200</button>
   </div>
+  <div class="tn-item">
+    <div class="tn-icono">🎁</div>
+    <div class="tn-info"><b>Sobre de Cabo Polonio</b><span>Un sobre para tu colección — 1 por día</span></div>
+    <button class="tn-comprar" data-tipo="sobre_polonio" data-precio="1200">🪙 1200</button>
+  </div>
   <h3 class="tn-subtitulo">🖼️ Marcos de avatar</h3>
   <div class="frame-grid" id="frameGrid"></div>
   <button class="no" id="tnCerrar" style="width:100%;border-radius:14px;padding:13px;font-weight:700;margin-top:10px">Cerrar</button>
@@ -1193,7 +1198,7 @@ const MUNDO=[
  {id:"punta",pasos:[[20, 22], [32, 30], [24, 42], [38, 52]],nx:50,ny:62,bg:"assets/worlds/punta-del-este.webp",n:"Punta del Este",r:"La Turista",rondas:4,cats:["Cosa","Cosas de la casa"],rica:true},
  {id:"salto",pasos:[[22, 20], [34, 28], [24, 40], [38, 50]],nx:52,ny:46,bg:"assets/worlds/salto.webp",n:"Salto y las termas",r:"El Parrillero",rondas:4,cats:["Comida","Animales"],rica:true},
  {id:"tacuarembo",pasos:[[28, 18], [20, 28], [30, 40], [22, 52]],nx:55,ny:58,bg:"assets/worlds/tacuarembo.webp",n:"Tacuarembó",r:"El Gaucho",rondas:4,cats:["Accion","Deporte"],rica:true},
- {id:"polonio",pasos:[[46, 16], [38, 28], [30, 40], [36, 52]],nx:45,ny:62,bg:"assets/worlds/cabo-polonio.webp",n:"Cabo Polonio",r:"El Farolero",rondas:5,cats:["Musica y fiesta","Escuela e infancia"]},
+ {id:"polonio",pasos:[[46, 16], [38, 28], [30, 40], [36, 52]],nx:45,ny:62,bg:"assets/worlds/cabo-polonio.webp",n:"Cabo Polonio",r:"El Farolero",rondas:5,cats:["Musica y fiesta","Escuela e infancia"],rica:true},
  {id:"colonia",pasos:[[20, 20], [32, 28], [24, 38], [38, 48]],nx:56,ny:44,bg:"assets/worlds/colonia.webp",n:"Colonia",r:"El Cinéfilo",rondas:5,cats:["Pelicula","Programa de TV"],rica:true},
  {id:"centenario",pasos:[[20, 22], [32, 30], [22, 42], [36, 52]],nx:60,ny:55,bg:"assets/worlds/estadio-centenario.webp",n:"Estadio Centenario",r:"La Campeona",rondas:5,cats:["Personajes","Dicho popular"]}];
 let ganados=(()=>{try{return new Set(JSON.parse(localStorage.getItem("larueda_mundo")||"[]"));}catch(e){return new Set();}})();
@@ -1683,6 +1688,20 @@ const COLECCIONES={
       {id:"fogon",nombre:"El Fogón",img:"assets/collectibles/tacuarembo/coleccion-tacuarembo-fogon.webp"},
       {id:"gramofono",nombre:"El Gramófono",img:"assets/collectibles/tacuarembo/coleccion-tacuarembo-gramofono.webp"}
     ]
+  },
+  polonio:{
+    nombre:"Cabo Polonio",
+    sobreCerrado:"assets/collectibles/polonio/sobre-polonio.webp",
+    sobreAbierto:"assets/collectibles/polonio/sobre-polonio-abierto.webp",
+    frameExclusivo:"frame-polonio", // preparado a futuro: NO activar hasta subir assets/frames/frame-polonio.png
+    items:[
+      {id:"faro",nombre:"El Faro",img:"assets/collectibles/polonio/coleccion-polonio-faro.webp"},
+      {id:"lobos",nombre:"Lobos Marinos",img:"assets/collectibles/polonio/coleccion-polonio-lobos.webp"},
+      {id:"rancho",nombre:"El Rancho",img:"assets/collectibles/polonio/coleccion-polonio-rancho.webp"},
+      {id:"dunas",nombre:"Las Dunas",img:"assets/collectibles/polonio/coleccion-polonio-dunas.webp"},
+      {id:"camion",nombre:"El Camión 4x4",img:"assets/collectibles/polonio/coleccion-polonio-camion.webp"},
+      {id:"cabana",nombre:"La Cabaña",img:"assets/collectibles/polonio/coleccion-polonio-cabana.webp"}
+    ]
   }
 };
 function cargarColeccionMeta(){
@@ -1987,6 +2006,22 @@ const CIUDAD_RICA={
       {img:"assets/passport/tacuarembo-sello-3.webp",nombre:"Carlos Gardel"},
       {img:"assets/passport/tacuarembo-sello-4.webp",nombre:"Las Cuchillas"},
       {img:"assets/passport/tacuarembo-sello-rival.webp",nombre:"El Gaucho"}
+    ]
+  },
+  polonio:{
+    nodos:[
+      {tipo:"paso",x:24,y:18},
+      {tipo:"paso",x:42,y:30},
+      {tipo:"paso",x:28,y:48},
+      {tipo:"paso",x:46,y:66},
+      {tipo:"rival",x:32,y:88}
+    ],
+    sellos:[
+      {img:"assets/passport/polonio-sello-1.webp",nombre:"Las Dunas"},
+      {img:"assets/passport/polonio-sello-2.webp",nombre:"Isla de Lobos"},
+      {img:"assets/passport/polonio-sello-3.webp",nombre:"El Pueblo"},
+      {img:"assets/passport/polonio-sello-4.webp",nombre:"Cielo de Estrellas"},
+      {img:"assets/passport/polonio-sello-rival.webp",nombre:"El Farolero"}
     ]
   }
 };
