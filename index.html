@@ -1334,10 +1334,18 @@ function sumarRondaColeccion(cual){
   if(cm.rondasProgreso>=3){
     cm.rondasProgreso=0;cm.sobres++;
     guardarColeccionMeta();colActualizarBloqueDurazno();
-    setTimeout(tk(()=>colMostrarSobreConseguido(cual)),650);
+    setTimeout(()=>{
+      if($("modalFin").classList.contains("ver"))sobrePendienteCual=cual;
+      else colMostrarSobreConseguido(cual);
+    },650);
   }else{guardarColeccionMeta();colActualizarBloqueDurazno();}
 }
 let colSobreCualActual=null,colVolverAModal=false;
+let sobrePendienteCual=null,accionTrasSobre=null;
+function continuarTrasSobre(){
+  const f=accionTrasSobre;accionTrasSobre=null;
+  if(f)f();
+}
 function colMostrarSobreConseguido(cual,comprado){
   colSobreCualActual=cual;
   $("sobreConseguidoImg").src=COLECCIONES[cual].sobreCerrado;
@@ -1427,7 +1435,7 @@ function colRenderModal(cual){
 }
 $("dzColeccionBtn").onclick=()=>{colRenderModal(dzCiudad().id);$("capaColeccion").classList.add("ver");};
 $("colCerrar").onclick=()=>$("capaColeccion").classList.remove("ver");
-$("sobreGuardar").onclick=()=>$("modalSobreConseguido").classList.remove("ver");
+$("sobreGuardar").onclick=()=>{$("modalSobreConseguido").classList.remove("ver");continuarTrasSobre();};
 $("sobreAbrirAhora").onclick=()=>{
   $("modalSobreConseguido").classList.remove("ver");
   colVolverAModal=false;
@@ -1436,6 +1444,7 @@ $("sobreAbrirAhora").onclick=()=>{
 $("sobrePremioCerrar").onclick=()=>{
   $("capaAbrirSobre").classList.remove("ver");
   if(colVolverAModal){colRenderModal(colSobreCualActual);$("capaColeccion").classList.add("ver");}
+  else continuarTrasSobre();
 };
 
 /* ---- Ciudades "ricas" (mapa 3D + pasaporte + sellos) — Durazno y Montevideo comparten esta pantalla ---- */
@@ -2554,8 +2563,12 @@ function revancha(){
   if(modo==="bot"&&destino!==null&&!gastarVida()){
     matchToken++;botPausado=0;
     $("modalFin").classList.remove("ver");
-    const dCur=MUNDO[destino];
-    if(CIUDAD_RICA[dCur.id]&&!ganados.has(dCur.id))abrirCiudadRica(destino);else verMundo();
+    const continuar=()=>{
+      const dCur=MUNDO[destino];
+      if(CIUDAD_RICA[dCur.id]&&!ganados.has(dCur.id))abrirCiudadRica(destino);else verMundo();
+    };
+    if(sobrePendienteCual){const c=sobrePendienteCual;sobrePendienteCual=null;accionTrasSobre=continuar;colMostrarSobreConseguido(c);}
+    else continuar();
     return;
   }
   matchToken++;botPausado=0;
@@ -2565,7 +2578,9 @@ function revancha(){
   S.turno=arranca;S.ronda=0;S.normalesDesdeToss=0;S.valor=0;S.fase="girar";
   S.mazo=nuevoMazo(S.cats);
   $("modalFin").classList.remove("ver");
-  nuevaRonda();
+  const continuar2=()=>nuevaRonda();
+  if(sobrePendienteCual){const c=sobrePendienteCual;sobrePendienteCual=null;accionTrasSobre=continuar2;colMostrarSobreConseguido(c);}
+  else continuar2();
 }
 function mostrarFin(tit,txt,selloImg){
   $("capaResuelto").classList.remove("ver");
@@ -2826,16 +2841,21 @@ $("confirmar").onclick=()=>{
 };
 $("fSalir").onclick=()=>location.reload();
 $("fMapa").onclick=()=>{matchToken++;botPausado=0;$("modalFin").classList.remove("ver");
-  if(fSiguientePaso!==null){const p=fSiguientePaso;fSiguientePaso=null;
-    const dd=MUNDO[destino];
-    if(meta.vidas>0){
-      if(dd&&p>=dd.pasos.length)empezarDestino(destino);
-      else empezarDestino(destino,p);
-      return;
-    }
-    abrirCiudadRica(destino);return;}
-  const dCur=destino!==null?MUNDO[destino]:null;
-  if(dCur&&CIUDAD_RICA[dCur.id]&&!ganados.has(dCur.id))abrirCiudadRica(destino);else verMundo();};
+  const continuar=()=>{
+    if(fSiguientePaso!==null){const p=fSiguientePaso;fSiguientePaso=null;
+      const dd=MUNDO[destino];
+      if(meta.vidas>0){
+        if(dd&&p>=dd.pasos.length)empezarDestino(destino);
+        else empezarDestino(destino,p);
+        return;
+      }
+      abrirCiudadRica(destino);return;}
+    const dCur=destino!==null?MUNDO[destino]:null;
+    if(dCur&&CIUDAD_RICA[dCur.id]&&!ganados.has(dCur.id))abrirCiudadRica(destino);else verMundo();
+  };
+  if(sobrePendienteCual){const c=sobrePendienteCual;sobrePendienteCual=null;accionTrasSobre=continuar;colMostrarSobreConseguido(c);}
+  else continuar();
+};
 function volar(e){
   const d=document.createElement("div");d.className="emo";d.textContent=e;
   d.style.left=(28+Math.random()*44)+"%";document.body.appendChild(d);
