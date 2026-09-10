@@ -2907,7 +2907,19 @@ function nuevoMazo(cats){
   const base=cats&&cats.length?FRASES.filter(f=>cats.includes(f.c)):FRASES;
   let d=base.filter(f=>!vistas.has(f.t));
   if(!d.length)d=[...base];
-  return d.sort(()=>Math.random()-.5);
+  const porCat={};
+  d.forEach(f=>{(porCat[f.c]=porCat[f.c]||[]).push(f);});
+  const categorias=Object.keys(porCat).sort(()=>Math.random()-.5);
+  categorias.forEach(c=>porCat[c].sort(()=>Math.random()-.5));
+  const mezclado=[];
+  let quedan=true;
+  while(quedan){
+    quedan=false;
+    for(const c of categorias){
+      if(porCat[c].length){mezclado.push(porCat[c].shift());quedan=true;}
+    }
+  }
+  return mezclado.reverse();
 }
 function iniciarPartida(n1,n2,cats,av1,av2,frame1,frame2){
   iniciarPartidaJugadores([{n:n1,av:av1,frame:frame1},{n:n2,av:av2,frame:frame2}],cats);
