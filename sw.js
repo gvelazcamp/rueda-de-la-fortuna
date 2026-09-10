@@ -1,4 +1,4 @@
-const CACHE_NAME = "gya-cache-v1";
+const CACHE_NAME = "gya-cache-v2";
 const APP_SHELL = ["./", "./index.html", "./manifest.json", "./icono-192.png", "./icono-512.png", "./assets/logo.webp"];
 
 self.addEventListener("install", (e) => {
@@ -18,20 +18,20 @@ self.addEventListener("activate", (e) => {
   );
 });
 
+// Red primero: siempre trae la versión más nueva del juego cuando hay internet
+// (antes era cache-primero y por eso el celular seguía viendo versiones viejas
+// aunque ya se hubiera subido un arreglo). Si no hay conexión, usa lo cacheado.
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
   e.respondWith(
-    caches.match(e.request).then((cached) => {
-      const fetchPromise = fetch(e.request)
-        .then((resp) => {
-          if (resp && resp.status === 200 && resp.type === "basic") {
-            const clone = resp.clone();
-            caches.open(CACHE_NAME).then((c) => c.put(e.request, clone));
-          }
-          return resp;
-        })
-        .catch(() => cached);
-      return cached || fetchPromise;
-    })
+    fetch(e.request)
+      .then((resp) => {
+        if (resp && resp.status === 200 && resp.type === "basic") {
+          const clone = resp.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(e.request, clone));
+        }
+        return resp;
+      })
+      .catch(() => caches.match(e.request))
   );
 });
