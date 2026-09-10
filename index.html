@@ -2753,7 +2753,7 @@ function arrancarReloj(){
       setTimeout(tk(cambiarTurno),1600);}
   },250);
 }
-function publicar(txt,fx){
+function publicar(txt,fx,mantenerReloj){
   V={mask:mask(),cat:S.cat,usadas:[...S.usadas],
      jug:S.jug.map(j=>({id:j.id||null,n:j.n,av:j.av||null,frame:j.frame||null,tot:j.tot,ronda:j.ronda,rg:j.rg||0})),turno:S.turno,fase:S.fase,
      hayVoc:[...VOCALES].some(v=>!S.usadas.has(v)&&S.frase.includes(v)),
@@ -2763,8 +2763,10 @@ function publicar(txt,fx){
      racha:{g:ultGanador,n:racha},aviso:txt,fx:fx||"",fxId:fx?++fxN:0,
      hielo:(S.jug[S.turno]&&S.jug[S.turno].hielo)||{},poderRondaId:S.poderRondaId||0};
   const esToss=S.fase==="tossup",esBonusReloj=S.fase==="bonus_resolver";
-  const vivo=(S.fase==="girar"||S.fase==="consonante"||S.fase==="vocal")&&!animando;
-  if(vivo)arrancarReloj();else pararReloj();
+  /* "lodo" también cuenta como fase viva: el reloj arranca apenas es el turno del jugador
+     embarrado y sigue corriendo mientras limpia, para que sienta la presión del tiempo. */
+  const vivo=(S.fase==="girar"||S.fase==="consonante"||S.fase==="vocal"||S.fase==="lodo")&&!animando;
+  if(vivo){if(!mantenerReloj)arrancarReloj();}else pararReloj();
   const tossMs=esToss?(S.tossPausado?Math.max(0,S.tossRestante||0):Math.max(0,S.tossFin-Date.now())):0;
   V.seg=esToss?Math.max(1,Math.ceil(tossMs/1000)):
     (esBonusReloj?Math.max(1,Math.ceil((S.bonusFin-Date.now())/1000)):(vivo?Math.max(1,Math.round((S.tFin-Date.now())/1000)):0));
@@ -2891,7 +2893,7 @@ function hostHieloTap(jugIdx,l){
 function hostLodoLimpio(jugIdx){
   if(!S||S.turno!==jugIdx||S.fase!=="lodo")return;
   S.jug[jugIdx].lodo=false;S.fase="girar";
-  publicar("💧 "+S.jug[jugIdx].n+" limpió el lodo. ¡Seguí jugando!");
+  publicar("💧 "+S.jug[jugIdx].n+" limpió el lodo. ¡Dale que el reloj no paró!",null,true);
 }
 /* Los invitados (guest online y tvguest) no tienen copia de S: llevan una sombra local
    de sus propios límites (por turno / por ronda) para deshabilitar botones sin filtrarle
@@ -3080,7 +3082,7 @@ function cambiarTurno(){
   S.jug[S.turno].poderUsadoTurno=false;
   if(S.jug[S.turno].lodo){
     S.fase="lodo";
-    publicar(S.jug[S.turno].n+" recibió 🟤 <b>Lodo</b>. Hay que limpiar la pantalla para seguir jugando.");
+    publicar(S.jug[S.turno].n+" recibió 🟤 <b>Lodo</b>. ¡Limpiá rápido, el reloj ya está corriendo!");
     return;
   }
   publicar("Le toca a <b>"+S.jug[S.turno].n+"</b>.");}
