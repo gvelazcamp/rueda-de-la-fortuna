@@ -451,11 +451,34 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 .acciones button.pista{border-color:#F5B30166;color:var(--oro)}
 .poderes{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin:8px 0}
 .poder-btn{background:#2A1A3C;border:1px solid #FFFFFF1F;border-radius:10px;padding:4px 2px 3px;
- display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}
-.poder-btn img{width:clamp(18px,7vw,26px);height:clamp(18px,7vw,26px);object-fit:contain}
-.poder-btn .poder-precio{font-size:.6rem;font-weight:800;color:var(--oro);white-space:nowrap}
+ display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0;min-height:44px;position:relative}
+.poder-btn img{width:clamp(18px,7vw,24px);height:clamp(18px,7vw,24px);object-fit:contain}
+.poder-btn .poder-nombre{font-size:.52rem;font-weight:700;color:var(--crema);white-space:nowrap;opacity:.85}
+.poder-btn .poder-precio{font-size:.58rem;font-weight:800;color:var(--oro);white-space:nowrap}
 .poder-btn:disabled{opacity:.4}
+.poder-btn.activo{border-color:var(--agua);box-shadow:0 0 0 2px #37D6C066;background:#1B3A38}
+.poder-btn.usado{opacity:.45}
+.poder-btn.usado::after{content:"✓";position:absolute;top:1px;right:3px;font-size:.6rem;color:var(--agua)}
+.confirm-poder{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:60;
+ background:var(--noche2);border:1px solid #FFFFFF2A;border-radius:14px;padding:12px 14px;
+ box-shadow:0 8px 24px #0009;display:flex;flex-direction:column;gap:8px;align-items:center;max-width:90vw}
+.confirm-poder p{margin:0;font-weight:700;color:var(--crema);font-size:.85rem;text-align:center}
+.confirm-poder-btns{display:flex;gap:8px}
+.confirm-poder-btns button{padding:7px 16px;border-radius:9px;border:1px solid #FFFFFF2A;font-weight:800;font-size:.8rem}
+.confirm-poder-btns .no{background:transparent;color:var(--crema)}
+.confirm-poder-btns .ok{background:var(--oro);color:var(--tinta);border-color:var(--oro)}
+.lodo-zona{display:none;flex-direction:column;align-items:center;gap:6px;padding:14px 10px;
+ background:#241239;border:1px dashed #A9793F88;border-radius:12px;margin:8px 0;touch-action:none;user-select:none}
+.lodo-zona p{margin:0;font-weight:700;color:var(--crema);font-size:.8rem}
+.lodo-mancha{width:64px;height:64px;border-radius:50%;
+ background:radial-gradient(circle at 35% 35%,#8a5a2f,#4a3018 70%);box-shadow:inset 0 0 12px #0008;transition:opacity .15s}
+.lodo-barra{width:100%;max-width:220px;height:10px;border-radius:6px;background:#150C20;overflow:hidden}
+.lodo-barra-fill{width:0%;height:100%;background:linear-gradient(90deg,#A9793F,var(--oro));transition:width .1s}
 .teclado{display:grid;grid-template-columns:repeat(9,1fr);gap:5px}
+.teclado button.congelada{background:linear-gradient(160deg,#cdeeff,#8fd0ee);color:#0b3550;border-color:#eafcff;position:relative}
+.teclado button.congelada::after{content:"❄️";position:absolute;top:0;right:1px;font-size:.55rem}
+.teclado button.congelada[data-grieta="1"]{filter:brightness(.82) saturate(.75)}
+.teclado button.congelada[data-grieta="2"]{filter:brightness(.6) saturate(.5)}
 @media(max-width:420px){.teclado{grid-template-columns:repeat(7,1fr)}}
 .teclado button{aspect-ratio:1;border-radius:9px;background:#2A1A3C;color:var(--crema);font-weight:700;
  font-size:1rem;border:1px solid #FFFFFF26}
@@ -557,7 +580,8 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 #tvcMiniTiempo{font-family:'Archivo Black';color:var(--oro);margin-bottom:8px}
 body.tvhost #juego{max-width:1240px}
 body.tvhost #juego .marcador{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}
-body.tvhost #juego .acciones,body.tvhost #juego .teclado,body.tvhost #juego .reacciones,body.tvhost #tossBuzz{display:none!important}
+body.tvhost #juego .acciones,body.tvhost #juego .teclado,body.tvhost #juego .reacciones,body.tvhost #tossBuzz,
+body.tvhost #juego .poderes,body.tvhost #juego .lodo-zona,body.tvhost #juego .confirm-poder{display:none!important}
 body.tvhost #juego .tablero{padding:26px 18px}
 body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66px);font-size:clamp(1.1rem,2.6vw,1.8rem)}
 @media(max-width:600px){#tvLista{grid-template-columns:1fr 1fr}.tv-codigo{font-size:3rem}}
@@ -844,12 +868,21 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
   </div>
   <div class="teclado" id="tvcTeclado"></div>
   <div class="poderes" id="tvcPoderes" style="display:none">
-    <button class="poder-btn" data-poder="hielo"><img src="assets/powers/poder-hielo.png" alt=""><span class="poder-precio">200</span></button>
-    <button class="poder-btn" data-poder="lodo"><img src="assets/powers/poder-lodo.png" alt=""><span class="poder-precio">200</span></button>
-    <button class="poder-btn" data-poder="escudo"><img src="assets/powers/poder-escudo.png" alt=""><span class="poder-precio">300</span></button>
-    <button class="poder-btn" data-poder="pista"><img src="assets/powers/poder-pista.png" alt=""><span class="poder-precio">150</span></button>
-    <button class="poder-btn" data-poder="mate"><img src="assets/powers/poder-mate.png" alt=""><span class="poder-precio">400</span></button>
-    <button class="poder-btn" data-poder="comodin"><img src="assets/powers/poder-comodin.png" alt=""><span class="poder-precio">500</span></button>
+    <button class="poder-btn" data-poder="hielo"><img src="assets/powers/power-hielo.webp" alt=""><span class="poder-nombre">Hielo</span><span class="poder-precio">🪙800</span></button>
+    <button class="poder-btn" data-poder="lodo"><img src="assets/powers/power-lodo.webp" alt=""><span class="poder-nombre">Lodo</span><span class="poder-precio">🪙800</span></button>
+    <button class="poder-btn" data-poder="escudo"><img src="assets/powers/power-escudo.webp" alt=""><span class="poder-nombre">Escudo</span><span class="poder-precio">🪙900</span></button>
+    <button class="poder-btn" data-poder="pista"><img src="assets/powers/power-pista.webp" alt=""><span class="poder-nombre">Pista</span><span class="poder-precio">🪙600</span></button>
+    <button class="poder-btn" data-poder="mate"><img src="assets/powers/power-mate.webp" alt=""><span class="poder-nombre">Mate</span><span class="poder-precio">🪙900</span></button>
+    <button class="poder-btn" data-poder="comodin"><img src="assets/powers/power-comodin.webp" alt=""><span class="poder-nombre">Comodín</span><span class="poder-precio">🪙1200</span></button>
+  </div>
+  <div class="lodo-zona" id="tvcLodoZona" style="display:none">
+    <div class="lodo-mancha" id="tvcLodoMancha"></div>
+    <p>🧹 Deslizá para limpiar el lodo</p>
+    <div class="lodo-barra"><div class="lodo-barra-fill" id="tvcLodoBarra"></div></div>
+  </div>
+  <div class="confirm-poder" id="tvcConfirmPoder" style="display:none">
+    <p id="tvcConfirmPoderTxt"></p>
+    <div class="confirm-poder-btns"><button class="no" id="tvcConfirmPoderNo">Cancelar</button><button class="ok" id="tvcConfirmPoderSi">Usar</button></div>
   </div>
   <div class="reacciones" id="tvcReacciones" style="margin-top:14px">
     <button data-e="👏">👏</button><button data-e="😱">😱</button><button data-e="🤣">🤣</button><button data-e="🔥">🔥</button>
@@ -879,14 +912,23 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
         <button class="pista" id="bPista" style="display:none">💡 Pista</button>
       </div>
       <div class="poderes" id="poderesFila" style="display:none">
-        <button class="poder-btn" data-poder="hielo"><img src="assets/powers/poder-hielo.png" alt=""><span class="poder-precio">200</span></button>
-        <button class="poder-btn" data-poder="lodo"><img src="assets/powers/poder-lodo.png" alt=""><span class="poder-precio">200</span></button>
-        <button class="poder-btn" data-poder="escudo"><img src="assets/powers/poder-escudo.png" alt=""><span class="poder-precio">300</span></button>
-        <button class="poder-btn" data-poder="pista"><img src="assets/powers/poder-pista.png" alt=""><span class="poder-precio">150</span></button>
-        <button class="poder-btn" data-poder="mate"><img src="assets/powers/poder-mate.png" alt=""><span class="poder-precio">400</span></button>
-        <button class="poder-btn" data-poder="comodin"><img src="assets/powers/poder-comodin.png" alt=""><span class="poder-precio">500</span></button>
+        <button class="poder-btn" data-poder="hielo"><img src="assets/powers/power-hielo.webp" alt=""><span class="poder-nombre">Hielo</span><span class="poder-precio">🪙800</span></button>
+        <button class="poder-btn" data-poder="lodo"><img src="assets/powers/power-lodo.webp" alt=""><span class="poder-nombre">Lodo</span><span class="poder-precio">🪙800</span></button>
+        <button class="poder-btn" data-poder="escudo"><img src="assets/powers/power-escudo.webp" alt=""><span class="poder-nombre">Escudo</span><span class="poder-precio">🪙900</span></button>
+        <button class="poder-btn" data-poder="pista"><img src="assets/powers/power-pista.webp" alt=""><span class="poder-nombre">Pista</span><span class="poder-precio">🪙600</span></button>
+        <button class="poder-btn" data-poder="mate"><img src="assets/powers/power-mate.webp" alt=""><span class="poder-nombre">Mate</span><span class="poder-precio">🪙900</span></button>
+        <button class="poder-btn" data-poder="comodin"><img src="assets/powers/power-comodin.webp" alt=""><span class="poder-nombre">Comodín</span><span class="poder-precio">🪙1200</span></button>
+      </div>
+      <div class="lodo-zona" id="lodoZona" style="display:none">
+        <div class="lodo-mancha" id="lodoMancha"></div>
+        <p>🧹 Deslizá para limpiar el lodo</p>
+        <div class="lodo-barra"><div class="lodo-barra-fill" id="lodoBarra"></div></div>
       </div>
       <div class="teclado" id="teclado"></div>
+      <div class="confirm-poder" id="confirmPoder" style="display:none">
+        <p id="confirmPoderTxt"></p>
+        <div class="confirm-poder-btns"><button class="no" id="confirmPoderNo">Cancelar</button><button class="ok" id="confirmPoderSi">Usar</button></div>
+      </div>
       <div class="reacciones" id="reacciones">
         <button data-e="👏">👏</button><button data-e="😱">😱</button>
         <button data-e="🤣">🤣</button><button data-e="🔥">🔥</button>
@@ -2215,12 +2257,14 @@ function recibirTVHost(d){
   if(S.fase==="tossup"&&d.a==="resolver"){hostResolver(d.txt,idx);return;}
   if(S.fase==="bonus_elegir"&&S.bonusGanador===idx&&d.a==="letra"){hostLetraBonus(d.l);return;}
   if(S.fase==="bonus_resolver"&&S.bonusGanador===idx&&d.a==="resolver"){hostResolverBonus(d.txt);return;}
+  if(S.fase==="lodo"&&S.turno===idx&&d.a==="lodo_limpio"){hostLodoLimpio(idx);return;}
   if(S.turno!==idx||animando)return;
   if(d.a==="girar")hostGirar();
   else if(d.a==="vocal")hostVocal();
   else if(d.a==="letra")hostLetra(d.l);
   else if(d.a==="resolver")hostResolver(d.txt);
   else if(d.a==="poder"&&PODERES[d.id])aplicarPoderEnHost(idx,d.id);
+  else if(d.a==="hielo_tap")hostHieloTap(idx,d.l);
 }
 function recibirTVGuest(d){
   if(d.tipo==="tv_lobby"){
@@ -2239,22 +2283,25 @@ function recibirTVGuest(d){
 function iniciarPartidaJugadores(jugadores,cats){
   matchToken++;botPausado=0;
   const js=jugadores.map((j,i)=>({id:j.id||null,n:(j.n||("Jugador "+(i+1))).slice(0,12),av:j.av||null,frame:j.frame||null,tot:0,ronda:0,rg:0,
-    escudo:false,congelado:false,bloqLetras:[],x2:false}));
+    escudo:false,hielo:{},lodo:false,comodin:false,poderesRonda:[],poderUsadoTurno:false}));
   arranca=((arranca%js.length)+js.length)%js.length;
-  S={jug:js,turno:arranca,rondas:rondasElegidas,ronda:0,cats:cats||null,mazo:nuevoMazo(cats),finYa:false,valor:0,fase:"girar",abiertas:new Set(),usadas:new Set(),frase:"",cat:"",normalesDesdeToss:0};
+  S={jug:js,turno:arranca,rondas:rondasElegidas,ronda:0,cats:cats||null,mazo:nuevoMazo(cats),finYa:false,valor:0,fase:"girar",abiertas:new Set(),usadas:new Set(),pistaPos:new Set(),frase:"",cat:"",normalesDesdeToss:0,poderRondaId:0};
   nuevaRonda();
 }
 function armarTecladoTV(){
   const t=$("tvcTeclado");if(t.children.length)return;
   LETRAS.forEach(l=>{const b=document.createElement("button");b.textContent=l;b.dataset.l=l;if(VOCALES.includes(l))b.classList.add("vocal");
-    b.onclick=()=>enviar({a:"letra",l});t.appendChild(b);});
+    b.onclick=()=>{
+      if(V&&V.hielo&&V.hielo[l]!==undefined){enviar({a:"hielo_tap",l});return;}
+      enviar({a:"letra",l});
+    };t.appendChild(b);});
 }
 function tvAbrirRespuesta(){$("tvcRespuestaWrap").classList.add("ver");$("tvcRespuesta").value="";$("tvcRespuesta").focus();}
 function renderTVControl(){
   if(modo!=="tvguest"||tvMiIndex<0||!V.jug||!V.jug[tvMiIndex])return;
   const yo=V.jug[tvMiIndex],turno=V.turno===tvMiIndex,actual=V.jug[V.turno];
   $("tvcSala").textContent="Sala "+sala;$("tvcNombre").textContent=yo.n;$("tvcRonda").textContent="$"+yo.ronda;$("tvcTotal").textContent="$"+yo.tot;
-  const esToss=V.fase==="tossup",bonusElegir=V.fase==="bonus_elegir",bonusResolver=V.fase==="bonus_resolver",esFin=V.fase==="fin"||V.fase==="bonus_fin";
+  const esToss=V.fase==="tossup",bonusElegir=V.fase==="bonus_elegir",bonusResolver=V.fase==="bonus_resolver",esFin=V.fase==="fin"||V.fase==="bonus_fin",esLodo=V.fase==="lodo";
   let estado="";
   if(esToss){
     if(V.tossPausado&&V.tossRespondedor===tvMiIndex)estado="⚡ ¡Vos apretaste primero! Tenés 5 segundos para responder.";
@@ -2265,32 +2312,44 @@ function renderTVControl(){
     estado=V.bonusGanador===tvMiIndex?(bonusElegir?"⭐ Ganaste. Elegí 3 consonantes y 1 vocal.":"⭐ Tenés 10 segundos para resolver el Bonus."):
       "⭐ "+(V.jug[V.bonusGanador]?V.jug[V.bonusGanador].n:"El ganador")+" está jugando la Ronda Bonus.";
   }else if(esFin)estado="Partida terminada. Mirá la TV.";
+  else if(esLodo)estado=turno?"🟤 ¡Te tiraron Lodo! Limpiá la pantalla para seguir.":"Esperando a "+(actual?actual.n:"otro jugador")+"…";
   else estado=turno?"🎯 Es tu turno.":"Esperando a "+(actual?actual.n:"otro jugador")+"…";
   $("tvcEstado").textContent=estado;
   const acciones=$("tvcAcciones"),soloResolver=esToss||bonusResolver;
-  acciones.style.display=(bonusElegir||esFin)?"none":"grid";
+  acciones.style.display=(bonusElegir||esFin||esLodo)?"none":"grid";
   $("tvcGirar").style.display=soloResolver?"none":"block";
   $("tvcVocal").style.display=soloResolver?"none":"block";
   $("tvcResolver").style.display=bonusElegir?"none":"block";
   $("tvcResolver").style.gridColumn=soloResolver?"1 / -1":"auto";
-  $("tvcTeclado").style.display=(esToss||bonusResolver||esFin)?"none":"grid";
+  $("tvcTeclado").style.display=(esToss||bonusResolver||esFin||esLodo)?"none":"grid";
   $("tvcGirar").disabled=!turno||V.fase!=="girar"||V.cons===0;
   $("tvcVocal").disabled=!turno||V.fase!=="girar"||!V.hayVoc||yo.ronda<250;
   $("tvcResolver").disabled=esToss?(!!V.tossPausado||!!(V.tossBloq&&V.tossBloq[tvMiIndex])):
     (bonusResolver?V.bonusGanador!==tvMiIndex:(bonusElegir||esFin?true:!turno));
   if(esToss&&V.tossPausado&&V.tossRespondedor===tvMiIndex){$("tvcRespuestaWrap").classList.add("ver");$("tvcMiniTiempo").textContent="⏱️ 5 segundos para responder";}
   else if(!bonusResolver&&V.fase!=="girar"&&V.fase!=="consonante"&&V.fase!=="vocal"){$("tvcRespuestaWrap").classList.remove("ver");}
-  $("tvcPoderes").style.display=(esToss||bonusElegir||bonusResolver||esFin)?"none":"grid";
-  if(!esToss&&!bonusElegir&&!bonusResolver&&!esFin){
-    const puedeUsar=turno&&(V.fase==="girar"||V.fase==="consonante"||V.fase==="vocal");
+  const puedeVerPoderes=!esToss&&!bonusElegir&&!bonusResolver&&!esFin&&!esLodo;
+  $("tvcPoderes").style.display=puedeVerPoderes?"grid":"none";
+  if(puedeVerPoderes){
+    sincronizarSombraPoderes();
     document.querySelectorAll("#tvcPoderes .poder-btn").forEach(b=>{
       const id=b.dataset.poder;
-      b.disabled=!puedeUsar||meta.monedas<PODERES[id].precio;
+      const puede=turno&&puedoUsarPoderGuest(id);
+      b.disabled=!puede||meta.monedas<PODERES[id].precio;
+      b.classList.toggle("usado",miPoderesRondaSombra.includes(id));
+      b.classList.toggle("activo",(id==="escudo"&&miEscudoSombra)||(id==="comodin"&&miComodinSombra));
     });
   }
+  const enLodoTV=esLodo&&turno;
+  $("tvcLodoZona").style.display=enLodoTV?"flex":"none";
+  if(enLodoTV&&!lodoFaseAnteriorTV)window.__resetLodoZonaTV&&window.__resetLodoZonaTV();
+  lodoFaseAnteriorTV=enLodoTV;
   [...$("tvcTeclado").children].forEach(b=>{const l=b.dataset.l,voc=VOCALES.includes(l);
     if(bonusElegir){const cupo=voc?!!V.bonusVocal:(V.bonusCons||[]).length>=3;b.disabled=V.bonusGanador!==tvMiIndex||V.usadas.includes(l)||cupo;}
-    else b.disabled=!turno||V.usadas.includes(l)||(V.bloqLetras||[]).includes(l)||(V.fase==="consonante"&&voc)||(V.fase==="vocal"&&!voc)||(V.fase!=="consonante"&&V.fase!=="vocal");
+    else b.disabled=!turno||V.usadas.includes(l)||(V.fase==="consonante"&&voc)||(V.fase==="vocal"&&!voc)||(V.fase!=="consonante"&&V.fase!=="vocal");
+    const grieta=V.hielo&&V.hielo[l];
+    b.classList.toggle("congelada",grieta!==undefined);
+    if(grieta!==undefined)b.dataset.grieta=grieta;else delete b.dataset.grieta;
   });
 }
 
@@ -2410,11 +2469,14 @@ function recibirHost(d){
   if(S.fase==="tossup"&&d.a==="resolver"){hostResolver(d.txt,1);return;}
   if(S.fase==="bonus_elegir"&&S.turno===1&&d.a==="letra"){hostLetraBonus(d.l);return;}
   if(S.fase==="bonus_resolver"&&S.turno===1&&d.a==="resolver"){hostResolverBonus(d.txt);return;}
+  if(S.fase==="lodo"&&S.turno===1&&d.a==="lodo_limpio"){hostLodoLimpio(1);return;}
   if(S.turno!==1||animando)return;
   if(d.a==="girar")hostGirar();
   else if(d.a==="vocal")hostVocal();
   else if(d.a==="letra")hostLetra(d.l);
   else if(d.a==="resolver")hostResolver(d.txt);
+  else if(d.a==="poder"&&PODERES[d.id])aplicarPoderEnHost(1,d.id);
+  else if(d.a==="hielo_tap")hostHieloTap(1,d.l);
 }
 function recibirGuest(d){
   if(d.tipo==="estado"){
@@ -2455,7 +2517,8 @@ function nuevaRonda(){
     const fToss=S.mazo.pop();
     vistas.add(fToss.t);guardarVistas();
     S.frase=fToss.t;S.catRaw=fToss.c;
-    S.abiertas=new Set();S.usadas=new Set();S.jug.forEach(j=>{j.ronda=0;j.x2=false;});S.valor=0;S.doble=false;S.pistaUsada=false;
+    S.abiertas=new Set();S.usadas=new Set();S.pistaPos=new Set();S.poderRondaId=(S.poderRondaId||0)+1;
+    S.jug.forEach(j=>{j.ronda=0;j.comodin=false;j.hielo={};j.lodo=false;j.escudo=false;j.poderesRonda=[];j.poderUsadoTurno=false;});S.valor=0;S.doble=false;S.pistaUsada=false;
     iniciarTossUp(fToss);
     return;
   }
@@ -2469,7 +2532,8 @@ function nuevaRonda(){
   const f=S.mazo.pop();
   vistas.add(f.t);guardarVistas();
   S.frase=f.t;S.catRaw=f.c;
-  S.abiertas=new Set();S.usadas=new Set();S.jug.forEach(j=>{j.ronda=0;j.x2=false;});S.valor=0;S.doble=false;
+  S.abiertas=new Set();S.usadas=new Set();S.pistaPos=new Set();S.poderRondaId=(S.poderRondaId||0)+1;
+  S.jug.forEach(j=>{j.ronda=0;j.comodin=false;j.hielo={};j.lodo=false;j.escudo=false;j.poderesRonda=[];j.poderUsadoTurno=false;});S.valor=0;S.doble=false;
   S.normalesDesdeToss=(S.normalesDesdeToss||0)+1;
   S.cat=(destino!==null&&modo==="bot"?MUNDO[destino].n+" · ":"")+"Ronda "+S.ronda+" de "+S.rondas+" · "+f.c;
   S.fase="girar";
@@ -2603,8 +2667,9 @@ function iniciarBonus(ganador,finalPendiente){
   if(!f){finalizarPartidaPendiente();return;}
   vistas.add(f.t);guardarVistas();
   S.finalPendiente=finalPendiente;S.turno=ganador;S.frase=f.t;S.catRaw=f.c;
-  S.abiertas=new Set();S.usadas=new Set();S.bonusCons=[];S.bonusVocal=null;S.bonusGanador=ganador;
-  S.jug.forEach(j=>{j.ronda=0;j.x2=false;});S.valor=0;S.doble=false;
+  S.abiertas=new Set();S.usadas=new Set();S.pistaPos=new Set();S.bonusCons=[];S.bonusVocal=null;S.bonusGanador=ganador;
+  S.poderRondaId=(S.poderRondaId||0)+1;
+  S.jug.forEach(j=>{j.ronda=0;j.comodin=false;j.hielo={};j.lodo=false;j.escudo=false;j.poderesRonda=[];j.poderUsadoTurno=false;});S.valor=0;S.doble=false;
   BONUS_BASE.split("").forEach(l=>{S.abiertas.add(l);S.usadas.add(l);});
   S.cat=(destino!==null&&modo==="bot"?MUNDO[destino].n+" · ":"")+"⭐ Ronda Bonus · "+f.c;
   S.fase="bonus_elegir";
@@ -2672,8 +2737,9 @@ function finalizarPartidaPendiente(bonusGanado){
   $("fMapa").textContent="Volver al mapa";
   mostrarFin(f.tit,detalle+f.extra+bonusTxt,f.selloImg);
 }
-const mask=()=>[...S.frase].map((c,i)=>c===" "?" ":(S.fase==="tossup"&&S.tossPos?S.tossPos.has(i)?c:"_":S.abiertas.has(c)?c:"_")).join("");
+const mask=()=>[...S.frase].map((c,i)=>c===" "?" ":(S.fase==="tossup"&&S.tossPos?S.tossPos.has(i)?c:"_":(S.abiertas.has(c)||(S.pistaPos&&S.pistaPos.has(i)))?c:"_")).join("");
 const consRestantes=()=>[...new Set(S.frase.replace(/ /g,""))].filter(c=>!VOCALES.includes(c)&&!S.abiertas.has(c)).length;
+const fraseCompleta=()=>[...S.frase].every((c,i)=>c===" "||S.abiertas.has(c)||(S.pistaPos&&S.pistaPos.has(i)));
 const BILLETE='<svg viewBox="0 0 28 18" aria-hidden="true"><rect x="1" y="1" width="26" height="16" rx="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="14" cy="9" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.6 5.4h1.5M21.9 12.6h1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 let fxN=0;
 function pararReloj(){if(relojID){clearInterval(relojID);relojID=null;}if(S)S.tFin=0;}
@@ -2695,7 +2761,7 @@ function publicar(txt,fx){
      tossBloq:S.tossBloq?S.tossBloq.slice():Array(S.jug.length).fill(false),tossPausado:!!S.tossPausado,tossRespondedor:S.tossRespondedor,
      bonusCons:S.bonusCons?S.bonusCons.slice():[],bonusVocal:S.bonusVocal||null,bonusGanador:S.bonusGanador,
      racha:{g:ultGanador,n:racha},aviso:txt,fx:fx||"",fxId:fx?++fxN:0,
-     bloqLetras:(S.jug[S.turno]&&S.jug[S.turno].bloqLetras)||[]};
+     hielo:(S.jug[S.turno]&&S.jug[S.turno].hielo)||{},poderRondaId:S.poderRondaId||0};
   const esToss=S.fase==="tossup",esBonusReloj=S.fase==="bonus_resolver";
   const vivo=(S.fase==="girar"||S.fase==="consonante"||S.fase==="vocal")&&!animando;
   if(vivo)arrancarReloj();else pararReloj();
@@ -2728,7 +2794,7 @@ function hostGirar(){
       const l=bolsa[Math.floor(Math.random()*bolsa.length)];
       S.abiertas.add(l);S.usadas.add(l);
       [0,110,220].forEach((m,k)=>setTimeout(()=>bip([784,1046,1318][k],.2,"sine",.07),m));
-      if([...S.frase].filter(c=>c!==" ").every(c=>S.abiertas.has(c))){
+      if(fraseCompleta()){
         const j=S.jug[S.turno];j.tot+=j.ronda;j.rg++;S.fase="girar";
         publicar("<b>COMODÍN</b> te regaló la «"+l+"» y completó la frase. "+j.n+" se lleva $"+j.ronda+".","comodin");
         if(S.turno===miJug&&destino!==null)sumarRondaColeccion(MUNDO[destino].id);
@@ -2743,40 +2809,52 @@ function hostGirar(){
     publicar("Salió <b>$"+s.v+"</b>. "+S.jug[S.turno].n+" elige una consonante (quedan "+consRestantes()+" sin descubrir).");
   });
 }
-/* ---- Poderes (solo modo local y Sala TV/Familia) ---- */
+/* ---- Poderes: solo jugando contra otra persona (mismo celular, online 1v1 o Sala TV/Familia). NO en Uruguay solo. ---- */
 const PODERES={
-  hielo:{nombre:"Hielo",precio:200},
-  lodo:{nombre:"Lodo",precio:200},
-  escudo:{nombre:"Escudo",precio:300},
-  pista:{nombre:"Pista",precio:150},
-  mate:{nombre:"Mate",precio:400},
-  comodin:{nombre:"Comodín",precio:500}
+  hielo:{nombre:"Hielo",precio:800},
+  lodo:{nombre:"Lodo",precio:800},
+  escudo:{nombre:"Escudo",precio:900},
+  pista:{nombre:"Pista",precio:600},
+  mate:{nombre:"Mate",precio:900},
+  comodin:{nombre:"Comodín",precio:1200}
 };
-function poderesActivosAqui(){return modo==="local"||modo==="tvhost"||modo==="tvguest";}
-function aplicarPoderEnHost(jugIdx,id){
-  if(!S||!PODERES[id]||animando)return;
+function poderesActivosAqui(){return modo==="local"||modo==="host"||modo==="guest";}
+function puedeUsarPoder(jugIdx,id){
+  if(!S||animando||!PODERES[id]||!S.jug[jugIdx])return false;
+  if(S.fase!=="girar"&&S.fase!=="consonante"&&S.fase!=="vocal")return false;
+  if(S.turno!==jugIdx)return false;
   const j=S.jug[jugIdx];
+  if(j.poderUsadoTurno)return false;
+  const usados=j.poderesRonda||[];
+  if(usados.length>=2||usados.includes(id))return false;
+  return true;
+}
+function aplicarPoderEnHost(jugIdx,id){
+  if(!puedeUsarPoder(jugIdx,id))return;
+  const j=S.jug[jugIdx];
+  j.poderUsadoTurno=true;j.poderesRonda=(j.poderesRonda||[]).concat([id]);
   if(id==="pista"){
-    const ocultas=[...new Set(S.frase.replace(/ /g,""))].filter(c=>!S.abiertas.has(c));
-    if(!ocultas.length)return;
-    const l=ocultas[Math.floor(Math.random()*ocultas.length)];
-    S.usadas.add(l);S.abiertas.add(l);
+    const pos=[...S.frase].map((c,i)=>({c,i})).filter(({c,i})=>c!==" "&&!S.abiertas.has(c)&&!(S.pistaPos&&S.pistaPos.has(i)));
+    if(!pos.length)return;
+    if(!S.pistaPos)S.pistaPos=new Set();
+    const el=pos[Math.floor(Math.random()*pos.length)];
+    S.pistaPos.add(el.i);
     bip(1318,.14,"sine",.06);
-    if([...S.frase].filter(c=>c!==" ").every(c=>S.abiertas.has(c))){
-      const jj=S.jug[S.turno];const gano=jj.ronda*(jj.x2?2:1);jj.tot+=gano;jj.x2=false;jj.rg++;
-      publicar(j.n+" usó 💡 Pista: se reveló la «"+l+"». ¡Frase completa! <b>"+jj.n+"</b> se lleva $"+gano+".","resuelto");
+    if(fraseCompleta()){
+      const jj=S.jug[S.turno];const gano=jj.ronda;jj.tot+=gano;jj.rg++;
+      publicar(j.n+" usó 💡 Pista. ¡Frase completa! <b>"+jj.n+"</b> se lleva $"+gano+".","resuelto");
       if(S.turno===miJug&&destino!==null)sumarRondaColeccion(MUNDO[destino].id);
       setTimeout(tk(nuevaRonda),5200);
-    }else publicar(j.n+" usó 💡 Pista: se reveló la «"+l+"».");
+    }else publicar(j.n+" usó 💡 Pista: se reveló una letra.");
     return;
   }
   if(id==="mate"){
-    publicar(j.n+" usó 🧉 Mate: +10 segundos en el reloj.");
-    if(S.tFin){S.tFin+=10000;V.seg=Math.max(1,Math.round((S.tFin-Date.now())/1000));verReloj();}
+    publicar(j.n+" usó 🧉 Mate: +5 segundos en el reloj.");
+    if(S.tFin){S.tFin+=5000;V.seg=Math.max(1,Math.round((S.tFin-Date.now())/1000));verReloj();}
     return;
   }
   if(id==="comodin"){
-    j.x2=true;
+    j.comodin=true;
     publicar("🔮 "+j.n+" activó un poder en secreto.");
     return;
   }
@@ -2785,40 +2863,143 @@ function aplicarPoderEnHost(jugIdx,id){
     publicar("🔮 "+j.n+" activó un poder en secreto.");
     return;
   }
-  const rivales=S.jug.map((_,i)=>i).filter(i=>i!==jugIdx);
-  const rivalIdx=rivales[Math.floor(Math.random()*rivales.length)];
+  const rivalIdx=S.jug.map((_,i)=>i).find(i=>i!==jugIdx);
   const rival=S.jug[rivalIdx];
   if(id==="hielo"){
-    if(rival.escudo){rival.escudo=false;publicar(j.n+" tiró 🧊 Hielo, ¡pero "+rival.n+" se defendió con un escudo!");}
-    else{rival.congelado=true;publicar(j.n+" tiró 🧊 Hielo: "+rival.n+" va a perder su próximo turno.");}
+    if(rival.escudo){rival.escudo=false;publicar(j.n+" tiró 🧊 Hielo, ¡pero "+rival.n+" se defendió con un escudo!");return;}
+    if(!rival.hielo)rival.hielo={};
+    const libres=LETRAS.filter(l=>!S.usadas.has(l)&&rival.hielo[l]===undefined);
+    const elegidas=[];
+    while(elegidas.length<2&&libres.length)elegidas.push(libres.splice(Math.floor(Math.random()*libres.length),1)[0]);
+    elegidas.forEach(l=>{rival.hielo[l]=0;});
+    publicar(j.n+" tiró 🧊 Hielo: congeló "+elegidas.length+" letra"+(elegidas.length===1?"":"s")+" a "+rival.n+".");
   }else if(id==="lodo"){
-    if(rival.escudo){rival.escudo=false;publicar(j.n+" tiró 🟤 Lodo, ¡pero "+rival.n+" se defendió con un escudo!");}
-    else{
-      const cons=LETRAS.filter(l=>!VOCALES.includes(l)&&!S.usadas.has(l));
-      const elegidas=[];
-      while(elegidas.length<3&&cons.length)elegidas.push(cons.splice(Math.floor(Math.random()*cons.length),1)[0]);
-      rival.bloqLetras=elegidas;
-      publicar(j.n+" tiró 🟤 Lodo: le tapó "+elegidas.length+" letra"+(elegidas.length===1?"":"s")+" a "+rival.n+" por su próximo turno.");
-    }
+    if(rival.escudo){rival.escudo=false;publicar(j.n+" tiró 🟤 Lodo, ¡pero "+rival.n+" se defendió con un escudo!");return;}
+    rival.lodo=true;
+    publicar(j.n+" le tiró 🟤 Lodo a "+rival.n+".");
   }
 }
-function comprarPoder(id){
-  if(modo!=="local"||!S||!PODERES[id])return;
-  if(S.fase!=="girar"&&S.fase!=="consonante"&&S.fase!=="vocal")return;
+function hostHieloTap(jugIdx,l){
+  if(!S||animando)return;
+  const j=S.jug[jugIdx];
+  if(!j.hielo||j.hielo[l]===undefined)return;
+  j.hielo[l]++;
+  if(j.hielo[l]>=3){delete j.hielo[l];bip(660,.15,"triangle",.06);}
+  else bip(320,.08,"sine",.05);
+  publicar(V.aviso||"");
+}
+function hostLodoLimpio(jugIdx){
+  if(!S||S.turno!==jugIdx||S.fase!=="lodo")return;
+  S.jug[jugIdx].lodo=false;S.fase="girar";
+  publicar("💧 "+S.jug[jugIdx].n+" limpió el lodo. ¡Seguí jugando!");
+}
+/* Los invitados (guest online y tvguest) no tienen copia de S: llevan una sombra local
+   de sus propios límites (por turno / por ronda) para deshabilitar botones sin filtrarle
+   nada al rival. El host siempre valida de nuevo con puedeUsarPoder antes de aplicar. */
+let miPoderesRondaSombra=[],miPoderTurnoSombra=false,miPoderRondaIdVista=-1,miTurnoFueMioAntes=false,
+  miEscudoSombra=false,miComodinSombra=false;
+function sincronizarSombraPoderes(){
+  if(!V)return;
+  const miIdx=modo==="tvguest"?tvMiIndex:miJug;
+  if(V.poderRondaId!==miPoderRondaIdVista){
+    miPoderRondaIdVista=V.poderRondaId;miPoderesRondaSombra=[];miPoderTurnoSombra=false;
+    miEscudoSombra=false;miComodinSombra=false;
+  }
+  const esMiTurnoAhora=V.turno===miIdx;
+  if(esMiTurnoAhora&&!miTurnoFueMioAntes)miPoderTurnoSombra=false;
+  miTurnoFueMioAntes=esMiTurnoAhora;
+}
+function puedoUsarPoderGuest(id){
+  sincronizarSombraPoderes();
+  if(miPoderTurnoSombra)return false;
+  if(miPoderesRondaSombra.length>=2||miPoderesRondaSombra.includes(id))return false;
+  return true;
+}
+function registrarUsoPoderGuest(id){
+  miPoderTurnoSombra=true;miPoderesRondaSombra=miPoderesRondaSombra.concat([id]);
+  if(id==="escudo")miEscudoSombra=true;
+  if(id==="comodin")miComodinSombra=true;
+}
+function ejecutarCompraPoder(id){
+  if(!PODERES[id])return;
+  if(modo==="guest"){
+    if(!V||V.turno!==miJug)return;
+    if(V.fase!=="girar"&&V.fase!=="consonante"&&V.fase!=="vocal")return;
+    if(!puedoUsarPoderGuest(id))return;
+    if(meta.monedas<PODERES[id].precio)return;
+    meta.monedas-=PODERES[id].precio;guardarMeta();mundoActualizarHud();
+    registrarUsoPoderGuest(id);
+    enviar({a:"poder",id});
+    pintarTodo();
+    return;
+  }
+  if(!poderesActivosAqui()||!S)return;
+  const jugIdx=(modo==="host")?0:S.turno;
+  if(!puedeUsarPoder(jugIdx,id))return;
   if(meta.monedas<PODERES[id].precio)return;
   meta.monedas-=PODERES[id].precio;guardarMeta();mundoActualizarHud();
-  aplicarPoderEnHost(S.turno,id);
+  aplicarPoderEnHost(jugIdx,id);
 }
-function usarPoderTV(id){
+function ejecutarCompraPoderTV(id){
   if(modo!=="tvguest"||tvMiIndex<0||!PODERES[id])return;
-  if(V.turno!==tvMiIndex)return;
+  if(!V||V.turno!==tvMiIndex)return;
+  if(V.fase!=="girar"&&V.fase!=="consonante"&&V.fase!=="vocal")return;
+  if(!puedoUsarPoderGuest(id))return;
   if(meta.monedas<PODERES[id].precio)return;
   meta.monedas-=PODERES[id].precio;guardarMeta();
+  registrarUsoPoderGuest(id);
   enviar({a:"poder",id});
   renderTVControl();
 }
-document.querySelectorAll("#poderesFila .poder-btn").forEach(b=>{b.onclick=()=>comprarPoder(b.dataset.poder);});
-document.querySelectorAll("#tvcPoderes .poder-btn").forEach(b=>{b.onclick=()=>usarPoderTV(b.dataset.poder);});
+let poderPendienteConfirmar=null;
+function pedirConfirmacionPoder(id){
+  if(!PODERES[id])return;
+  poderPendienteConfirmar=id;
+  $("confirmPoderTxt").textContent="¿Usar "+PODERES[id].nombre+" por 🪙"+PODERES[id].precio+"?";
+  $("confirmPoder").style.display="flex";
+}
+$("confirmPoderNo").onclick=()=>{poderPendienteConfirmar=null;$("confirmPoder").style.display="none";};
+$("confirmPoderSi").onclick=()=>{
+  const id=poderPendienteConfirmar;poderPendienteConfirmar=null;$("confirmPoder").style.display="none";
+  if(id)ejecutarCompraPoder(id);
+};
+let poderPendienteConfirmarTV=null;
+function pedirConfirmacionPoderTV(id){
+  if(!PODERES[id])return;
+  poderPendienteConfirmarTV=id;
+  $("tvcConfirmPoderTxt").textContent="¿Usar "+PODERES[id].nombre+" por 🪙"+PODERES[id].precio+"?";
+  $("tvcConfirmPoder").style.display="flex";
+}
+$("tvcConfirmPoderNo").onclick=()=>{poderPendienteConfirmarTV=null;$("tvcConfirmPoder").style.display="none";};
+$("tvcConfirmPoderSi").onclick=()=>{
+  const id=poderPendienteConfirmarTV;poderPendienteConfirmarTV=null;$("tvcConfirmPoder").style.display="none";
+  if(id)ejecutarCompraPoderTV(id);
+};
+document.querySelectorAll("#poderesFila .poder-btn").forEach(b=>{b.onclick=()=>pedirConfirmacionPoder(b.dataset.poder);});
+document.querySelectorAll("#tvcPoderes .poder-btn").forEach(b=>{b.onclick=()=>pedirConfirmacionPoderTV(b.dataset.poder);});
+(function(){
+  function armarLimpieza(zonaId,manchaId,barraId,alTerminar){
+    const zona=$(zonaId);let limpiando=false,ultX=0,ultY=0,progreso=0;
+    const reset=()=>{progreso=0;$(barraId).style.width="0%";$(manchaId).style.opacity="1";};
+    const mover=(x,y)=>{
+      if(!limpiando)return;
+      progreso=Math.min(100,progreso+Math.hypot(x-ultX,y-ultY)/6);ultX=x;ultY=y;
+      $(barraId).style.width=progreso+"%";$(manchaId).style.opacity=String(1-progreso/100);
+      if(progreso>=100){limpiando=false;alTerminar();}
+    };
+    zona.addEventListener("pointerdown",e=>{limpiando=true;ultX=e.clientX;ultY=e.clientY;try{zona.setPointerCapture(e.pointerId);}catch(err){}});
+    zona.addEventListener("pointermove",e=>mover(e.clientX,e.clientY));
+    zona.addEventListener("pointerup",()=>limpiando=false);
+    zona.addEventListener("pointercancel",()=>limpiando=false);
+    return reset;
+  }
+  window.__resetLodoZona=armarLimpieza("lodoZona","lodoMancha","lodoBarra",()=>{
+    if(modo==="guest")enviar({a:"lodo_limpio"});else hostLodoLimpio(S.turno);
+  });
+  window.__resetLodoZonaTV=armarLimpieza("tvcLodoZona","tvcLodoMancha","tvcLodoBarra",()=>{
+    enviar({a:"lodo_limpio"});
+  });
+})();
 function hostVocal(){
   if(S.fase!=="girar"||animando||S.jug[S.turno].ronda<250)return;
   S.jug[S.turno].ronda-=250;S.fase="vocal";
@@ -2836,7 +3017,7 @@ function hostPista(){
   const l=ocultas[Math.floor(Math.random()*ocultas.length)];
   S.usadas.add(l);S.abiertas.add(l);
   bip(1318,.14,"sine",.06);
-  if([...S.frase].filter(c=>c!==" ").every(c=>S.abiertas.has(c))){
+  if(fraseCompleta()){
     const j=S.jug[S.turno];j.tot+=j.ronda;j.rg++;
     publicar("💡 Pista: se reveló la «"+l+"». ¡Frase completa! <b>"+j.n+"</b> se lleva $"+j.ronda+".","resuelto");
     if(S.turno===miJug&&destino!==null)sumarRondaColeccion(MUNDO[destino].id);
@@ -2858,8 +3039,8 @@ function hostLetra(l){
   if(veces>0){
     bip(1046,.16,"sine",.07);S.abiertas.add(l);
     if(!voc){S.jug[S.turno].ronda+=S.valor*veces*(S.doble?2:1);S.doble=false;}
-    if([...S.frase].filter(c=>c!==" ").every(c=>S.abiertas.has(c))){
-      const j=S.jug[S.turno];const gano=j.ronda*(j.x2?2:1);j.tot+=gano;j.x2=false;j.rg++;
+    if(fraseCompleta()){
+      const j=S.jug[S.turno];const gano=j.ronda;j.tot+=gano;j.rg++;
       publicar("¡Frase completa! <b>"+j.n+"</b> se lleva $"+gano+".","resuelto");
       if(S.turno===miJug&&destino!==null)sumarRondaColeccion(MUNDO[destino].id);
       setTimeout(tk(nuevaRonda),5200);return;
@@ -2867,6 +3048,11 @@ function hostLetra(l){
     S.fase="girar";
     publicar("Hay <b>"+veces+"</b> «"+l+"». Sigue "+S.jug[S.turno].n+
       (consRestantes()===0?": no quedan consonantes, comprá una vocal o resolvé.":": girar, comprar vocal o resolver."));
+  }else if(S.jug[S.turno].comodin){
+    bip(500,.2,"triangle",.06);
+    S.jug[S.turno].comodin=false;
+    S.fase="girar";
+    publicar("🃏 <b>¡Comodín!</b> "+S.jug[S.turno].n+" no tenía «"+l+"», pero conserva el turno.","comodin");
   }else{
     bip(160,.3,"square",.06);
     publicar("No hay «"+l+"». Pasa el turno.","error");
@@ -2879,7 +3065,7 @@ function hostResolver(txt,jugadorToss){
   if(S&&S.fase==="bonus_resolver"){hostResolverBonus(txt);return;}
   if(norm(txt)===norm(S.frase)){
     bip(1318,.25,"sine",.08);[...S.frase].forEach(c=>S.abiertas.add(c));
-    const j=S.jug[S.turno];const gano=j.ronda*(j.x2?2:1);j.tot+=gano;j.x2=false;j.rg++;
+    const j=S.jug[S.turno];const gano=j.ronda;j.tot+=gano;j.rg++;
     publicar("¡Correcto! <b>"+j.n+"</b> resolvió y suma $"+gano+".","resuelto");
     if(S.turno===miJug&&destino!==null)sumarRondaColeccion(MUNDO[destino].id);
     setTimeout(tk(nuevaRonda),5200);
@@ -2890,13 +3076,11 @@ function hostResolver(txt,jugadorToss){
   }
 }
 function cambiarTurno(){
-  S.jug[S.turno].bloqLetras=[];
   S.turno=(S.turno+1)%S.jug.length;S.fase="girar";S.valor=0;S.doble=false;
-  if(S.jug[S.turno].congelado){
-    S.jug[S.turno].congelado=false;S.jug[S.turno].bloqLetras=[];
-    const saltado=S.jug[S.turno].n;
-    S.turno=(S.turno+1)%S.jug.length;
-    publicar(saltado+" estaba congelado ❄️ y perdió el turno. Le toca a <b>"+S.jug[S.turno].n+"</b>.");
+  S.jug[S.turno].poderUsadoTurno=false;
+  if(S.jug[S.turno].lodo){
+    S.fase="lodo";
+    publicar(S.jug[S.turno].n+" recibió 🟤 <b>Lodo</b>. Hay que limpiar la pantalla para seguir jugando.");
     return;
   }
   publicar("Le toca a <b>"+S.jug[S.turno].n+"</b>.");}
@@ -2987,7 +3171,8 @@ function revancha(){
   matchToken++;botPausado=0;
   limpiarToss();limpiarBonus();arranca=(arranca+1)%S.jug.length;S.finYa=false;S.finalPendiente=null;
   S.bonusCons=[];S.bonusVocal=null;S.bonusGanador=null;S.bonusFin=0;
-  S.jug.forEach(j=>{j.tot=0;j.ronda=0;j.rg=0;j.escudo=false;j.congelado=false;j.bloqLetras=[];j.x2=false;});
+  S.jug.forEach(j=>{j.tot=0;j.ronda=0;j.rg=0;j.escudo=false;j.hielo={};j.lodo=false;j.comodin=false;j.poderesRonda=[];j.poderUsadoTurno=false;});
+  S.poderRondaId=(S.poderRondaId||0)+1;S.pistaPos=new Set();
   S.turno=arranca;S.ronda=0;S.normalesDesdeToss=0;S.valor=0;S.fase="girar";
   S.mazo=nuevoMazo(S.cats);
   $("modalFin").classList.remove("ver");
@@ -3180,6 +3365,7 @@ function dibujarReloj(){
   if(n!==ultSeg){if(n<=5&&n>0)bip(n<=3?1150:820,.06,"square",.05);ultSeg=n;}
 }
 const esMiTurno=()=>modo==="local"||V.turno===(modo==="tvguest"?tvMiIndex:miJug);
+let lodoFaseAnteriorJuego=false,lodoFaseAnteriorTV=false;
 function pintar(){
   asegurarMarcador();
   V.jug.forEach((j,i)=>{const e=$("j"+i);if(!e)return;
@@ -3215,27 +3401,53 @@ function pintar(){
   }else{
     $("bPista").style.display="none";
   }
-  if(modo==="local"){
-    $("poderesFila").style.display="grid";
-    const puedeUsar=!animando&&(V.fase==="girar"||V.fase==="consonante"||V.fase==="vocal");
+  if(poderesActivosAqui()){
     document.querySelectorAll("#poderesFila .poder-btn").forEach(b=>{
       const id=b.dataset.poder;
-      b.disabled=!puedeUsar||meta.monedas<PODERES[id].precio;
+      let puede,usado=false,activo=false;
+      if(modo==="guest"){
+        sincronizarSombraPoderes();
+        puede=mio&&puedoUsarPoderGuest(id);
+        usado=miPoderesRondaSombra.includes(id);
+        activo=(id==="escudo"&&miEscudoSombra)||(id==="comodin"&&miComodinSombra);
+      }else{
+        const jugIdx=modo==="host"?0:V.turno;
+        puede=puedeUsarPoder(jugIdx,id);
+        const jRef=S&&S.jug[jugIdx];
+        if(jRef){usado=(jRef.poderesRonda||[]).includes(id);activo=(id==="escudo"&&jRef.escudo)||(id==="comodin"&&jRef.comodin);}
+      }
+      b.disabled=!puede||meta.monedas<PODERES[id].precio;
+      b.classList.toggle("usado",usado);
+      b.classList.toggle("activo",activo);
     });
-  }else{
-    $("poderesFila").style.display="none";
   }
-  [...$("teclado").children].forEach(b=>{const l=b.dataset.l,voc=VOCALES.includes(l);
+  const enLodo=V.fase==="lodo"&&mio;
+  document.querySelector(".acciones").style.display=enLodo?"none":"grid";
+  $("poderesFila").style.display=(poderesActivosAqui()&&!enLodo)?"grid":"none";
+  $("teclado").style.display=enLodo?"none":"grid";
+  $("lodoZona").style.display=enLodo?"flex":"none";
+  if(enLodo&&!lodoFaseAnteriorJuego)window.__resetLodoZona&&window.__resetLodoZona();
+  lodoFaseAnteriorJuego=enLodo;
+  if(!enLodo)[...$("teclado").children].forEach(b=>{const l=b.dataset.l,voc=VOCALES.includes(l);
     if(bonusElegir){
       const cupoLleno=voc?!!V.bonusVocal:(V.bonusCons||[]).length>=3;
       b.disabled=!miBonus||V.usadas.includes(l)||cupoLleno;
-    }else b.disabled=!mio||V.usadas.includes(l)||(V.bloqLetras||[]).includes(l)||(V.fase==="consonante"&&voc)||(V.fase==="vocal"&&!voc)||(V.fase!=="consonante"&&V.fase!=="vocal");
+    }else b.disabled=!mio||V.usadas.includes(l)||(V.fase==="consonante"&&voc)||(V.fase==="vocal"&&!voc)||(V.fase!=="consonante"&&V.fase!=="vocal");
+    const grieta=V.hielo&&V.hielo[l];
+    b.classList.toggle("congelada",grieta!==undefined);
+    if(grieta!==undefined)b.dataset.grieta=grieta;else delete b.dataset.grieta;
   });
 }
 
 $("bGirar").onclick=()=>{if(modo==="guest")enviar({a:"girar"});else hostGirar();};
 $("bVocal").onclick=()=>{if(modo==="guest")enviar({a:"vocal"});else hostVocal();};
-function accionLetra(l){if(modo==="guest")enviar({a:"letra",l});else hostLetra(l);}
+function accionLetra(l){
+  if(V&&V.hielo&&V.hielo[l]!==undefined){
+    if(modo==="guest")enviar({a:"hielo_tap",l});else hostHieloTap(S.turno,l);
+    return;
+  }
+  if(modo==="guest")enviar({a:"letra",l});else hostLetra(l);
+}
 function abrirResolver(jugador){
   const esToss=V.fase==="tossup",esBonus=V.fase==="bonus_resolver";
   tossRespondedor=(jugador===0||jugador===1)?jugador:null;
