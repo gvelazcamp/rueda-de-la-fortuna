@@ -3597,6 +3597,8 @@ function finDelJuego(){
   if(modo==="bot"){
     const d=destino!==null?MUNDO[destino]:null;
     fSiguientePaso=null;
+    const bonusJugado=Math.floor((a.tot||0)/20);
+    if(bonusJugado>0){sumarMonedas(bonusJugado);mundoActualizarHud();}
     if(g===0){
       tit=d?"¡"+d.n+" conquistado!":"¡Ganaste!";
       let selloImg;
@@ -3605,10 +3607,12 @@ function finDelJuego(){
         if(CIUDAD_RICA[d.id])selloImg=CIUDAD_RICA[d.id].sellos[4].img;
         logroDesbloquear(d.id+"100");
         extra=(MUNDO[destino+1]?" Se abrió "+MUNDO[destino+1].n+".":" ¡Terminaste el mapa!")+" +500 🪙";}
+      if(bonusJugado>0)extra+=" +"+bonusJugado+" 🪙 por lo jugado.";
       iniciarBonus(g,{g,tit,extra,selloImg});return;
     }
     if(g<0)tit="¡Empate!";
     else{tit="Te ganó "+b.n;extra=" Probá de nuevo cuando quieras.";}
+    if(bonusJugado>0)extra+=" +"+bonusJugado+" 🪙 por lo jugado.";
     S.fase="fin";pararReloj();publicar("Partida terminada.");
     $("fMapa").style.display="block";$("fSalir").style.display="none";
     $("fMapa").textContent="Volver al mapa";
