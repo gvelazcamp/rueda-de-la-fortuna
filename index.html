@@ -377,7 +377,7 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
  opacity:.65;margin-left:2px}
 #bRuleta .btn-ico,#bTienda .btn-ico,#bLogros .btn-ico{background:#F5B30130;color:var(--oro)}
 #bTV .btn-ico,#bEntrarTV .btn-ico{background:#37D6C030;color:var(--agua)}
-#bUnirse .btn-ico,#bLocal .btn-ico,#bBot .btn-ico{background:#E5197C26;color:#FF9AC4}
+#bUnirse .btn-ico,#bBot .btn-ico{background:#E5197C26;color:#FF9AC4}
 .setup-tagline{margin:20px 0 6px;color:#E9C9F0;font-weight:700;font-size:.95rem}
 .setup-ola{margin-top:6px;line-height:0}
 .setup-ola svg{display:block;width:100%;height:44px}
@@ -675,7 +675,6 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
     <button class="btn-grande sec" id="bBot"><span class="btn-ico">🇺🇾</span><span class="btn-txt">Uruguay — jugar solo</span></button>
     <button class="btn-grande sec" id="bCrear"><span class="btn-ico">👥</span><span class="btn-txt">Crear sala y pasar el código</span></button>
     <button class="btn-grande sec" id="bUnirse"><span class="btn-ico">🎟️</span><span class="btn-txt">Entrar con un código</span></button>
-    <button class="btn-grande sec" id="bLocal"><span class="btn-ico">🧑‍🤝‍🧑</span><span class="btn-txt">Jugar los dos en este celular</span></button>
     <button class="btn-grande sec rw-boton" id="bRuleta"><span class="btn-ico">🎡</span><span class="btn-txt">Ruleta de premios</span><span id="rwBotonEstado" class="rw-badge"></span></button>
     <button class="btn-grande sec" id="bTienda"><span class="btn-ico">🛍️</span><span class="btn-txt">Tienda</span></button>
     <button class="btn-grande sec" id="bCompartirJuego"><span class="btn-ico">📤</span><span class="btn-txt">Compartir el juego</span></button>
@@ -2890,13 +2889,6 @@ $("tvcEnviarResp").onclick=()=>{const t=$("tvcRespuesta").value.trim();if(!t)ret
 $("tvcRespuesta").addEventListener("keydown",e=>{if(e.key==="Enter")$("tvcEnviarResp").click();});
 $("tvcReacciones").addEventListener("click",e=>{const b=e.target.closest("button");if(b)enviar({a:"reaccion",e:b.dataset.e});});
 
-$("bLocal").onclick=()=>{
-  modo="local";const n=$("miNombre").value.trim()||"Jugador 1";
-  const otro=(prompt("Nombre del segundo jugador","Rival")||"Jugador 2").slice(0,12);
-  $("setup").style.display="none";$("juego").style.display="block";
-  armarTeclado();iniciarPartida(n,otro,undefined,perfil.avatar||null,null,frameEquipado||null,null);
-};
-
 $("bCrear").onclick=()=>{
   modo="host";miJug=0;
   $("setup").style.display="none";$("lobby").style.display="block";
@@ -2907,7 +2899,7 @@ $("bCrear").onclick=()=>{
     mq.subscribe(tema("accion"));
     mq.on("message",(t,pl)=>{if(t===tema("accion")){try{recibirHost(JSON.parse(pl.toString()));}catch(e){}}});
     $("estado").textContent="Sala lista. Esperando al otro jugador…";
-  },()=>{$("estado").textContent="No se pudo conectar a internet para la sala. Probá con otra red (datos del celular) o usá «Jugar los dos en este celular».";});
+  },()=>{$("estado").textContent="No se pudo conectar a internet para la sala. Probá con otra red (datos del celular).";});
 };
 
 const invitacion=()=>"Jugamos a Girá y Adiviná\n"+location.origin+location.pathname+"?sala="+sala+"\nCódigo: "+sala;
@@ -2949,14 +2941,14 @@ $("miNombre").addEventListener("change",()=>{try{localStorage.setItem("larueda_n
 
 const tvEnLink=(new URLSearchParams(location.search).get("tv")||"").toUpperCase();
 if(tvEnLink){
-  $("bCrear").style.display="none";$("bLocal").style.display="none";$("bBot").style.display="none";$("bTV").style.display="none";$("bUnirse").style.display="none";
+  $("bCrear").style.display="none";$("bBot").style.display="none";$("bTV").style.display="none";$("bUnirse").style.display="none";
   document.querySelector("#setup p.sub").textContent="Te invitaron a una Sala TV. Escribí tu nombre y entrá.";
   $("bEntrarTV").className="btn-grande";$("bEntrarTV").textContent="Entrar a Sala TV "+tvEnLink;
   $("bEntrarTV").onclick=()=>{const n=$("miNombre").value.trim();if(!n){$("miNombre").focus();return;}try{localStorage.setItem("larueda_nombre",n);}catch(e){}unirseTV(tvEnLink);};
 }
 const salaEnLink=(new URLSearchParams(location.search).get("sala")||"").toUpperCase();
 if(salaEnLink){
-  $("bCrear").style.display="none";$("bLocal").style.display="none";
+  $("bCrear").style.display="none";
   $("bBot").style.display="none";$("bTV").style.display="none";$("bEntrarTV").style.display="none";
   document.querySelector("#setup p.sub").textContent="Te invitaron a jugar. Poné tu nombre y entrá.";
   $("bUnirse").className="btn-grande";
