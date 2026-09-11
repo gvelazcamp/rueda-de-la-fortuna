@@ -276,6 +276,8 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 .logro-toast-icono{font-size:2rem;flex-shrink:0}
 .logro-toast b{display:block;font-family:'Archivo Black',sans-serif;font-size:.82rem}
 .logro-toast span{font-size:.85rem;font-weight:700}
+.info-toast{background:linear-gradient(135deg,#2A1A3C,#3A2450);color:var(--crema);border:1px solid #FFFFFF26}
+.info-toast span{font-weight:500;line-height:1.35}
 
 /* Sobres y colección de Durazno */
 .sobre-conseguido-img{width:150px;margin:0 auto 14px;display:block;
@@ -937,6 +939,10 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
 <div class="logro-toast" id="logroToast">
   <span class="logro-toast-icono" id="logroToastIcono"></span>
   <div><b>¡Logro desbloqueado!</b><span id="logroToastNombre"></span></div>
+</div>
+<div class="logro-toast info-toast" id="infoToast">
+  <span class="logro-toast-icono" id="infoToastIcono"></span>
+  <span id="infoToastTxt"></span>
 </div>
 
 <section id="lobby">
@@ -1996,16 +2002,25 @@ function colEncontrados(cual){
   const tenidos=new Set(cm.coleccionables);
   return c.items.filter(it=>tenidos.has(it.id)).length;
 }
-function mostrarToast(icono,texto,ms){
+function mostrarToast(icono,texto){
   $("logroToastIcono").textContent=icono;
   $("logroToastNombre").textContent=texto;
   $("logroToast").classList.add("ver");
   bip(700,.2,"sine",.08);
   clearTimeout(logroToastTimer);
-  logroToastTimer=setTimeout(()=>$("logroToast").classList.remove("ver"),ms||2600);
+  logroToastTimer=setTimeout(()=>$("logroToast").classList.remove("ver"),2600);
+}
+let infoToastTimer=null;
+function mostrarInfoToast(icono,texto,ms){
+  $("infoToastIcono").textContent=icono;
+  $("infoToastTxt").textContent=texto;
+  $("infoToast").classList.add("ver");
+  bip(700,.2,"sine",.08);
+  clearTimeout(infoToastTimer);
+  infoToastTimer=setTimeout(()=>$("infoToast").classList.remove("ver"),ms||3500);
 }
 function explicarMonedas(){
-  mostrarToast("🪙","Estas son tus monedas: se ganan jugando, con Objetivos diarios y la Ruleta. Se usan para comprar poderes, pistas y sobres en la Tienda.",4200);
+  mostrarInfoToast("🪙","Estas son tus monedas: se ganan jugando, con Objetivos diarios y la Ruleta. Se usan para comprar poderes, pistas y sobres en la Tienda.",4200);
 }
 if($("setupMonedas"))$("setupMonedas").onclick=explicarMonedas;
 if($("mhMonedas"))$("mhMonedas").onclick=explicarMonedas;
