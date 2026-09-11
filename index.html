@@ -1161,6 +1161,16 @@ function sincronizarMusica(){
 function detenerMusica(){
   if(audioMusica&&!audioMusica.paused)audioMusica.pause();
 }
+try{
+  if("mediaSession" in navigator){
+    navigator.mediaSession.setActionHandler("pause",()=>{
+      musicaOn=false;guardarMusica();detenerMusica();actualizarBotonMusica();
+    });
+    navigator.mediaSession.setActionHandler("play",()=>{
+      musicaOn=true;guardarMusica();sincronizarMusica();actualizarBotonMusica();
+    });
+  }
+}catch(e){}
 /* ---- Instalar como app (PWA) ---- */
 if("serviceWorker" in navigator){
   window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});
