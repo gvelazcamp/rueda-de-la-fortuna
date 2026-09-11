@@ -663,7 +663,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
       <button id="btnMusica" type="button" title="Silenciar música">🔊</button>
     </div>
   </div>
-  <div class="campo"><span>Tu nombre</span><input id="miNombre" placeholder="escribí tu nombre" maxlength="12" autocomplete="off"></div>
+  <div class="campo" id="campoNombre"><span>Tu nombre</span><input id="miNombre" placeholder="escribí tu nombre" maxlength="12" autocomplete="off"></div>
   <div class="rondas" id="rondas">
     <button data-r="3" aria-pressed="true">3 rondas</button>
     <button data-r="5" aria-pressed="false">5 rondas</button>
@@ -2620,6 +2620,7 @@ function actualizarChipPerfil(){
     $("perfilNombreTxt").textContent=perfil.nombre;
     pintarMiMarco("perfilFrameImg");
   }else chip.style.display="none";
+  if($("campoNombre"))$("campoNombre").style.display=perfilExiste()?"none":"";
 }
 function guardarPerfil(nombre,avatar){
   perfil={nombre,avatar};
@@ -2945,7 +2946,7 @@ function unirse(cod){
 }
 $("bConectar").onclick=()=>{const c=$("codigoInput").value.trim().toUpperCase();if(modo==="tvguest")unirseTV(c);else unirse(c);};
 
-try{$("miNombre").value=localStorage.getItem("larueda_nombre")||"";}catch(e){}
+try{$("miNombre").value=perfil.nombre||localStorage.getItem("larueda_nombre")||"";}catch(e){}
 $("miNombre").addEventListener("change",()=>{try{localStorage.setItem("larueda_nombre",$("miNombre").value.trim());}catch(e){}});
 
 const tvEnLink=(new URLSearchParams(location.search).get("tv")||"").toUpperCase();
