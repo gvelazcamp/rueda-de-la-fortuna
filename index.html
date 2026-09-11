@@ -658,7 +658,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
     </div>
     <div class="setup-stats">
       <span class="stat-pill stat-racha" id="setupRacha" title="Racha de días jugados">🔥 <b>0</b></span>
-      <span class="stat-pill stat-monedas" id="setupMonedas" title="Monedas: se ganan jugando y sirven para comprar en la Tienda">🪙 <b>0</b></span>
+      <span class="stat-pill stat-monedas" id="setupMonedas" title="Monedas: se ganan jugando y sirven para comprar en la Tienda">🪙 <b>0</b> monedas</span>
       <span class="stat-pill stat-vidas" id="setupVidas">❤️ <b>0</b></span>
       <button id="btnMusica" type="button" title="Silenciar música">🔊</button>
     </div>
@@ -672,7 +672,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
   <p class="estado" id="stockFrases" style="margin:-2px 0 14px"></p>
   <div class="setup-menu">
     <button class="btn-grande" id="bInstalar" style="display:none"><span class="btn-ico">📲</span><span class="btn-txt">Instalar app en el celular</span></button>
-    <button class="btn-grande sec" id="bBot"><span class="btn-ico">🇺🇾</span><span class="btn-txt">Uruguay — jugar solo</span></button>
+    <button class="btn-grande sec" id="bBot"><span class="btn-ico">🇺🇾</span><span class="btn-txt">Uruguay - Jugar</span></button>
     <button class="btn-grande sec" id="bCrear"><span class="btn-ico">👥</span><span class="btn-txt">Crear sala y pasar el código</span></button>
     <button class="btn-grande sec" id="bUnirse"><span class="btn-ico">🎟️</span><span class="btn-txt">Entrar con un código</span></button>
     <button class="btn-grande sec rw-boton" id="bRuleta"><span class="btn-ico">🎡</span><span class="btn-txt">Ruleta de premios</span><span id="rwBotonEstado" class="rw-badge"></span></button>
@@ -710,7 +710,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
 
 <section id="mundo">
   <h1 class="titulo" style="font-size:2.4rem">URUGUAY</h1>
-  <div class="mundo-hud"><span id="mhVidas">❤️ 5</span><span class="mh-monedas" id="mhMonedas" title="Monedas: se ganan jugando y sirven para comprar en la Tienda">🪙 500</span></div>
+  <div class="mundo-hud"><span id="mhVidas">❤️ 5</span><span class="mh-monedas" id="mhMonedas" title="Monedas: se ganan jugando y sirven para comprar en la Tienda">🪙 500 monedas</span></div>
   <p class="sub" id="subMundo">Ganale a cada rival y andá abriendo el país.</p>
   <div id="mapa"></div>
   <button class="btn-grande sec" id="salirMundo">Volver al inicio</button>
@@ -722,7 +722,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
     <div class="dz-jugador" id="dzJugador"><span class="avatar-wrap"><img id="dzJugadorAvatar" src="" alt=""><img class="avatar-frame" id="dzJugadorFrameImg" alt=""></span><span id="dzJugadorNombre"></span></div>
     <div class="dz-vidasmonedas">
       <div class="dz-vidas"><span id="dzVidas">❤️ 5</span><small id="dzProxima"></small></div>
-      <div class="dz-monedas" id="dzMonedas">🪙 500</div>
+      <div class="dz-monedas" id="dzMonedas" title="Monedas: se ganan jugando y sirven para comprar en la Tienda">🪙 500 monedas</div>
     </div>
   </div>
   <div class="dz-viewport-wrap">
@@ -1005,7 +1005,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
 
 <section id="juego">
   <div id="jgHud">
-    <div id="jgMonedas" title="Monedas: se ganan jugando y sirven para comprar en la Tienda">🪙 0</div>
+    <div id="jgMonedas" title="Monedas: se ganan jugando y sirven para comprar en la Tienda">🪙 0 monedas</div>
     <div id="jgSobre" style="display:none">🎁 0/3</div>
   </div>
   <div class="serie" id="serie"></div>
@@ -1408,10 +1408,10 @@ $("objLista").addEventListener("click",e=>{
 function mundoActualizarHud(){
   regenerarVidas();
   if($("mhVidas"))$("mhVidas").textContent="❤️ "+meta.vidas;
-  if($("mhMonedas"))$("mhMonedas").textContent="🪙 "+meta.monedas;
-  if($("jgMonedas"))$("jgMonedas").textContent="🪙 "+meta.monedas;
+  if($("mhMonedas"))$("mhMonedas").textContent="🪙 "+meta.monedas+" monedas";
+  if($("jgMonedas"))$("jgMonedas").textContent="🪙 "+meta.monedas+" monedas";
   if($("setupVidas"))$("setupVidas").innerHTML="❤️ <b>"+meta.vidas+"</b>";
-  if($("setupMonedas"))$("setupMonedas").innerHTML="🪙 <b>"+meta.monedas+"</b>";
+  if($("setupMonedas"))$("setupMonedas").innerHTML="🪙 <b>"+meta.monedas+"</b> monedas";
   if($("setupRacha"))$("setupRacha").innerHTML="🔥 <b>"+meta.diaRacha+"</b>";
 }
 function fechaHoy(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
@@ -2360,7 +2360,7 @@ function dzProgresoTxt(){
 function dzActualizarHud(){
   regenerarVidas();
   $("dzVidas").textContent="❤️ "+meta.vidas;
-  $("dzMonedas").textContent="🪙 "+meta.monedas;
+  $("dzMonedas").textContent="🪙 "+meta.monedas+" monedas";
   $("dzProxima").textContent=textoProxima();
   const jug=$("dzJugador");
   if(perfilExiste()){
