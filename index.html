@@ -490,8 +490,6 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 .lodo-zona p{position:relative;z-index:1;margin:0;font-weight:700;color:var(--crema);font-size:1rem;
  text-shadow:0 2px 6px #000;background:#000000AA;padding:9px 18px;border-radius:99px}
 .lodo-mancha{position:absolute;inset:0;width:100%;height:100%;z-index:0;touch-action:none}
-.lodo-barra{position:relative;z-index:1;width:100%;max-width:280px;height:12px;border-radius:6px;background:#00000066;overflow:hidden}
-.lodo-barra-fill{width:0%;height:100%;background:linear-gradient(90deg,#A9793F,var(--oro));transition:width .1s}
 .teclado{display:grid;grid-template-columns:repeat(9,1fr);gap:5px}
 .teclado button.congelada{background:linear-gradient(160deg,#cdeeff,#8fd0ee);color:#0b3550;border-color:#eafcff;position:relative}
 .teclado button.congelada::after{content:"❄️";position:absolute;top:0;right:1px;font-size:.55rem}
@@ -975,7 +973,6 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
   <div class="lodo-zona" id="tvcLodoZona" style="display:none">
     <canvas class="lodo-mancha" id="tvcLodoMancha"></canvas>
     <p>🧹 Deslizá para limpiar el lodo</p>
-    <div class="lodo-barra"><div class="lodo-barra-fill" id="tvcLodoBarra"></div></div>
   </div>
   <div class="confirm-poder" id="tvcConfirmPoder" style="display:none">
     <p id="tvcConfirmPoderTxt"></p>
@@ -1019,7 +1016,6 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
       <div class="lodo-zona" id="lodoZona" style="display:none">
         <canvas class="lodo-mancha" id="lodoMancha"></canvas>
         <p>🧹 Deslizá para limpiar el lodo</p>
-        <div class="lodo-barra"><div class="lodo-barra-fill" id="lodoBarra"></div></div>
       </div>
       <div class="teclado" id="teclado"></div>
       <div class="confirm-poder" id="confirmPoder" style="display:none">
@@ -3413,9 +3409,12 @@ document.querySelectorAll("#tvcPoderes .poder-btn").forEach(b=>{b.onclick=()=>pe
   const lodoPendientes=[];
   imgLodo.onload=()=>{lodoPendientes.forEach(fn=>fn());};
   imgLodo.src="assets/powers/lodo-mancha.webp";
-  function armarLimpieza(zonaId,manchaId,barraId,alTerminar){
+  const UMBRAL_LIMPIO=.8;
+  function armarLimpieza(zonaId,manchaId,alTerminar){
     const zona=$(zonaId),canvas=$(manchaId),ctx=canvas.getContext("2d");
-    let limpiando=false,ultX=0,ultY=0,progreso=0,radioBorrado=60;
+    const chk=document.createElement("canvas"),chkCtx=chk.getContext("2d",{willReadFrequently:true});
+    chk.width=48;chk.height=64;
+    let limpiando=false,radioBorrado=60,terminado=false;
     const manchon=(cx,cy,r)=>{
       ctx.fillStyle="#4a3018";
       ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
@@ -3426,48 +3425,53 @@ document.querySelectorAll("#tvcPoderes .poder-btn").forEach(b=>{b.onclick=()=>pe
       ctx.drawImage(imgLodo,-size/2,-size/2,size,size);
       ctx.restore();
     };
+    const dibujar=(cx,cy,size,ang,sx,sy)=>{
+      if(imgLodo.complete&&imgLodo.naturalWidth)manchonImg(cx,cy,size,ang);
+      else manchon(cx,cy,size/2);
+      chkCtx.fillStyle="#4a3018";
+      chkCtx.beginPath();chkCtx.arc(cx*sx,cy*sy,(size/2)*((sx+sy)/2),0,Math.PI*2);chkCtx.fill();
+    };
     const pintarLodo=()=>{
       const w=Math.ceil(window.innerWidth||1),h=Math.ceil(window.innerHeight||1);
       canvas.width=w;canvas.height=h;
       const diag=Math.hypot(w,h);
-      radioBorrado=diag*.11;
-      ctx.globalCompositeOperation="source-over";
-      ctx.clearRect(0,0,w,h);
-      if(imgLodo.complete&&imgLodo.naturalWidth){
-        const nGrandes=6+Math.floor(Math.random()*3);
-        for(let i=0;i<nGrandes;i++)manchonImg(Math.random()*w,Math.random()*h,diag*(.32+Math.random()*.2),Math.random()*Math.PI*2);
-        const nChicas=6+Math.floor(Math.random()*4);
-        for(let i=0;i<nChicas;i++)manchonImg(Math.random()*w,Math.random()*h,diag*(.13+Math.random()*.1),Math.random()*Math.PI*2);
-      }else{
-        const nGrandes=5+Math.floor(Math.random()*3);
-        for(let i=0;i<nGrandes;i++)manchon(Math.random()*w,Math.random()*h,diag*(.22+Math.random()*.13));
-        for(let i=0;i<10;i++)manchon(Math.random()*w,Math.random()*h,diag*(.07+Math.random()*.06));
-      }
+      radioBorrado=diag*.1;
+      terminado=false;
+      ctx.globalCompositeOperation="source-over";ctx.clearRect(0,0,w,h);
+      chkCtx.globalCompositeOperation="source-over";chkCtx.clearRect(0,0,chk.width,chk.height);
+      const sx=chk.width/w,sy=chk.height/h;
+      const nGrandes=6+Math.floor(Math.random()*3);
+      for(let i=0;i<nGrandes;i++)dibujar(Math.random()*w,Math.random()*h,diag*(.32+Math.random()*.2),Math.random()*Math.PI*2,sx,sy);
+      const nChicas=6+Math.floor(Math.random()*4);
+      for(let i=0;i<nChicas;i++)dibujar(Math.random()*w,Math.random()*h,diag*(.13+Math.random()*.1),Math.random()*Math.PI*2,sx,sy);
     };
     lodoPendientes.push(()=>{if(zona.style.display!=="none")pintarLodo();});
-    const reset=()=>{progreso=0;$(barraId).style.width="0%";pintarLodo();};
+    const reset=()=>{pintarLodo();};
+    const cobertura=()=>{
+      const d=chkCtx.getImageData(0,0,chk.width,chk.height).data;
+      let suma=0;
+      for(let i=3;i<d.length;i+=4)suma+=d[i];
+      return 1-suma/(255*chk.width*chk.height);
+    };
     const limpiarEn=(x,y)=>{
+      const sx=chk.width/canvas.width,sy=chk.height/canvas.height;
       ctx.globalCompositeOperation="destination-out";
       ctx.beginPath();ctx.arc(x,y,radioBorrado,0,Math.PI*2);ctx.fill();
+      chkCtx.globalCompositeOperation="destination-out";
+      chkCtx.beginPath();chkCtx.arc(x*sx,y*sy,radioBorrado*((sx+sy)/2),0,Math.PI*2);chkCtx.fill();
+      if(!terminado&&cobertura()>=UMBRAL_LIMPIO){terminado=true;limpiando=false;alTerminar();}
     };
-    const mover=(x,y)=>{
-      if(!limpiando)return;
-      progreso=Math.min(100,progreso+Math.hypot(x-ultX,y-ultY)/6);ultX=x;ultY=y;
-      $(barraId).style.width=progreso+"%";
-      limpiarEn(x,y);
-      if(progreso>=100){limpiando=false;alTerminar();}
-    };
-    zona.addEventListener("pointerdown",e=>{limpiando=true;ultX=e.clientX;ultY=e.clientY;limpiarEn(e.clientX,e.clientY);try{zona.setPointerCapture(e.pointerId);}catch(err){}});
-    zona.addEventListener("pointermove",e=>mover(e.clientX,e.clientY));
+    zona.addEventListener("pointerdown",e=>{limpiando=true;limpiarEn(e.clientX,e.clientY);try{zona.setPointerCapture(e.pointerId);}catch(err){}});
+    zona.addEventListener("pointermove",e=>{if(limpiando)limpiarEn(e.clientX,e.clientY);});
     zona.addEventListener("pointerup",()=>limpiando=false);
     zona.addEventListener("pointercancel",()=>limpiando=false);
     reset();
     return reset;
   }
-  window.__resetLodoZona=armarLimpieza("lodoZona","lodoMancha","lodoBarra",()=>{
+  window.__resetLodoZona=armarLimpieza("lodoZona","lodoMancha",()=>{
     if(modo==="guest")enviar({a:"lodo_limpio"});else hostLodoLimpio(S.turno);
   });
-  window.__resetLodoZonaTV=armarLimpieza("tvcLodoZona","tvcLodoMancha","tvcLodoBarra",()=>{
+  window.__resetLodoZonaTV=armarLimpieza("tvcLodoZona","tvcLodoMancha",()=>{
     enviar({a:"lodo_limpio"});
   });
 })();
