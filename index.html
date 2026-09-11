@@ -146,7 +146,8 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
  transition:width .4s ease}
 #dzBoton:disabled{opacity:.5}
 .mundo-hud{display:flex;justify-content:center;align-items:center;gap:18px;margin-bottom:10px;font-weight:700}
-.mundo-hud .mh-monedas{color:var(--oro)}
+.mundo-hud .mh-monedas{color:var(--oro);cursor:pointer}
+#setupMonedas,#jgMonedas{cursor:pointer}
 
 /* Pasaporte de Durazno */
 .passport-backdrop{position:fixed;inset:0;z-index:100;display:none;place-items:center;
@@ -263,9 +264,10 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 .rk-info b{font-size:.9rem}
 .rk-info span{font-size:.72rem;color:#B49FCE}
 .rk-monedas{font-weight:800;color:var(--oro);font-size:.85rem;flex-shrink:0;white-space:nowrap}
-.rk-borrar{background:transparent;border:none;color:#B49FCE88;font-size:1.3rem;font-weight:800;line-height:1;padding:2px 4px;flex-shrink:0;border-radius:6px}
-.rk-borrar:hover{color:#F09595;background:#F0959522}
 .lg-check{font-size:1.3rem;color:#1DBF5F;flex-shrink:0}
+#xGlobalCerrar{display:none;position:fixed;top:14px;right:14px;z-index:60;width:38px;height:38px;
+ border-radius:50%;background:#2A1A3CEE;color:var(--crema);border:1px solid #FFFFFF33;
+ font-size:1.05rem;font-weight:800;box-shadow:0 4px 12px #0008;cursor:pointer}
 .logro-toast{position:fixed;top:-120px;left:50%;transform:translateX(-50%);z-index:200;
  display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#F5B301,#FFE39B);
  color:var(--tinta);border-radius:16px;padding:12px 20px;box-shadow:0 10px 30px #000000AA;
@@ -931,6 +933,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
   </div>
 </div></div>
 
+<button id="xGlobalCerrar" aria-label="Cerrar">✕</button>
 <div class="logro-toast" id="logroToast">
   <span class="logro-toast-icono" id="logroToastIcono"></span>
   <div><b>¡Logro desbloqueado!</b><span id="logroToastNombre"></span></div>
@@ -1727,8 +1730,7 @@ async function rkCargarTabla(){
     d.innerHTML='<div class="rk-puesto">'+(i+1)+'</div>'+
       '<div class="rk-info"><b>'+rkEsc(f.apodo)+(f.apodo===rkPerfil.apodo?" (vos)":"")+'</b>'+
       '<span>🗺️ '+f.ciudades_ganadas+'/9 · 🏆 racha '+f.mejor_racha+' · 🏅 '+f.logros+'</span></div>'+
-      '<div class="rk-monedas">🪙 '+f.monedas_totales+'</div>'+
-      '<button class="rk-borrar" data-apodo="'+rkEsc(f.apodo)+'" title="Eliminar del ranking">×</button>';
+      '<div class="rk-monedas">🪙 '+f.monedas_totales+'</div>';
     cont.appendChild(d);
   });
   $("rkEstado").textContent=(data&&data.length)?"":"Todavía no hay nadie más — invitá amigos.";
@@ -1765,13 +1767,6 @@ $("rkCrear").onclick=async()=>{
   rkMostrarTabla();
 };
 $("rkSalir").onclick=rkMostrarSetup;
-$("rkLista").onclick=async(e)=>{
-  const b=e.target.closest(".rk-borrar");if(!b)return;
-  const apodo=b.dataset.apodo;
-  if(!confirm('¿Eliminar a "'+apodo+'" del ranking?'))return;
-  try{await supa.from("gya_ranking").delete().eq("grupo",RK_GRUPO).eq("apodo",apodo);}catch(e){}
-  rkCargarTabla();
-};
 $("rkCompartir").onclick=async()=>{
   const t="Sumate a mi ranking de Girá y Adiviná — entrá a «Ranking de amigos» y ponete un apodo.\n"+location.origin+location.pathname;
   try{await navigator.clipboard.writeText(t);$("rkCompartir").textContent="✅ Copiado";}
@@ -2001,14 +1996,33 @@ function colEncontrados(cual){
   const tenidos=new Set(cm.coleccionables);
   return c.items.filter(it=>tenidos.has(it.id)).length;
 }
-function mostrarToast(icono,texto){
+function mostrarToast(icono,texto,ms){
   $("logroToastIcono").textContent=icono;
   $("logroToastNombre").textContent=texto;
   $("logroToast").classList.add("ver");
   bip(700,.2,"sine",.08);
   clearTimeout(logroToastTimer);
-  logroToastTimer=setTimeout(()=>$("logroToast").classList.remove("ver"),2600);
+  logroToastTimer=setTimeout(()=>$("logroToast").classList.remove("ver"),ms||2600);
 }
+function explicarMonedas(){
+  mostrarToast("🪙","Estas son tus monedas: se ganan jugando, con Objetivos diarios y la Ruleta. Se usan para comprar poderes, pistas y sobres en la Tienda.",4200);
+}
+if($("setupMonedas"))$("setupMonedas").onclick=explicarMonedas;
+if($("mhMonedas"))$("mhMonedas").onclick=explicarMonedas;
+if($("jgMonedas"))$("jgMonedas").onclick=explicarMonedas;
+const MENUS_CON_X={capaRuleta:"rwCerrar",capaTienda:"tnCerrar",capaLogros:"lgCerrar",
+  capaObjetivos:"objCerrar",capaRecords:"recCerrar",capaRanking:"rkCerrar"};
+function xGlobalActualizar(){
+  const idAbierta=Object.keys(MENUS_CON_X).find(id=>{const el=$(id);return el&&el.classList.contains("ver");});
+  const boton=$("xGlobalCerrar");
+  if(idAbierta){boton.style.display="grid";boton.style.placeItems="center";boton.dataset.target=idAbierta;}
+  else boton.style.display="none";
+}
+new MutationObserver(xGlobalActualizar).observe(document.body,{attributes:true,attributeFilter:["class"],subtree:true});
+$("xGlobalCerrar").onclick=()=>{
+  const id=$("xGlobalCerrar").dataset.target,btnId=id&&MENUS_CON_X[id];
+  if(btnId&&$(btnId))$(btnId).click();
+};
 function colActualizarBloqueDurazno(){
   const cm=coleccionMeta[dzCiudad().id];if(!cm)return;
   const el=$("dzSobreTxt");if(!el)return;
