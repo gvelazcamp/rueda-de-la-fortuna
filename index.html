@@ -378,6 +378,10 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 
 #juego{display:none;max-width:1060px;margin:0 auto}
 .serie{text-align:center;text-shadow:0 2px 6px #000;color:#B49FCE;font-size:.9rem;margin-bottom:10px;min-height:20px}
+#jgHud{position:fixed;top:10px;right:10px;z-index:40;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+#jgHud>div{background:#160B24E6;border:1px solid #F5B30166;color:var(--oro);font-weight:800;font-size:.82rem;
+ padding:6px 12px;border-radius:99px;box-shadow:0 4px 10px #0006;white-space:nowrap}
+#jgSobre{border-color:#37D6C066!important;color:var(--agua)!important}
 .serie b{color:var(--oro);font-family:'Archivo Black'}
 .marcador{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
 .jug{background:#0C0616D9;border:2px solid transparent;border-radius:16px;padding:12px 14px}
@@ -597,7 +601,8 @@ p.sub{margin:14px 0 24px;color:#C9B8DE}
 body.tvhost #juego{max-width:1240px}
 body.tvhost #juego .marcador{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}
 body.tvhost #juego .acciones,body.tvhost #juego .teclado,body.tvhost #juego .reacciones,body.tvhost #tossBuzz,
-body.tvhost #juego .poderes,body.tvhost #juego .lodo-zona,body.tvhost #juego .confirm-poder{display:none!important}
+body.tvhost #juego .poderes,body.tvhost #juego .lodo-zona,body.tvhost #juego .confirm-poder,
+body.tvhost #jgHud{display:none!important}
 body.tvhost #juego .tablero{padding:26px 18px}
 body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66px);font-size:clamp(1.1rem,2.6vw,1.8rem)}
 @media(max-width:600px){#tvLista{grid-template-columns:1fr 1fr}.tv-codigo{font-size:3rem}}
@@ -984,6 +989,10 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
 </section>
 
 <section id="juego">
+  <div id="jgHud">
+    <div id="jgMonedas">🪙 0</div>
+    <div id="jgSobre" style="display:none">🎁 0/3</div>
+  </div>
   <div class="serie" id="serie"></div>
   <div class="marcador" id="marcador">
     <div class="jug" id="j0"><div class="nom"><span class="quien"><span class="avatar-wrap"><img class="av"><img class="avatar-frame"></span><span class="n"></span></span><span class="turno">turno</span></div>
@@ -1313,6 +1322,7 @@ function mundoActualizarHud(){
   regenerarVidas();
   if($("mhVidas"))$("mhVidas").textContent="❤️ "+meta.vidas;
   if($("mhMonedas"))$("mhMonedas").textContent="🪙 "+meta.monedas;
+  if($("jgMonedas"))$("jgMonedas").textContent="🪙 "+meta.monedas;
   if($("setupVidas"))$("setupVidas").innerHTML="❤️ <b>"+meta.vidas+"</b>";
   if($("setupMonedas"))$("setupMonedas").innerHTML="🪙 <b>"+meta.monedas+"</b>";
   if($("setupRacha"))$("setupRacha").innerHTML="🔥 <b>"+meta.diaRacha+"</b>";
@@ -1918,6 +1928,15 @@ function colActualizarBloqueDurazno(){
   $("dzSobreLabel").textContent=cm.completada?"🎁 Sobre extra":"🎁 Próximo sobre";
   el.textContent=cm.completada?"premio sorpresa":cm.rondasProgreso+" / 3 rondas";
   $("dzSobreBarra").style.width=Math.round(cm.rondasProgreso/3*100)+"%";
+  jgActualizarSobre();
+}
+function jgActualizarSobre(){
+  const el=$("jgSobre");if(!el)return;
+  const cual=modo==="bot"&&destino!==null&&MUNDO[destino]?MUNDO[destino].id:null;
+  const cm=cual?coleccionMeta[cual]:null;
+  if(!cm||!COLECCIONES[cual]){el.style.display="none";return;}
+  el.style.display="";
+  el.textContent=cm.completada?"🎁 premio sorpresa":"🎁 "+cm.rondasProgreso+"/3";
 }
 function sumarRondaColeccion(cual){
   // Solo cuenta en Mundo Uruguay -> ciudad con colección -> jugador solo (evita ventajas/duplicados en multijugador).
@@ -3676,6 +3695,8 @@ function mostrarFin(tit,txt,selloImg){
   [0,180,360,620].forEach((ms,i)=>setTimeout(()=>bip([784,988,1175,1568][i],.28,"sine",.07),ms));
 }
 function armarTeclado(){
+  mundoActualizarHud();
+  jgActualizarSobre();
   $("teclado").innerHTML="";
   LETRAS.forEach(l=>{const b=document.createElement("button");b.textContent=l;b.dataset.l=l;
     if(VOCALES.includes(l))b.classList.add("vocal");
