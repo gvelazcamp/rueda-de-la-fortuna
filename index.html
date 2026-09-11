@@ -241,6 +241,13 @@ button:focus-visible{outline:3px solid var(--agua);outline-offset:2px}
 .lg-info{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
 .lg-info b{font-size:.92rem}
 .lg-info span{font-size:.76rem;color:#B49FCE}
+.lg-info .dz-barra{margin-top:4px}
+.obj-item.lista{align-items:stretch}
+.obj-reclamar{flex-shrink:0;border-radius:10px;padding:9px 12px;font-weight:800;font-size:.78rem;
+ background:#2A1A3C;color:#7C6A94;border:1px solid #FFFFFF1A;white-space:nowrap}
+.obj-reclamar.listo{background:var(--oro);color:var(--tinta);border-color:var(--oro)}
+.obj-reclamar.hecho{background:#150C20;color:var(--agua);border-color:#37D6C066}
+.obj-item.destacado{border-color:#F5B30166;background:#F5B3011A}
 .rk-caja{max-width:440px;max-height:86vh;overflow-y:auto}
 .rk-acciones{display:flex;gap:8px;margin-bottom:12px}
 .rk-acciones button{flex:1;border-radius:10px;padding:9px 4px;font-weight:700;font-size:.76rem}
@@ -671,6 +678,7 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
     <button class="btn-grande sec rw-boton" id="bRuleta"><span class="btn-ico">🎡</span><span class="btn-txt">Ruleta de premios</span><span id="rwBotonEstado" class="rw-badge"></span></button>
     <button class="btn-grande sec" id="bTienda"><span class="btn-ico">🛍️</span><span class="btn-txt">Tienda</span></button>
     <button class="btn-grande sec" id="bCompartirJuego"><span class="btn-ico">📤</span><span class="btn-txt">Compartir el juego</span></button>
+    <button class="btn-grande sec" id="bObjetivos"><span class="btn-ico">🎯</span><span class="btn-txt">Objetivos diarios</span></button>
     <button class="btn-grande sec" id="bLogros"><span class="btn-ico">🏅</span><span class="btn-txt">Logros</span></button>
     <button class="btn-grande sec" id="bRecords"><span class="btn-ico">🏆</span><span class="btn-txt">Mis récords</span></button>
     <button class="btn-grande sec" id="bRanking"><span class="btn-ico">🥇</span><span class="btn-txt">Ranking de amigos</span></button>
@@ -848,6 +856,13 @@ body.tvhost #juego .ficha{width:clamp(30px,4.5vw,52px);height:clamp(42px,6vw,66p
   <p class="lg-resumen" id="lgResumen">0 / 0 desbloqueados</p>
   <div class="lg-lista" id="lgLista"></div>
   <button class="no" id="lgCerrar" style="width:100%;border-radius:14px;padding:13px;font-weight:700;margin-top:10px">Cerrar</button>
+</div></div>
+
+<div class="capa" id="capaObjetivos"><div class="caja rk-caja">
+  <h2>🎯 Objetivos diarios</h2>
+  <p class="sub" id="objReinicio" style="margin:2px 0 12px"></p>
+  <div class="lg-lista" id="objLista"></div>
+  <button class="no" id="objCerrar" style="width:100%;border-radius:14px;padding:13px;font-weight:700;margin-top:10px">Cerrar</button>
 </div></div>
 
 <div class="capa" id="capaRecords"><div class="caja">
@@ -1318,6 +1333,78 @@ function textoProxima(){
   const mm=Math.floor(rest/60000),ss=Math.floor(rest%60000/1000);
   return"Próxima vida en "+mm+":"+String(ss).padStart(2,"0");
 }
+const OBJETIVOS=[
+  {id:"partidas",nombre:"Jugá 2 partidas",icono:"🎮",meta:2,premio:60},
+  {id:"giros",nombre:"Girá la rueda 6 veces",icono:"🎡",meta:6,premio:60},
+  {id:"vocales",nombre:"Comprá 1 vocal",icono:"🔤",meta:1,premio:50},
+  {id:"poderes",nombre:"Usá 1 poder",icono:"⚡",meta:1,premio:80},
+  {id:"victorias",nombre:"Ganá 1 ciudad o paso",icono:"🏆",meta:1,premio:100}
+];
+const OBJ_PREMIO_TODOS=200;
+function objVacio(){return{fecha:fechaHoy(),partidas:0,giros:0,vocales:0,poderes:0,victorias:0,reclamados:[]};}
+let objetivosMeta=(()=>{
+  try{const g=JSON.parse(localStorage.getItem("gya_objetivos"));if(g&&g.fecha===fechaHoy())return g;}catch(e){}
+  return objVacio();
+})();
+const guardarObjetivos=()=>{try{localStorage.setItem("gya_objetivos",JSON.stringify(objetivosMeta));}catch(e){}};
+function objObtenerHoy(){
+  if(objetivosMeta.fecha!==fechaHoy()){objetivosMeta=objVacio();guardarObjetivos();}
+  return objetivosMeta;
+}
+function objSumar(id,n){
+  const o=objObtenerHoy();o[id]=(o[id]||0)+n;guardarObjetivos();
+  if($("capaObjetivos")&&$("capaObjetivos").classList.contains("ver"))objRender();
+}
+function objReclamar(id){
+  const o=objObtenerHoy(),def=OBJETIVOS.find(x=>x.id===id);
+  if(!def||o[id]<def.meta||o.reclamados.includes(id))return;
+  o.reclamados.push(id);guardarObjetivos();
+  sumarMonedas(def.premio);mundoActualizarHud();
+  objRender();
+}
+function objReclamarTodos(){
+  const o=objObtenerHoy();
+  if(o.reclamados.includes("todos")||!OBJETIVOS.every(d=>o.reclamados.includes(d.id)))return;
+  o.reclamados.push("todos");guardarObjetivos();
+  sumarMonedas(OBJ_PREMIO_TODOS);mundoActualizarHud();
+  objRender();
+}
+function objRender(){
+  const o=objObtenerHoy();
+  const medianoche=new Date();medianoche.setHours(24,0,0,0);
+  const rest=Math.max(0,medianoche-Date.now());
+  const hh=Math.floor(rest/3600000),mm=Math.floor(rest%3600000/60000);
+  $("objReinicio").textContent="Se reinician en "+hh+"h "+mm+"min";
+  const cont=$("objLista");cont.innerHTML="";
+  const todosListos=OBJETIVOS.every(d=>o.reclamados.includes(d.id));
+  const dTodos=document.createElement("div");
+  dTodos.className="lg-item destacado";
+  const yaTodos=o.reclamados.includes("todos");
+  dTodos.innerHTML='<div class="lg-icono">🏅</div><div class="lg-info"><b>Completá los 5 objetivos</b>'+
+    '<span>'+OBJETIVOS.filter(d=>o.reclamados.includes(d.id)).length+' / '+OBJETIVOS.length+'</span>'+
+    '<div class="dz-barra"><i style="width:'+Math.round(OBJETIVOS.filter(d=>o.reclamados.includes(d.id)).length/OBJETIVOS.length*100)+'%"></i></div></div>'+
+    '<button class="obj-reclamar '+(yaTodos?"hecho":(todosListos?"listo":""))+'" data-id="todos" '+(yaTodos||!todosListos?"disabled":"")+'>'+
+    (yaTodos?"✓ Listo":"🪙 "+OBJ_PREMIO_TODOS)+'</button>';
+  cont.appendChild(dTodos);
+  OBJETIVOS.forEach(d=>{
+    const val=Math.min(o[d.id]||0,d.meta),lista=val>=d.meta,hecho=o.reclamados.includes(d.id);
+    const el=document.createElement("div");
+    el.className="lg-item";
+    el.innerHTML='<div class="lg-icono">'+d.icono+'</div><div class="lg-info"><b>'+d.nombre+'</b>'+
+      '<span>'+val+' / '+d.meta+'</span>'+
+      '<div class="dz-barra"><i style="width:'+Math.round(val/d.meta*100)+'%"></i></div></div>'+
+      '<button class="obj-reclamar '+(hecho?"hecho":(lista?"listo":""))+'" data-id="'+d.id+'" '+(hecho||!lista?"disabled":"")+'>'+
+      (hecho?"✓ Listo":"🪙 "+d.premio)+'</button>';
+    cont.appendChild(el);
+  });
+}
+function objAbrir(){objRender();$("capaObjetivos").classList.add("ver");}
+$("bObjetivos").onclick=objAbrir;
+$("objCerrar").onclick=()=>$("capaObjetivos").classList.remove("ver");
+$("objLista").addEventListener("click",e=>{
+  const b=e.target.closest(".obj-reclamar");if(!b||b.disabled)return;
+  const id=b.dataset.id;if(id==="todos")objReclamarTodos();else objReclamar(id);
+});
 function mundoActualizarHud(){
   regenerarVidas();
   if($("mhVidas"))$("mhVidas").textContent="❤️ "+meta.vidas;
@@ -3212,6 +3299,7 @@ function publicar(txt,fx,mantenerReloj){
 }
 function hostGirar(){
   if(S.fase!=="girar"||animando||consRestantes()===0)return;
+  if(modo!=="bot"||S.turno===miJug)objSumar("giros",1);
   pararReloj();
   const destino=giroActual+360*5+Math.random()*360;
   if(modo!=="local"&&modo!=="bot")enviar({tipo:"giro",destino});
@@ -3268,6 +3356,7 @@ function puedeUsarPoder(jugIdx,id){
 }
 function aplicarPoderEnHost(jugIdx,id){
   if(!puedeUsarPoder(jugIdx,id))return;
+  if(modo!=="bot"||jugIdx===miJug)objSumar("poderes",1);
   const j=S.jug[jugIdx];
   j.poderUsadoTurno=true;j.poderesRonda=(j.poderesRonda||[]).concat([id]);
   if(id==="pista"){
@@ -3496,6 +3585,7 @@ document.querySelectorAll("#tvcPoderes .poder-btn").forEach(b=>{b.onclick=()=>pe
 })();
 function hostVocal(){
   if(S.fase!=="girar"||animando||S.jug[S.turno].ronda<250)return;
+  if(modo!=="bot"||S.turno===miJug)objSumar("vocales",1);
   S.jug[S.turno].ronda-=250;S.fase="vocal";
   publicar("Vocal comprada por $250. "+S.jug[S.turno].n+" elige cuál.");
 }
@@ -3590,6 +3680,7 @@ function finDelJuego(){
     let selloImg;
     fSiguientePaso=null;
     if(g===0){
+      objSumar("victorias",1);
       tit="¡Paso "+(pasoActual+1)+" superado!";
       const esNuevo=hechos(d.id)<=pasoActual;
       if(esNuevo){progreso[d.id]=pasoActual+1;guardarPasos();
@@ -3619,6 +3710,7 @@ function finDelJuego(){
     const bonusJugado=Math.floor((a.tot||0)/20);
     if(bonusJugado>0){sumarMonedas(bonusJugado);mundoActualizarHud();}
     if(g===0){
+      objSumar("victorias",1);
       tit=d?"¡"+d.n+" conquistado!":"¡Ganaste!";
       let selloImg;
       if(d&&!ganados.has(d.id)){ganados.add(d.id);guardarMundo();
@@ -3647,6 +3739,7 @@ function finDelJuego(){
   }
 
   tit="¡Victoria, "+S.jug[g].n+"!";
+  if(g===miJug)objSumar("victorias",1);
   serie[g]=(serie[g]||0)+1;
   if(ultGanador===g)racha++;else{ultGanador=g;racha=1;}
   if(racha>meta.mejorRachaVictorias){meta.mejorRachaVictorias=racha;guardarMeta();}
@@ -3697,6 +3790,7 @@ function mostrarFin(tit,txt,selloImg){
 function armarTeclado(){
   mundoActualizarHud();
   jgActualizarSobre();
+  objSumar("partidas",1);
   $("teclado").innerHTML="";
   LETRAS.forEach(l=>{const b=document.createElement("button");b.textContent=l;b.dataset.l=l;
     if(VOCALES.includes(l))b.classList.add("vocal");
